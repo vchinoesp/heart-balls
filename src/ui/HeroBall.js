@@ -10,8 +10,9 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
  * encima del panel del popup. El número se pinta en una textura
  * equirectangular que envuelve la esfera: al girar se lee de izq. a dcha.
  *
- * Entrada: llega rodando desde la izquierda (gira de izq. a dcha.) y se
- * queda balanceándose suavemente.
+ * Entrada: llega rodando desde la izquierda (gira de izq. a dcha.).
+ * Después se balancea sola y se puede girar arrastrando (ratón o dedo), con
+ * inercia; al soltarla vuelve a balancearse sola.
  */
 export default class HeroBall {
     constructor(canvas, { reducedMotion = false } = {}) {
@@ -19,9 +20,14 @@ export default class HeroBall {
         this.reducedMotion = reducedMotion;
         this.render = this.render.bind(this);
 
+        // Amplitud del balanceo automático (rad) y sensibilidad del arrastre
+        this.swayAmplitude = 0.6;
+        this.dragSpeed = 0.012;
+
         this.setRenderer();
         this.setScene();
         this.setBall();
+        this.setDrag();
     }
 
     setRenderer() {
@@ -81,7 +87,84 @@ export default class HeroBall {
             })
         );
 
-        this.scene.add(this.ball);
+        // pivot = giro del usuario / balanceo; ball.rotation = animación de entrada
+        this.pivot = new THREE.Group();
+        this.pivot.add(this.ball);
+        this.scene.add(this.pivot);
+    }
+
+    setDrag() {
+        const rotation = this.pivot.rotation;
+        const follow = { duration: 0.8, ease: 'power3.out' };
+
+        this.rotateX = gsap.quickTo(rotation, 'x', follow);
+        this.rotateY = gsap.quickTo(rotation, 'y', follow);
+        this.target = { x: 0, y: 0 };
+        this.drag = null;
+
+        this.canvas.addEventListener('pointerdown', (event) => {
+            this.canvas.setPointerCapture(event.pointerId);
+            this.stopSway();
+            this.target.x = rotation.x;
+            this.target.y = rotation.y;
+            this.drag = { x: event.clientX, y: event.clientY, vx: 0, time: performance.now() };
+        });
+
+        this.canvas.addEventListener('pointermove', (event) => {
+            if (!this.drag) return;
+
+            const now = performance.now();
+            const dx = event.clientX - this.drag.x;
+            const dy = event.clientY - this.drag.y;
+
+            this.drag.vx = dx / Math.max(now - this.drag.time, 1);
+            this.drag = { ...this.drag, x: event.clientX, y: event.clientY, time: now };
+
+            this.target.y += dx * this.dragSpeed;
+            this.target.x = gsap.utils.clamp(-0.6, 0.6, this.target.x + dy * this.dragSpeed);
+            this.rotateY(this.target.y);
+            this.rotateX(this.target.x);
+        });
+
+        const release = () => {
+            if (!this.drag) return;
+
+            // Inercia al soltar y vuelta al balanceo automático
+            if (!this.reducedMotion) this.rotateY(this.target.y + this.drag.vx * 160 * this.dragSpeed * 10);
+
+            this.drag = null;
+            this.rotateX(0);
+            this.swayCall?.kill();
+            this.swayCall = gsap.delayedCall(1.6, () => this.startSway());
+        };
+
+        this.canvas.addEventListener('pointerup', release);
+        this.canvas.addEventListener('pointercancel', release);
+    }
+
+    /** Balanceo automático de lado a lado (continúa desde donde esté). */
+    startSway() {
+        if (this.reducedMotion) return;
+
+        const rotation = this.pivot.rotation;
+
+        this.stopSway();
+
+        // Volver al número "de frente" más cercano y oscilar alrededor
+        const turns = Math.round(rotation.y / (Math.PI * 2)) * Math.PI * 2;
+
+        this.sway = gsap
+            .timeline({ repeat: -1, yoyo: false })
+            .to(rotation, { y: turns + this.swayAmplitude, duration: 2.6, ease: 'sine.inOut' })
+            .to(rotation, { y: turns - this.swayAmplitude, duration: 5.2, ease: 'sine.inOut' })
+            .to(rotation, { y: turns, duration: 2.6, ease: 'sine.inOut' });
+    }
+
+    stopSway() {
+        this.sway?.kill();
+        this.sway = null;
+        this.swayCall?.kill();
+        gsap.killTweensOf(this.pivot.rotation);
     }
 
     /** Textura de madera clara con el número "tostado" en el frente. */
@@ -131,16 +214,17 @@ export default class HeroBall {
         const centerX = width * 0.25;
         const centerY = height * 0.52;
 
-        context.font = `600 ${height * 0.26}px Georgia, "Times New Roman", serif`;
+        // Tipografía fina (Source Sans 3 Light), "tostada" sobre la madera
+        context.font = `300 ${height * 0.34}px "Source Sans 3", "Helvetica Neue", Arial, sans-serif`;
         context.textAlign = 'center';
         context.textBaseline = 'middle';
 
-        context.filter = 'blur(2px)';
-        context.fillStyle = 'rgba(255, 236, 200, 0.55)';
-        context.fillText(text, centerX + 3, centerY + 4);
+        context.filter = 'blur(1.5px)';
+        context.fillStyle = 'rgba(255, 236, 200, 0.5)';
+        context.fillText(text, centerX + 2, centerY + 3);
 
-        context.filter = 'blur(1px)';
-        context.fillStyle = '#6a4523';
+        context.filter = 'blur(0.8px)';
+        context.fillStyle = '#6e4827';
         context.fillText(text, centerX, centerY);
         context.filter = 'none';
 
@@ -162,6 +246,10 @@ export default class HeroBall {
         this.resize();
 
         gsap.killTweensOf([this.ball.position, this.ball.rotation, this.ball.scale]);
+        this.stopSway();
+        this.pivot.rotation.set(0, 0, 0);
+        this.target.x = 0;
+        this.target.y = 0;
         gsap.ticker.add(this.render);
 
         if (this.reducedMotion) {
@@ -194,13 +282,7 @@ export default class HeroBall {
                 { x: 1, y: 1, z: 1, duration: 1.2, ease: 'power3.out' },
                 0
             )
-            .to(this.ball.rotation, {
-                y: 0.22,
-                duration: 2.4,
-                ease: 'sine.inOut',
-                yoyo: true,
-                repeat: -1
-            });
+            .add(() => this.startSway(), 1.5);
 
         this.timeline = timeline;
 
@@ -209,7 +291,15 @@ export default class HeroBall {
 
     close() {
         this.timeline?.kill();
+        this.stopSway();
+        this.drag = null;
         gsap.ticker.remove(this.render);
+    }
+
+    /** Compila shaders y sube texturas antes del primer uso (sin tirón al abrir). */
+    prewarm() {
+        this.paintLabel(0);
+        this.render();
     }
 
     render() {

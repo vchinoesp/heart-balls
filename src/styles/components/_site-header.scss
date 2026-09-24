@@ -1,0 +1,170 @@
+@use '../tokens' as *;
+
+// Bloque BEM: cabecera
+.site-header {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  padding: calc(1rem + env(safe-area-inset-top)) 1rem 0;
+
+  &__brand {
+    justify-self: start;
+    margin-top: 0.25rem;
+    border-radius: 4px;
+    transition: opacity 0.4s $ease-out-power3;
+
+    &:hover {
+      opacity: 0.8;
+    }
+
+    @include focus-ring(6px);
+  }
+
+  &__brand-logo {
+    width: clamp(5.5rem, 13vw, 11.6rem);
+  }
+
+  &__title {
+    margin: 0;
+  }
+
+  &__title-logo {
+    width: clamp(8.5rem, 25vw, 22.5rem);
+  }
+
+  &__actions {
+    position: relative;
+    justify-self: end;
+    display: grid;
+    margin-top: 0.4rem;
+
+    // Los dos botones ocupan la misma celda (se alternan)
+    > * {
+      grid-area: 1 / 1;
+      justify-self: end;
+    }
+  }
+
+  @media (min-width: $bp-tablet) {
+    padding: calc(2rem + env(safe-area-inset-top)) 2.25rem 0;
+
+    &__actions {
+      margin-top: 1.9rem;
+    }
+  }
+}
+
+// Bloque BEM: botón "Ver el anuncio" / "Ver making of"
+.play-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: $color-gold;
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 999px;
+
+  @include focus-ring(4px);
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: #fff;
+    transition:
+      transform 0.5s $ease-out-expo,
+      box-shadow 0.5s $ease-out-expo;
+
+    svg {
+      width: 55%;
+      height: 55%;
+      margin-left: 8%;
+      fill: $color-ink;
+    }
+  }
+
+  &__label {
+    transition: color 0.4s $ease-out-power3;
+  }
+
+  &:hover &__icon {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.12);
+  }
+
+  &:hover &__label {
+    color: $color-gold-light;
+  }
+
+  // Variante dorada (making of)
+  &--gold &__icon {
+    background: $color-gold;
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  &--gold:hover &__icon {
+    box-shadow: 0 0 0 6px rgba(201, 147, 74, 0.2);
+  }
+
+  @media (min-width: $bp-tablet) {
+    &__icon {
+      width: 3.25rem;
+      height: 3.25rem;
+    }
+  }
+
+  // En móvil el header solo muestra el círculo (el texto queda para lectores)
+  @media (max-width: 47.99rem) {
+    &.site-header__watch &__label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+  }
+}
+
+// Bloque BEM: botón volver
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.75rem;
+  padding: 0 0.25rem;
+  border: 0;
+  background: none;
+  color: $color-gold;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 4px;
+
+  @include focus-ring(4px);
+
+  svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    transition: transform 0.5s $ease-out-expo;
+  }
+
+  &:hover {
+    color: $color-gold-light;
+
+    svg {
+      transform: translateX(-4px);
+    }
+  }
+}

@@ -1,0 +1,311 @@
+
+
+
+
+
+
+.footer-rrss{
+  opacity: 0;
+  position: relative;
+  bottom: 0;
+  left: 0;
+  background: none;
+  width: 100%;
+  z-index: 151;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+  margin-top: -185px;
+  filter: drop-shadow(0px 0px 5px #000000);
+  .rrss-desk{
+    color: #fff;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+
+    .content-rrss{
+
+      display: flex;
+      flex-direction: row;
+      padding-left: 5px;
+      padding-bottom: 5px;
+      pointer-events: initial;
+      a{
+        z-index: 21;
+        cursor: pointer;
+        text-decoration: none;
+        padding: 5px;
+        transition: all 0.3s ease-out;
+        width: 33px;
+        .logo_fb{
+          width: 25px;
+        }
+        .logo_tw{
+          width: 33px;
+          margin-left: -4px;
+        }
+        .logo_whatsapp{
+          width: 24px;
+        }
+      }
+    }
+  }
+  .content-logos-legales{
+    pointer-events: initial;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 5px;
+    text-align: center;
+    gap: 20px;
+    .content-logos{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      .txt-mayor{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+
+        font-size: 10px;
+        color: #ffffff;
+        .logmas18{
+          width: 25px;
+        }
+      }
+      .img_juegoseguro{
+        width: 100px;
+      }
+      .img_jugarbien{
+        width: 100px;
+      }
+      .img_mano{
+        width: 25px;
+      }
+    }
+    .content-legales{
+
+      ul{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0px 0px;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0px;
+        margin-inline-end: 0px;
+        padding-inline-start: 0px;
+        &.links{
+          gap: 30px;
+        }
+        li{
+          line-height: 12px;
+          list-style: none;
+          a{
+            pointer-events: initial;
+            text-transform: uppercase;
+
+            font-size: 14px;
+            color: #ffffff;
+            text-decoration: none;
+            text-underline-position: under;
+            .br-legal{
+              display: none;
+            }
+          }
+        }
+      }
+    }
+  }
+  .copyright{
+    width: 100%;
+
+    text-align: center;
+    margin: 0 auto;
+    color: #ffffff;
+    font-size: 10px;
+    margin-bottom: 20px;
+    padding-top: 0px;
+  }
+}
+
+@media (max-width:1200px) {
+  .footer-rrss{
+    margin-top: -195px;
+    .rrss-desk{
+
+      .content-rrss{
+
+
+      }
+    }
+    .content-logos-legales{
+      gap: 15px;
+      .content-logos{
+        gap: 10px;
+      }
+      .content-legales{
+
+        ul{
+
+          &.links{
+            gap: 20px;
+          }
+          li{
+
+            a{
+
+            }
+          }
+        }
+      }
+    }
+    .copyright{
+      width: 90%;
+      text-align: center;
+      margin: 0 auto;
+      color: #ffffff;
+      font-size: 10px;
+      margin-bottom: 20px;
+
+    }
+  }
+}
+
+
+@media (max-width:768px) {
+
+    .footer-rrss{
+      margin-top: -195px;
+      .rrss-desk{
+
+        .content-rrss{
+
+
+        }
+      }
+      .content-logos-legales{
+        gap: 15px;
+        .content-logos{
+          gap: 10px;
+        }
+        .content-legales{
+
+          ul{
+
+            &.links{
+              gap: 10px;
+            }
+            li{
+
+              a{
+                font-size: 12px;
+              }
+            }
+          }
+        }
+      }
+      .copyright{
+        font-size: 9px;
+        margin-bottom: 15px;
+      }
+    }
+
+}
+
+@media (max-width:560px) {
+
+  .footer-rrss{
+    margin-top: -215px;
+    .rrss-desk{
+      .content-rrss{
+      }
+    }
+    .content-logos-legales{
+      gap: 15px;
+      .content-logos{
+        gap: 10px;
+      }
+      .content-legales{
+
+        ul{
+          justify-content: center;
+          flex-wrap: wrap;
+          &.links{
+            gap: 10px;
+          }
+          li{
+
+            a{
+              font-size: 12px;
+            }
+          }
+        }
+      }
+    }
+    .copyright{
+      font-size: 9px;
+      margin-bottom: 15px;
+    }
+  }
+
+}
+
+
+@media (max-width:460px) {
+
+  .footer-rrss{
+    margin-top: -220px;
+    .rrss-desk{
+      .content-rrss{
+      }
+    }
+    .content-logos-legales{
+      gap: 10px;
+      .content-logos{
+        gap: 5px;
+        .txt-mayor{
+          gap: 2px;
+          font-size: 8px;
+          .logmas18{
+            width: 20px;
+          }
+        }
+        .img_juegoseguro{
+          width: 70px;
+        }
+        .img_jugarbien{
+          width: 70px;
+        }
+        .img_mano{
+          width: 20px;
+        }
+      }
+      .content-legales{
+
+        ul{
+          justify-content: center;
+          flex-wrap: wrap;
+          &.links{
+            gap: 10px;
+          }
+          li{
+
+            a{
+              font-size: 12px;
+            }
+          }
+        }
+      }
+    }
+    .copyright{
+      font-size: 9px;
+      margin-bottom: 15px;
+    }
+  }
+
+}

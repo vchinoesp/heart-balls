@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import gsap from 'gsap';
 
 import Sizes from './Sizes.js';
 import Time from './Time.js';
@@ -16,26 +17,39 @@ import heartConfig from '../config/heart.config.js';
 /**
  * Experience
  *
- * Punto de entrada de la escena WebGL. Sin variables globales:
- * main.js crea una instancia y la conserva.
+ * Escena WebGL del corazón. La crea App durante la carga y la controla:
+ *  - init({ onProgress })  carga datos, crea el mundo y precompila shaders
+ *  - playIntro()           el corazón se "genera" al llegar a la home
+ *  - pause() / resume()    fuera de la home no se renderiza (batería)
+ *  - setSafeArea()         encuadra el corazón entre el copy y el footer
  *
- * Flujo: navegar el corazón (HeartControls) -> señalar/elegir bola
- * (BallSelection) -> popup con la bola girando (BallModal) -> "Elige otra".
+ * Flujo interno: navegar (HeartControls) -> señalar/elegir bola
+ * (BallSelection) -> popup con la bola (BallModal) -> "Elige otra".
  */
 export default class Experience {
-    constructor(canvas) {
+    constructor(canvas, { modalRoot, links } = {}) {
         this.canvas = canvas;
+        this.modalRoot = modalRoot;
+        this.links = links;
         this.config = structuredClone(heartConfig);
         this.isMobile = window.matchMedia('(pointer: coarse)').matches;
         this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        this.paused = false;
+
+        this.hidden = true; // fuera de la home
+        this.modalOpen = false;
 
         this.scene = new THREE.Scene();
         this.debug = new Debug();
         this.sizes = new Sizes();
     }
 
-    async init() {
+    get paused() {
+        return this.hidden || this.modalOpen;
+    }
+
+    async init({ onProgress } = {}) {
+        const progress = (value) => onProgress?.(value);
+
         await this.debug.init();
 
         const { lobeX, lobeY, lobeRadius } = this.config.shape;
@@ -51,12 +65,8 @@ export default class Experience {
             subjectWidth: this.heartSize.width
         });
 
-        this.renderer = new Renderer(
-            this.canvas,
-            this.sizes,
-            this.scene,
-            this.camera
-        );
+        this.renderer = new Renderer(this.canvas, this.sizes, this.scene, this.camera);
+        progress(0.15);
 
         this.world = new World({
             scene: this.scene,
@@ -68,8 +78,23 @@ export default class Experience {
         });
 
         await this.world.init();
+        progress(0.6);
 
         this.setInteraction();
+
+        // Precompilar shaders ahora (y no en el primer frame de la home)
+        const renderer = this.renderer.instance;
+
+        if (renderer.extensions.has('KHR_parallel_shader_compile')) {
+            await renderer.compileAsync(this.scene, this.camera.instance);
+        } else {
+            renderer.compile(this.scene, this.camera.instance);
+        }
+        this.world.heartBalls.setIntro(0);
+        progress(0.9);
+
+        this.modal.prewarm();
+        progress(1);
 
         if (this.debug.showFps) {
             this.fpsMeter = new FpsMeter({ renderer: this.renderer.instance });
@@ -82,13 +107,16 @@ export default class Experience {
 
         this.time = new Time();
         window.addEventListener('time:tick', this.onTick);
+
+        this.ready = true;
     }
 
     setInteraction() {
         const heartBalls = this.world.heartBalls;
 
         this.modal = new BallModal({
-            root: document.querySelector('.ball-modal'),
+            root: this.modalRoot,
+            links: this.links,
             reducedMotion: this.reducedMotion,
             onClose: () => this.onModalClose()
         });
@@ -99,6 +127,7 @@ export default class Experience {
             fx: this.world.fx,
             element: this.canvas,
             interaction: this.config.interaction,
+            getCenterNdc: () => ({ x: 0, y: -this.camera.ndcShiftY }),
             onSelect: ({ number }) => this.onBallSelected(number)
         });
 
@@ -112,7 +141,78 @@ export default class Experience {
             onTap: (ndc, type) => this.selection.tap(ndc, type),
             onKeySelect: () => this.selection.selectCenter()
         });
+
+        this.setInteractive(false);
     }
+
+    /* ------------------------------------------------------------------ */
+    /* API para App                                                        */
+    /* ------------------------------------------------------------------ */
+
+    setInteractive(enabled) {
+        this.controls.setEnabled(enabled);
+        this.selection.locked = !enabled;
+    }
+
+    pause() {
+        this.hidden = true;
+    }
+
+    resume() {
+        this.hidden = false;
+    }
+
+    setSafeArea({ top, bottom }) {
+        this.camera.setSafeArea({ top, bottom });
+    }
+
+    /**
+     * El corazón se genera: las bolas llegan en espiral desde fuera, de abajo
+     * arriba, mientras el corazón termina de girar hacia el frente.
+     */
+    playIntro({ delay = 0 } = {}) {
+        const heartBalls = this.world.heartBalls;
+        const group = heartBalls.group;
+
+        if (this.reducedMotion) {
+            heartBalls.setIntro(1);
+            this.setInteractive(true);
+
+            return gsap.timeline();
+        }
+
+        const state = { progress: 0 };
+        const timeline = gsap.timeline({
+            delay,
+            onComplete: () => this.setInteractive(true)
+        });
+
+        timeline
+            .to(state, {
+                progress: 1,
+                duration: 3.4,
+                ease: 'power2.inOut',
+                onUpdate: () => heartBalls.setIntro(state.progress)
+            })
+            .fromTo(
+                group.rotation,
+                { y: -Math.PI * 0.9 },
+                { y: 0, duration: 3.8, ease: 'expo.out' },
+                0
+            )
+            .fromTo(
+                group.position,
+                { y: -0.6 },
+                { y: 0, duration: 3.4, ease: 'expo.out' },
+                0
+            );
+
+        return timeline;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Popup                                                               */
+    /* ------------------------------------------------------------------ */
 
     onBallSelected(number) {
         this.controls.setEnabled(false);
@@ -120,21 +220,25 @@ export default class Experience {
 
         // Con el popup abierto el corazón queda detrás, desenfocado: no hace
         // falta renderizarlo a 60 fps (ahorro de batería en móvil).
-        this.paused = true;
+        this.modalOpen = true;
         this.renderer.update();
     }
 
     onModalClose() {
-        this.paused = false;
+        this.modalOpen = false;
         this.controls.setEnabled(true);
         this.selection.release();
     }
+
+    /* ------------------------------------------------------------------ */
+    /* Bucle                                                               */
+    /* ------------------------------------------------------------------ */
 
     resize() {
         this.camera.resize();
         this.renderer.resize();
 
-        if (this.paused) this.renderer.update();
+        if (this.modalOpen) this.renderer.update();
     }
 
     update() {

@@ -1,13 +1,28 @@
 // Tokens de diseño compartidos
-$color-bg-center: #15284a;
-$color-bg-mid: #0b1730;
-$color-bg-edge: #060d1c;
-$color-text: #f3e6d2; // contraste > 12:1 sobre el fondo
-$color-text-muted: #d2c0a4; // contraste > 8:1 sobre el fondo
-$color-gold: #d4a25c; // dorado de la creatividad
+$color-bg-top: #020816;
+$color-bg-mid: #06132b;
+$color-bg-floor: #0a1f45;
+$color-text: #ffffff;
+$color-text-soft: #e8e2d6;
+$color-gold: #c9934a; // dorado de la creatividad (6.4:1 sobre el fondo)
+$color-gold-light: #ddb068;
 $color-gold-dark: #94601f; // dorado sobre blanco: 4.9:1 (AA)
-$color-ink: #1b1f2b; // texto sobre dorado: 7.9:1 (AA)
+$color-ink: #0b1730; // texto sobre dorado: 6.4:1 (AA)
 $color-panel: rgba(38, 42, 56, 0.94);
 $color-focus: #ffd58a;
-$font-stack: 'Helvetica Neue', Arial, system-ui, sans-serif;
+
+$font-stack: 'Source Sans 3', 'Helvetica Neue', Arial, system-ui, sans-serif;
+
 $ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+$ease-out-power3: cubic-bezier(0.215, 0.61, 0.355, 1);
+
+$bp-tablet: 48rem; // 768px
+$bp-desktop: 64rem; // 1024px
+
+// Anillo de foco común (WCAG 2.4.7 / 2.4.11)
+@mixin focus-ring($offset: 3px) {
+  &:focus-visible {
+    outline: 3px solid $color-focus;
+    outline-offset: $offset;
+  }
+}

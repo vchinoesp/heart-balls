@@ -1,0 +1,32 @@
+@use '../tokens' as *;
+
+// Bloque BEM: fondo (degradado + luz de suelo + bokeh)
+.backdrop {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, $color-bg-top 0%, $color-bg-mid 55%, $color-bg-top 100%);
+  pointer-events: none;
+
+  &__floor {
+    position: absolute;
+    right: -20%;
+    bottom: -8%;
+    left: -20%;
+    height: 42%;
+    background: radial-gradient(ellipse 50% 45% at 50% 55%, rgba(18, 48, 104, 0.55), rgba(10, 31, 69, 0) 70%);
+  }
+
+  &__bokeh {
+    position: absolute;
+    inset: 0;
+  }
+
+  &__dot {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, rgba(150, 175, 230, 0.9), rgba(90, 120, 190, 0.35) 55%, rgba(60, 90, 160, 0) 72%);
+    will-change: transform;
+  }
+}

@@ -49,7 +49,10 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
             uHoverLift: { value: interaction.hoverLift },
             uHoverScale: { value: interaction.hoverScale },
             uSelectedId: { value: -1 },
-            uSelectedScale: { value: 1 }
+            uSelectedScale: { value: 1 },
+
+            // Intro: 0 = bolas dispersas, 1 = corazón formado
+            uIntro: { value: 1 }
         };
     }
 
@@ -62,6 +65,8 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
                 /* glsl */ `
                 #include <common>
                 attribute float aNumber;
+                attribute vec2 aIntro; // x: retardo (0..1), y: giro de llegada (rad)
+                uniform float uIntro;
                 uniform vec3 uPointer;
                 uniform float uRepel;
                 uniform float uRepelRadius;
@@ -98,6 +103,23 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
                 vec3 ballCenter = instanceMatrix[3].xyz;
                 vec3 ballNormal = normalize(instanceMatrix[2].xyz);
                 vec3 ballLocal = (instanceMatrix * vec4(transformed, 1.0)).xyz - ballCenter;
+
+                // Intro: cada bola llega en espiral desde fuera y "salta" a su sitio
+                if (uIntro < 1.0) {
+                    float introT = clamp((uIntro - aIntro.x * 0.6) / 0.4, 0.0, 1.0);
+                    float introE = 1.0 - pow(1.0 - introT, 3.0);
+                    float angle = (1.0 - introE) * aIntro.y;
+                    float c = cos(angle);
+                    float s = sin(angle);
+                    vec3 swirl = vec3(ballCenter.x * c - ballCenter.z * s, ballCenter.y, ballCenter.x * s + ballCenter.z * c);
+
+                    ballCenter = swirl * (1.0 + (1.0 - introE) * 1.8) + vec3(0.0, -(1.0 - introE) * 1.2, 0.0);
+
+                    float back = introT - 1.0;
+                    float introScale = introT <= 0.0 ? 0.0 : 1.0 + 2.2 * back * back * back + 1.2 * back * back;
+
+                    ballLocal *= introScale;
+                }
 
                 // Hover (actual + anterior saliendo)
                 float hover = 0.0;
@@ -213,6 +235,6 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
     }
 
     customProgramCacheKey() {
-        return 'BallMaterial_v3';
+        return 'BallMaterial_v4';
     }
 }

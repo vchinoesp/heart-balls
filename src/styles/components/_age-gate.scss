@@ -1,0 +1,82 @@
+@use '../tokens' as *;
+
+// Bloque BEM: selector de edad
+.screen--age {
+  justify-content: center;
+  padding-bottom: 8vh;
+}
+
+.age-gate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.75rem;
+  text-align: center;
+
+  &__question {
+    margin: 0;
+    font-size: clamp(1.25rem, 2.2vw, 1.6rem);
+    font-weight: 400;
+  }
+
+  &__options {
+    display: flex;
+    gap: clamp(1.5rem, 4vw, 3.5rem);
+  }
+
+  &__option {
+    display: grid;
+    place-items: center;
+    width: clamp(6rem, 11vw, 8rem);
+    aspect-ratio: 1;
+    padding: 0;
+    border: 2px solid $color-gold;
+    border-radius: 50%;
+    background: transparent;
+    font-size: clamp(1.1rem, 1.6vw, 1.35rem);
+    font-weight: 600;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      transform 0.5s $ease-out-expo,
+      background-color 0.4s $ease-out-power3,
+      box-shadow 0.5s $ease-out-expo,
+      color 0.4s $ease-out-power3;
+
+    @include focus-ring(5px);
+
+    &:hover {
+      transform: scale(1.06);
+      box-shadow: 0 0 0 8px rgba(201, 147, 74, 0.14);
+    }
+
+    &:active {
+      transform: scale(0.97);
+    }
+
+    &--yes {
+      background: $color-gold;
+      color: $color-ink;
+
+      &:hover {
+        background: $color-gold-light;
+      }
+    }
+
+    &--no {
+      color: #fff;
+
+      &:hover {
+        background: rgba(201, 147, 74, 0.12);
+      }
+    }
+  }
+
+  &__message {
+    min-height: 1.5em;
+    margin: 0;
+    color: $color-gold;
+    font-size: clamp(1rem, 1.4vw, 1.15rem);
+    opacity: 0;
+  }
+}

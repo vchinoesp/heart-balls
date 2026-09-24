@@ -10,8 +10,9 @@ import HeroBall from './HeroBall.js';
  * vuelve al elemento que lo abrió. Animaciones de entrada/salida con GSAP.
  */
 export default class BallModal {
-    constructor({ root, reducedMotion = false, onClose }) {
+    constructor({ root, links = {}, reducedMotion = false, onClose }) {
         this.root = root;
+        this.links = links;
         this.reducedMotion = reducedMotion;
         this.onClose = onClose;
         this.isOpen = false;
@@ -21,6 +22,13 @@ export default class BallModal {
         this.shadow = root.querySelector('.ball-modal__shadow');
         this.numberText = root.querySelector('[data-ball-number]');
         this.buyLink = root.querySelector('[data-action="buy"]');
+        this.pointsLink = root.querySelector('[data-action="points"]');
+        this.content = [
+            root.querySelector('.ball-modal__title'),
+            ...root.querySelectorAll('.ball-modal__actions > *')
+        ];
+
+        if (links.pointsOfSale) this.pointsLink.href = links.pointsOfSale;
 
         this.handleKeyDown = this.handleKeyDown.bind(this);
         this.handleClick = this.handleClick.bind(this);
@@ -39,16 +47,18 @@ export default class BallModal {
         const formatted = HeroBall.format(number);
 
         this.numberText.textContent = `Tu número: ${formatted}`;
-        // TODO: URL real de compra cuando la facilite el cliente
         this.buyLink.dataset.number = formatted;
+
+        if (this.links.buy) {
+            this.buyLink.href = this.links.buy.replace('{number}', String(number).padStart(5, '0'));
+        }
 
         this.root.hidden = false;
         document.documentElement.classList.add('has-modal');
         document.addEventListener('keydown', this.handleKeyDown);
         window.addEventListener('resize', this.handleResize);
 
-        // El renderer del popup se crea la primera vez que se usa
-        this.hero ??= new HeroBall(this.canvas, { reducedMotion: this.reducedMotion });
+        this.createHero();
 
         const duration = this.reducedMotion ? 0.01 : 0.6;
 
@@ -64,10 +74,28 @@ export default class BallModal {
             { scaleX: 1, autoAlpha: 1, duration: this.reducedMotion ? 0.01 : 1.4, ease: 'expo.out', delay: duration * 0.3 }
         );
 
+        if (!this.reducedMotion) {
+            gsap.fromTo(
+                this.content,
+                { opacity: 0, y: 18 },
+                { opacity: 1, y: 0, duration: 0.9, ease: 'expo.out', stagger: 0.07, delay: 0.15 }
+            );
+        }
+
         this.hero.open(number);
 
         // Foco inicial en la acción principal
         this.root.querySelector('[data-action="buy"]').focus({ preventScroll: true });
+    }
+
+    createHero() {
+        this.hero ??= new HeroBall(this.canvas, { reducedMotion: this.reducedMotion });
+    }
+
+    /** Se llama durante el loading: el primer popup se abre sin tirones. */
+    prewarm() {
+        this.createHero();
+        this.hero.prewarm();
     }
 
     close({ another = false } = {}) {

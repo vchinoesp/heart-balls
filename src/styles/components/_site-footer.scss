@@ -1,0 +1,117 @@
+@use '../tokens' as *;
+
+// Bloque BEM: footer legal (común a todas las pantallas salvo el loading)
+.site-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.75rem 1rem calc(0.9rem + env(safe-area-inset-bottom));
+  text-align: center;
+  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.8));
+
+  a {
+    border-radius: 3px;
+    transition: opacity 0.4s $ease-out-power3;
+
+    &:hover {
+      opacity: 0.75;
+    }
+
+    @include focus-ring(3px);
+  }
+
+  &__logos {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem 1rem;
+  }
+
+  &__age {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.5625rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    pointer-events: auto;
+
+    img {
+      width: 1.3rem;
+    }
+  }
+
+  &__logo-wide {
+    width: 4.5rem;
+  }
+
+  &__logos a > img[src*='mano'] {
+    width: 1.5rem;
+  }
+
+  &__links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.35rem 1.1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    a {
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-decoration: none;
+      text-transform: uppercase;
+    }
+  }
+
+  &__copyright {
+    max-width: 52rem;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.5625rem;
+    line-height: 1.35;
+  }
+
+  &__break {
+    display: none;
+  }
+
+  @media (min-width: $bp-tablet) {
+    gap: 1.1rem;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+
+    &__logos {
+      gap: 1rem 1.25rem;
+    }
+
+    &__age {
+      font-size: 0.625rem;
+    }
+
+    &__logo-wide {
+      width: 7rem;
+    }
+
+    &__links {
+      gap: 0.5rem 2.5rem;
+
+      a {
+        font-size: 0.875rem;
+      }
+    }
+
+    &__copyright {
+      font-size: 0.625rem;
+    }
+
+    &__break {
+      display: inline;
+    }
+  }
+}

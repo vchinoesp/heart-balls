@@ -85,6 +85,12 @@
     display: block;
     width: 100%;
     height: 100%;
+    touch-action: none; // se puede girar la bola con el dedo
+    cursor: grab;
+
+    &:active {
+      cursor: grabbing;
+    }
   }
 
   &__shadow {

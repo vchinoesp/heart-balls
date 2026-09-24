@@ -78,6 +78,11 @@ export default class HeartBalls {
         this.writeMatrices(mesh, layout, scale, offsetY, random);
         this.writeColors(mesh, random);
 
+        this.geometry.setAttribute(
+            'aIntro',
+            new THREE.InstancedBufferAttribute(this.createIntroData(layout, random), 2)
+        );
+
         this.numbers = this.createNumbers(this.count, random);
         this.geometry.setAttribute(
             'aNumber',
@@ -177,6 +182,27 @@ export default class HeartBalls {
         }
 
         mesh.instanceMatrix.needsUpdate = true;
+    }
+
+    /** Retardo de llegada (de abajo arriba + azar) y giro de la espiral. */
+    createIntroData(layout, random) {
+        const data = new Float32Array(this.count * 2);
+
+        for (let i = 0; i < this.count; i++) {
+            const heightFactor = layout.positions[i * 3 + 1] / layout.height;
+
+            data[i * 2] = Math.min(heightFactor * 0.7 + random.next() * 0.3, 1);
+            data[i * 2 + 1] = random.range(1.6, 3.6) * (random.next() > 0.5 ? 1 : -1);
+        }
+
+        return data;
+    }
+
+    /** 0 = dispersas / 1 = corazón formado. El núcleo aparece al final. */
+    setIntro(progress) {
+        this.material.uniforms.uIntro.value = progress;
+
+        if (this.coreMesh) this.coreMesh.visible = progress > 0.75;
     }
 
     getNumber(index) {

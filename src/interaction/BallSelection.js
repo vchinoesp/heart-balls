@@ -20,12 +20,14 @@ import BallPicker from '../world/heart/BallPicker.js';
  *  - Las bolitas de relleno no se destacan (solo las de tamaño normal).
  */
 export default class BallSelection {
-    constructor({ camera, heartBalls, fx, element, interaction, onSelect }) {
+    constructor({ camera, heartBalls, fx, element, interaction, onSelect, getCenterNdc }) {
         this.heartBalls = heartBalls;
         this.fx = fx;
         this.element = element;
         this.interaction = interaction;
         this.onSelect = onSelect;
+        // Centro visual del corazón en pantalla (la cámara puede estar desplazada)
+        this.getCenterNdc = getCenterNdc ?? (() => ({ x: 0, y: 0 }));
 
         this.picker = new BallPicker(camera);
 
@@ -77,7 +79,7 @@ export default class BallSelection {
     selectCenter() {
         if (this.locked) return;
 
-        const hit = this.pickHoverable({ x: 0, y: 0 });
+        const hit = this.pickHoverable(this.getCenterNdc());
 
         if (hit) this.select(hit.index);
     }

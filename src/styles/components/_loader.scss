@@ -1,0 +1,47 @@
+@use '../tokens' as *;
+
+// Bloque BEM: loading (electrocardiograma)
+.screen--loading {
+  justify-content: center;
+  padding-bottom: 12vh;
+}
+
+.loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: min(100%, 38rem);
+
+  &__ecg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  &__line {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &__dot {
+    fill: #fff;
+  }
+
+  &__glow {
+    fill: rgba(255, 255, 255, 0.35);
+    filter: blur(8px);
+  }
+
+  &__percent {
+    margin: 0;
+    color: $color-gold;
+    font-size: clamp(1.5rem, 2.4vw, 2rem);
+    font-style: italic;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+}

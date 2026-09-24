@@ -303,17 +303,19 @@ export default class HeartControls {
     }
 
     /** Zoom manteniendo fijo el punto bajo el puntero (zoom "hacia" ahí). */
-    zoomTo(ratio, ndc = { x: 0, y: 0 }) {
+    zoomTo(ratio, ndc = { x: 0, y: -(this.camera.ndcShiftY ?? 0) }) {
         const next = gsap.utils.clamp(this.minRatio, 1, ratio);
         const current = this.camera.halfExtents(this.state.ratio);
         const after = this.camera.halfExtents(next);
 
+        // ndc de pantalla -> ndc de la vista (la cámara puede estar desplazada)
+        const viewY = ndc.y + (this.camera.ndcShiftY ?? 0);
         const pointX = this.state.panX + ndc.x * current.halfWidth;
-        const pointY = this.state.panY + ndc.y * current.halfHeight;
+        const pointY = this.state.panY + viewY * current.halfHeight;
 
         this.state.ratio = next;
         this.state.panX = pointX - ndc.x * after.halfWidth;
-        this.state.panY = pointY - ndc.y * after.halfHeight;
+        this.state.panY = pointY - viewY * after.halfHeight;
 
         this.clampPan();
         this.tweenRatio(this.state.ratio);

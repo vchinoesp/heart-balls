@@ -1,4 +1,11 @@
 @use 'reset';
 @use 'globals';
+@use 'components/backdrop';
+@use 'components/site-header';
+@use 'components/age-gate';
+@use 'components/loader';
+@use 'components/intro';
+@use 'components/video';
+@use 'components/site-footer';
 @use 'components/ball-modal';
 @use 'components/fps-meter';

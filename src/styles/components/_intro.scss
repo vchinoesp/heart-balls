@@ -1,0 +1,45 @@
+@use '../tokens' as *;
+
+// Bloque BEM: copy de la home
+.screen--home {
+  padding-top: clamp(0.75rem, 3vh, 3rem);
+}
+
+.intro {
+  max-width: 60rem;
+  text-align: center;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+
+  &__title {
+    margin: 0 0 0.35rem;
+    color: $color-gold;
+    font-size: clamp(1.25rem, 2.2vw, 1.9rem);
+    font-weight: 400;
+    line-height: 1.15;
+    text-transform: uppercase;
+  }
+
+  &__text {
+    margin: 0;
+    color: $color-text-soft;
+    font-size: clamp(0.875rem, 1.25vw, 1.125rem);
+    font-weight: 300;
+    line-height: 1.55;
+  }
+
+  &__break {
+    display: none;
+  }
+
+  &__cta {
+    margin: 0.2rem 0 0;
+    font-size: clamp(0.9375rem, 1.25vw, 1.125rem);
+    font-weight: 600;
+  }
+
+  @media (min-width: $bp-tablet) {
+    &__break {
+      display: inline;
+    }
+  }
+}

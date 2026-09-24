@@ -3,48 +3,243 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0b1730" />
+    <meta name="theme-color" content="#050d1d" />
 
-    <title>Un corazón hecho de números · Heart Balls</title>
+    <title>El Sorteo que nos une · Lotería Nacional</title>
     <meta
       name="description"
-      content="Experiencia interactiva: navega por un gran corazón formado por miles de bolas de madera numeradas del 00000 al 99999 y elige tu corazonada."
+      content="Esta Navidad tengo una corazonada. Navega por un corazón formado por miles de bolas numeradas del 00000 al 99999 y elige tu número del Sorteo de Lotería Nacional."
     />
 
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="es_ES" />
-    <meta property="og:title" content="Un corazón hecho de números" />
+    <meta property="og:site_name" content="Lotería Nacional" />
+    <meta property="og:title" content="El Sorteo que nos une" />
     <meta
       property="og:description"
-      content="Miles de bolas de madera numeradas del 00000 al 99999 forman un gran corazón. Encuentra tu corazonada."
+      content="Esta Navidad tengo una corazonada. Encuentra tu número entre miles de bolas y mucha suerte."
     />
-    <!-- TODO: añadir og:image (1200x630, WebP/JPG) y og:url cuando haya dominio -->
+    <!-- TODO: og:image (1200x630, JPG/WebP) y og:url cuando haya dominio -->
     <meta name="twitter:card" content="summary_large_image" />
 
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap"
+      rel="stylesheet"
+    />
+
     <link rel="preload" href="/data/heart-layout.bin" as="fetch" type="application/octet-stream" crossorigin />
   </head>
-  <body>
+  <body class="app" data-screen="boot">
+    <!-- Fondo (CSS, sin coste de GPU) -->
+    <div class="backdrop" aria-hidden="true">
+      <div class="backdrop__bokeh"></div>
+      <div class="backdrop__floor"></div>
+    </div>
+
     <canvas
       class="webgl"
-      tabindex="0"
+      tabindex="-1"
       role="application"
       aria-roledescription="corazón interactivo"
       aria-label="Corazón formado por bolas de madera numeradas del 00000 al 99999"
       aria-describedby="heart-instructions"
     ></canvas>
 
-    <main class="hero">
-      <!-- Copy provisional: pendiente de creatividad final -->
-      <h1 class="hero__title">Un corazón hecho de números</h1>
-      <p class="hero__text">Del 00000 al 99999, cada bola cuenta.</p>
-      <p class="hero__hint" id="heart-instructions">
-        <span class="hero__hint-touch">Arrastra para girar · pellizca para acercar · toca dos veces una bola para elegirla</span>
-        <span class="hero__hint-mouse">Arrastra para girar · rueda para acercar · haz clic en una bola para elegirla</span>
-        <span class="u-visually-hidden">Con el teclado: flechas para girar, más y menos para acercar, Intro para elegir la bola del centro.</span>
-      </p>
-    </main>
+    <div class="layout">
+      <header class="site-header">
+        <a
+          class="site-header__brand"
+          href="https://www.loteriasyapuestas.es/es/loteria-nacional"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <img
+            class="site-header__brand-logo"
+            src="/images/logo_loteria.svg"
+            width="186"
+            height="68"
+            alt="Lotería Nacional (se abre en una pestaña nueva)"
+          />
+        </a>
 
+        <h1 class="site-header__title">
+          <img
+            class="site-header__title-logo"
+            src="/images/logoelsorteoquenosune.svg"
+            width="360"
+            height="210"
+            alt="El Sorteo que nos une"
+          />
+        </h1>
+
+        <div class="site-header__actions">
+          <button class="play-button site-header__watch" type="button" data-action="watch">
+            <span class="play-button__label">Ver el anuncio</span>
+            <span class="play-button__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false"><path d="M9 6.5v11l9-5.5z" /></svg>
+            </span>
+          </button>
+
+          <button class="back-button site-header__back" type="button" data-action="back">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M14.5 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" />
+            </svg>
+            Volver
+          </button>
+        </div>
+      </header>
+
+      <main class="screens">
+        <!-- 1. Selector de edad -->
+        <section class="screen screen--age" data-screen="age" aria-labelledby="age-title" hidden>
+          <div class="age-gate">
+            <h2 class="age-gate__question" id="age-title" tabindex="-1" data-animate>¿Tienes más de 18 años?</h2>
+            <div class="age-gate__options" data-animate>
+              <button class="age-gate__option age-gate__option--yes" type="button" data-age="yes">Sí</button>
+              <button class="age-gate__option age-gate__option--no" type="button" data-age="no">No</button>
+            </div>
+            <p class="age-gate__message" role="status" aria-live="polite"></p>
+          </div>
+        </section>
+
+        <!-- 2. Loading -->
+        <section class="screen screen--loading" data-screen="loading" aria-label="Cargando" hidden>
+          <div
+            class="loader"
+            role="progressbar"
+            aria-label="Cargando la experiencia"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="0"
+          >
+            <svg class="loader__ecg" viewBox="0 0 600 160" aria-hidden="true" focusable="false">
+              <path class="loader__line" d="" />
+              <circle class="loader__glow" r="18" cx="0" cy="80" />
+              <circle class="loader__dot" r="5" cx="0" cy="80" />
+            </svg>
+            <p class="loader__percent"><span class="loader__value">0</span>%</p>
+          </div>
+        </section>
+
+        <!-- 3. Home + 4. Selector de bola (popup) -->
+        <section class="screen screen--home" data-screen="home" aria-labelledby="home-title" hidden>
+          <div class="intro">
+            <h2 class="intro__title" id="home-title" tabindex="-1">Esta Navidad tengo una corazonada.</h2>
+            <p class="intro__text">
+              Navega con los dedos desde tu móvil o con el ratón desde tu ordenador a través de nuestro corazón.
+              <br class="intro__break" />
+              Sumérgete y encuentra ese presentimiento que te dice, que ese número, es el número.
+            </p>
+            <p class="intro__cta">Elige el tuyo y mucha suerte.</p>
+            <p class="u-visually-hidden" id="heart-instructions">
+              Con el teclado: tabula hasta el corazón, usa las flechas para girarlo, más y menos para acercarte e
+              Intro para elegir la bola del centro.
+            </p>
+          </div>
+        </section>
+
+        <!-- 5. Visor de YouTube -->
+        <section class="screen screen--video" data-screen="video" aria-labelledby="video-title" hidden>
+          <h2 class="u-visually-hidden" id="video-title" tabindex="-1">Anuncio El Sorteo que nos une</h2>
+          <div class="video">
+            <div class="video__frame">
+              <div class="video__player"></div>
+              <button class="video__poster" type="button" data-action="play-video" aria-label="Reproducir el vídeo">
+                <img class="video__poster-image" alt="" width="1280" height="720" />
+                <span class="video__poster-play" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false"><path d="M9 6.5v11l9-5.5z" /></svg>
+                </span>
+              </button>
+            </div>
+
+            <button class="play-button play-button--gold video__switch" type="button" data-action="switch-video">
+              <span class="play-button__label">Ver making of</span>
+              <span class="play-button__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><path d="M9 6.5v11l9-5.5z" /></svg>
+              </span>
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div class="site-footer__logos">
+          <span class="site-footer__age">
+            Juega con responsabilidad
+            <a
+              href="https://www.selae.es/es/web-corporativa/responsabilidad-social/gestion-responsable-del-juego/primera-regla-del-juego-18-anos/primera-regla-del-juego-18-anos"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-track-category="footer"
+              data-track-action="click"
+              data-track-label="footer-18"
+            >
+              <img src="/images/logomas18.png" width="23" height="23" alt="Prohibido a menores de 18 años" />
+            </a>
+          </span>
+          <a
+            href="https://www.juegoseguro.es/"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-track-category="footer"
+            data-track-action="click"
+            data-track-label="footer-juegoseguro"
+          >
+            <img class="site-footer__logo-wide" src="/images/logo_juegoseguro.png" width="115" height="21" alt="Juego seguro" />
+          </a>
+          <a
+            href="https://www.jugarbien.es/"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-track-category="footer"
+            data-track-action="click"
+            data-track-label="footer-jugarbien"
+          >
+            <img class="site-footer__logo-wide" src="/images/jugarbien.svg" width="85" height="30" alt="Jugar bien" />
+          </a>
+          <a
+            href="https://juegos.loteriasyapuestas.es/jugar/evidencias/6/6"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-track-category="footer"
+            data-track-action="click"
+            data-track-label="footer-warning"
+          >
+            <img src="/images/logo_mano.png" width="30" height="29" alt="Autoprohibición" />
+          </a>
+        </div>
+
+        <nav class="site-footer__nav" aria-label="Información legal">
+          <ul class="site-footer__links">
+            <li>
+              <a href="https://www.loteriasyapuestas.es/es/centro-de-ayuda/informacion-pie/aviso-legal" target="_blank" rel="noopener noreferrer" data-track-category="footer" data-track-action="click" data-track-label="Aviso Legal">Aviso legal</a>
+            </li>
+            <li>
+              <a href="https://www.loteriasyapuestas.es/es/centro-de-ayuda/informacion-pie/estipulaciones-proteccion-datos" target="_blank" rel="noopener noreferrer" data-track-category="footer" data-track-action="click" data-track-label="Política de privacidad">Política privacidad</a>
+            </li>
+            <li>
+              <a href="https://www.loteriasyapuestas.es/es/paginas-informativas/politica-de-uso-de-la-web-y-sitios-moviles-webs-juego-y-corporativa" target="_blank" rel="noopener noreferrer" data-track-category="footer" data-track-action="click" data-track-label="Uso web">Uso web</a>
+            </li>
+            <li>
+              <a href="https://www.loteriasyapuestas.es" target="_blank" rel="noopener noreferrer" data-track-category="footer" data-track-action="click" data-track-label="Loterías y Apuestas del Estado">Loterías y Apuestas del Estado</a>
+            </li>
+          </ul>
+        </nav>
+
+        <p class="site-footer__copyright">
+          Copyright © Sociedad Estatal Loterías y Apuestas del Estado, S.M.E., S.A. (SELAE) 2026. Todas las marcas, imágenes, vídeos
+          <br class="site-footer__break" />
+          y contenidos del presente Portal están protegidos por derechos de Propiedad Intelectual e Industrial titularidad de SELAE.
+          Está prohibido el uso de estas por terceros sin autorización expresa de SELAE.
+        </p>
+      </footer>
+    </div>
+
+    <!-- 4. Popup de la bola elegida -->
     <div
       class="ball-modal"
       role="dialog"
@@ -72,11 +267,9 @@
         </div>
 
         <div class="ball-modal__actions">
-          <!-- TODO: URL real de compra (el número está en data-number) -->
-          <a class="ball-modal__button ball-modal__button--primary" href="#" data-action="buy">Compra tu décimo</a>
+          <a class="ball-modal__button ball-modal__button--primary" href="#" target="_blank" rel="noopener noreferrer" data-action="buy">Compra tu décimo</a>
           <button class="ball-modal__button ball-modal__button--secondary" type="button" data-action="another">Elige otra</button>
-          <!-- TODO: URL real del buscador de puntos de venta -->
-          <a class="ball-modal__link" href="#">
+          <a class="ball-modal__link" href="#" target="_blank" rel="noopener noreferrer" data-action="points">
             <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
               <path d="M12 22s7-7.2 7-12.5A7 7 0 0 0 5 9.5C5 14.8 12 22 12 22z" fill="none" stroke="currentColor" stroke-width="1.5" />
               <circle cx="12" cy="9.5" r="2.5" fill="currentColor" />
@@ -86,6 +279,10 @@
         </div>
       </div>
     </div>
+
+    <noscript>
+      <p class="noscript">Esta experiencia necesita JavaScript. El Sorteo que nos une · Lotería Nacional.</p>
+    </noscript>
 
     <script type="module" src="/src/main.js"></script>
   </body>

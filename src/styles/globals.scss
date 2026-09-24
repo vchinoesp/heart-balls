@@ -8,36 +8,23 @@ body {
 
 body {
   overflow: hidden;
-  background-color: $color-bg-mid;
-  // Fondo en CSS (no en WebGL): coste cero y visible aunque falle WebGL
-  background-image: radial-gradient(
-    ellipse at 50% 42%,
-    $color-bg-center 0%,
-    $color-bg-mid 55%,
-    $color-bg-edge 100%
-  );
+  background-color: $color-bg-top;
   color: $color-text;
   font-family: $font-stack;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.webgl {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  outline: none;
-  touch-action: none;
-  cursor: grab;
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
 
-  &:active {
-    cursor: grabbing;
-  }
-
-  // Foco visible solo con teclado (WCAG 2.4.7)
-  &:focus-visible {
-    outline: 3px solid $color-focus;
-    outline-offset: -6px;
-  }
+button {
+  font: inherit;
+  color: inherit;
 }
 
 // Utilidad: oculto visualmente pero legible por lectores de pantalla
@@ -51,62 +38,70 @@ body {
   white-space: nowrap;
 }
 
-// Bloque BEM: hero
-.hero {
+// Canvas del corazón (detrás de todo el contenido)
+.webgl {
   position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  padding: 1.25rem 1rem calc(1.25rem + env(safe-area-inset-bottom));
-  text-align: center;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  outline: none;
+  touch-action: none;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &:focus-visible {
+    outline: 3px solid $color-focus;
+    outline-offset: -6px;
+  }
+}
+
+// Estructura: cabecera / pantallas / footer. No bloquea el canvas:
+// solo los elementos interactivos reciben eventos.
+.layout {
+  position: fixed;
+  z-index: 2;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
   pointer-events: none;
 
-  &__title {
-    font-size: clamp(1.125rem, 2.4vw, 1.5rem);
-    font-weight: 600;
-    letter-spacing: 0.02em;
+  a,
+  button {
+    pointer-events: auto;
   }
+}
 
-  &__text {
-    margin-top: 0.35rem;
-    color: $color-text-muted;
-    font-size: clamp(0.875rem, 1.6vw, 1rem);
-  }
+.screens {
+  position: relative;
+  min-height: 0;
+}
 
-  &__hint {
-    margin-top: 0.6rem;
-    color: $color-text-muted;
-    font-size: 0.8125rem;
-    letter-spacing: 0.02em;
-  }
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 1rem;
 
-  // Instrucción según el tipo de puntero
-  &__hint-touch {
+  &[hidden] {
     display: none;
   }
 
-  @media (pointer: coarse) {
-    &__hint-touch {
-      display: inline;
-    }
-
-    &__hint-mouse {
-      display: none;
-    }
+  // Los títulos que reciben foco al cambiar de pantalla no muestran anillo
+  [tabindex='-1']:focus {
+    outline: none;
   }
 }
 
-// Sin WebGL: el texto pasa al centro de la pantalla
-.no-webgl .hero,
-.is-webgl-error .hero {
-  top: 50%;
-  bottom: auto;
-  transform: translateY(-50%);
-}
-
-.no-webgl .hero__hint,
-.is-webgl-error .hero__hint {
-  display: none;
+.noscript {
+  position: fixed;
+  inset: auto 1rem 1rem;
+  text-align: center;
 }
 
 @media (prefers-reduced-motion: reduce) {

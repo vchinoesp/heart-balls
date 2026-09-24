@@ -20,8 +20,11 @@ export default class Camera {
         this.subjectHeight = subjectHeight;
 
         // Margen alrededor del corazón (1 = justo al borde)
-        this.framing = { vertical: 1.3, horizontal: 1.14 };
+        this.framing = { vertical: 1.08, horizontal: 1.12 };
         this.view = { ratio: 1, panX: 0, panY: 0 };
+        // Franja de pantalla (px) reservada arriba/abajo para el copy y el footer
+        this.safeArea = { top: 0, bottom: 0 };
+        this.ndcShiftY = 0;
 
         this.setInstance();
         this.fit();
@@ -39,19 +42,46 @@ export default class Camera {
         this.scene.add(this.instance);
     }
 
-    /** Distancia a la que el corazón entra completo en pantalla. */
+    /**
+     * Distancia a la que el corazón entra completo en la franja libre
+     * (entre safeArea.top y safeArea.bottom) y desplazamiento de la imagen
+     * para centrarlo en esa franja (setViewOffset: el picking lo respeta).
+     */
     fit() {
         const { aspect } = this.instance;
         const halfTan = this.halfTan();
+        const height = this.sizes.height;
+        const { top, bottom } = this.safeArea;
+        const available = Math.max(height - top - bottom, height * 0.35) / height;
 
         const byHeight =
-            (this.subjectHeight * this.framing.vertical) / (2 * halfTan);
+            (this.subjectHeight * this.framing.vertical) / (2 * halfTan * available);
         const byWidth =
             (this.subjectWidth * this.framing.horizontal) /
             (2 * halfTan * aspect);
 
         this.fitDistance = Math.max(byHeight, byWidth);
+
+        // Centro de la franja libre respecto al centro de la pantalla (px)
+        const shift = top + (height - top - bottom) / 2 - height / 2;
+        const { width } = this.sizes;
+
+        // Para convertir ndc de pantalla a ndc de la vista desplazada (zoom al puntero)
+        this.ndcShiftY = (2 * shift) / height;
+
+        if (Math.abs(shift) > 0.5) {
+            this.instance.setViewOffset(width, height, 0, -shift, width, height);
+        } else {
+            this.instance.clearViewOffset();
+        }
+
         this.applyView();
+    }
+
+    setSafeArea({ top = 0, bottom = 0 }) {
+        this.safeArea.top = top;
+        this.safeArea.bottom = bottom;
+        this.fit();
     }
 
     halfTan() {
