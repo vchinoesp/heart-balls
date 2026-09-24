@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "bake": "node scripts/bake-heart.mjs",
+    "prebuild": "npm run bake",
     "build": "vite build",
     "preview": "vite preview"
   },

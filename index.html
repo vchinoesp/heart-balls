@@ -2,12 +2,41 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b1730" />
+
+    <title>Un corazón hecho de números · Heart Balls</title>
+    <meta
+      name="description"
+      content="Experiencia interactiva: un gran corazón formado por miles de bolas de madera numeradas del 00000 al 99999."
+    />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:title" content="Un corazón hecho de números" />
+    <meta
+      property="og:description"
+      content="Miles de bolas de madera numeradas del 00000 al 99999 forman un gran corazón."
+    />
+    <!-- TODO: añadir og:image (1200x630, WebP/JPG) y og:url cuando haya dominio -->
+    <meta name="twitter:card" content="summary_large_image" />
+
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>heart-balls</title>
+    <link rel="preload" href="/data/heart-layout.bin" as="fetch" type="application/octet-stream" crossorigin />
   </head>
   <body>
-    <canvas class="webgl"></canvas>
+    <canvas
+      class="webgl"
+      role="img"
+      aria-label="Corazón formado por bolas de madera numeradas del 00000 al 99999"
+    ></canvas>
+
+    <main class="hero">
+      <!-- Copy provisional: pendiente de creatividad final -->
+      <h1 class="hero__title">Un corazón hecho de números</h1>
+      <p class="hero__text">Del 00000 al 99999, cada bola cuenta.</p>
+    </main>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

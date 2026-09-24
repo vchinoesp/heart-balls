@@ -36,6 +36,8 @@ export default class Heart {
                     this.model
                 );
 
+
+
                 this.model.traverse(
                     (child) => {
                         if (child.isMesh) {
@@ -53,23 +55,65 @@ export default class Heart {
                         }
                     }
                 );
-                this.model.visible = false;
+                this.model.visible = true;
                 const box =
                     new THREE.Box3().setFromObject(
                         this.model
                     );
 
+                const size =
+                    new THREE.Vector3();
+
+                box.getSize(size);
+
                 console.log(
                     'HEART SIZE',
-                    new THREE.Vector3().subVectors(
-                        box.max,
-                        box.min
-                    )
+                    size
                 );
+                const helper = new THREE.Box3Helper(
+                    new THREE.Box3().setFromObject(
+                        this.model
+                    ),
+                    0x00ff00
+                );
+
+                this.scene.add(helper);
+
                 this.setDebug();
             }
         );
     }
+
+    isPointInside(worldPoint) {
+        if (!this.mesh) return false;
+
+        const raycaster =
+            new THREE.Raycaster();
+
+        const direction =
+            new THREE.Vector3(
+                1,
+                0,
+                0
+            );
+
+        raycaster.set(
+            worldPoint,
+            direction
+        );
+
+        const intersections =
+            raycaster.intersectObject(
+                this.mesh,
+                false
+            );
+
+        return (
+            intersections.length % 2 === 1
+        );
+    }
+
+
 
     setVisibility(visible) {
         if (!this.model) return;

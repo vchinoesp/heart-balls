@@ -83,22 +83,7 @@ La experiencia debe sentirse fluida, elegante y moderna tanto en desktop como mo
 
 ---
 
-# Three.js
 
-Utilizar siempre:
-
-- InstancedMesh
-- BufferGeometry
-- Frustum Culling
-- Texture Atlases cuando sea posible
-
-Evitar:
-
-- Miles de Mesh independientes
-- Geometrías duplicadas
-- Texturas sin comprimir
-
----
 
 # Animaciones
 
@@ -277,88 +262,12 @@ Con previews automáticas para pruebas en móvil.
 
 
 
-ESTRUCTURA ACTUAL DEL PROYECTO
-Plain Text
-heart-balls
-│
-├── docs
-│
-├── public
-│
-├── src
-│ │
-│ ├── animations
-│ │ ├── gsap
-│ │ └── timelines
-│ │
-│ ├── assets
-│ │ └── hero.png
-│ │
-│ ├── config
-│ │
-│ ├── experience
-│ │ ├── Camera.js
-│ │ ├── Experience.js
-│ │ ├── Renderer.js
-│ │ ├── Sizes.js
-│ │ └── Time.js
-│ │
-│ ├── shaders
-│ │
-│ ├── styles
-│ │ ├── globals.scss
-│ │ ├── main.scss
-│ │ └── reset.scss
-│ │
-│ ├── utils
-│ │
-│ ├── world
-│ │ ├── Environment.js
-│ │ ├── Heart.js
-│ │ └── Particles.js
-│ │
-│ ├── App.js
-│ ├── main.js
-│
-├── index.html
-│
-├── package.json
-├── package-lock.json
-└── .gitignore
-Mostrar más líneas
 
 
 
 ESTADO ACTUAL DEL CÓDIGO
 Actualmente ya existe una escena Three.js funcional.
-Tenemos implementados:
-Plain Text
-✅ Scene
-✅ Camera
-✅ Renderer
-✅ Resize Manager
-✅ Time Manager
-✅ Animation Loop
-✅ Canvas Fullscreen
-✅ Sphere de prueba
-Mostrar más líneas
-La aplicación arranca correctamente.
-La esfera rota correctamente.
-El resize funciona correctamente.
-El proyecto compila correctamente con:
-npm run dev
+He probrado a utilizar un .glb para adaptanos a la forma del corazón, pero no logro a que las bolas se colequen como en la creatividad, cada bola lleva un nº que se tiene que ver los nº van del 00.000 al 99.999, vamos haciendo pruebas y construyendo el proyecto poco a poco.  Cada bola es como una bola de madera, las bolas de abajo fuera del corazon no la tengas en cuenta, tb te paso como una img para ver como esta formado el corazon por si vale. 
+La intención es luego añadirle a las bolas un efecto de repulsión como este ejemplo, https://optimistic-cantaloupe-850021.framer.app/. 
 
-
-
-FORMA DE TRABAJAR A PARTIR DE AHORA
-Cuando te pase una creatividad o un nuevo requisito:
-Analiza el impacto en arquitectura.
-Propón la mejor solución técnica.
-Prioriza rendimiento móvil.
-Mantén la estructura del proyecto.
-Devuelve siempre el código completo de los archivos modificados.
-Piensa como un Creative Developer senior especializado en campañas digitales premium.
-El siguiente paso será comenzar a construir la base del corazón utilizando Three.js y preparar una arquitectura capaz de escalar hasta decenas de miles de instancias usando InstancedMesh.
-
-
-Te voy a pasar la creatividad, y tb una base para la generación del corazon, mi idea es hacer el corazon como base donde se colequen las bolas, cada bola lleva un nº que se tiene que ver los nº van del 00.000 al 99.999, vamos haciendo pruebas y construyendo el proyecto poco a poco.  Cada bola es como una bola de madera, las bolas de abajo fuera del corazon no la tengas en cuenta, tb te paso como una img para ver como esta formado el corazon por si vale. 
+Te voy a pasar las creatividades y la carpeta del proyecto, quiero que analices todo lo que llevamos ya hecho y dime si vamos por buen camino, o lo mejor es empezar de nuevo.
