@@ -1,184 +1,80 @@
 import * as THREE from 'three';
 
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import Sizes from './Sizes.js';
+import Time from './Time.js';
+import Camera from './Camera.js';
+import Renderer from './Renderer.js';
 
-import Sizes from './Sizes';
-import Time from './Time';
-import Camera from './Camera';
-import Renderer from './Renderer';
+import Debug from '../utils/Debug.js';
+import World from '../world/World.js';
+import heartConfig from '../config/heart.config.js';
 
-import Debug from '../utils/Debug';
-import Heart from '../world/Heart';
-//import Balls from '../world/Balls';
-//import HeartBalls from '../world/HeartBalls';
-//import HeartSurfacePoints from '../world/HeartSurfacePoints';
-import HeartPackedBalls from '../world/HeartPackedBalls';
-
-
+/**
+ * Experience
+ *
+ * Punto de entrada de la escena WebGL. Sin variables globales:
+ * main.js crea una instancia y la conserva.
+ */
 export default class Experience {
-    constructor() {
-        window.experience = this;
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.config = structuredClone(heartConfig);
+        this.isMobile = window.matchMedia('(pointer: coarse)').matches;
 
-        this.canvas =
-            document.querySelector(
-                '.webgl'
-            );
-
-        this.scene =
-            new THREE.Scene();
-
-        this.debug =
-            new Debug();
-
-        this.sizes =
-            new Sizes();
-
-        this.time =
-            new Time();
-
-        this.camera =
-            new Camera(
-                this.sizes,
-                this.scene,
-                this.debug
-            );
-
-        this.renderer =
-            new Renderer(
-                this.canvas,
-                this.sizes,
-                this.scene,
-                this.camera
-            );
-
-        this.setLights();
-
-        this.controls =
-            new OrbitControls(
-                this.camera.instance,
-                this.canvas
-            );
-
-        this.controls.enableDamping =
-            true;
-
-        this.controls.dampingFactor =
-            0.05;
-
-        this.heart = new Heart(
-                this.scene,
-                this.debug
-            );
-        this.debugConfig = {
-            showHeart: true,
-            /*showPoints: true,
-            showBalls: false*/
-        };
-
-        this.heartPackedBalls =
-            new HeartPackedBalls(
-                this.scene,
-                this.heart,
-                this.debug,
-                this.debugConfig
-            );
-
-
-        /*this.heartSurfacePoints =
-            new HeartSurfacePoints(
-                this.scene,
-                this.heart,
-                this.debug,
-                this.debugConfig
-            );*/
-
-        /*this.heartBalls =
-            new HeartBalls(
-                this.scene,
-                this.heart,
-                this.debug,
-                this.debugConfig
-            );*/
-/*
-        this.balls =
-            new Balls(
-                this.scene
-            );*/
-
-        window.addEventListener(
-            'sizes:resize',
-            () => {
-                this.resize();
-            }
-        );
-
-        window.addEventListener(
-            'time:tick',
-            () => {
-                this.update();
-            }
-        );
+        this.scene = new THREE.Scene();
+        this.debug = new Debug();
+        this.sizes = new Sizes();
     }
 
-    setLights() {
+    async init() {
+        await this.debug.init();
 
-        this.ambientLight =
-            new THREE.AmbientLight(
-                0xffffff,
-                0.6
-            );
+        const { lobeX, lobeY, lobeRadius } = this.config.shape;
+        const heartAspect = (2 * (lobeX + lobeRadius)) / (lobeY + lobeRadius);
 
-        this.scene.add(
-            this.ambientLight
+        this.camera = new Camera(this.sizes, this.scene, this.debug, {
+            subjectHeight: this.config.worldHeight,
+            subjectWidth: this.config.worldHeight * heartAspect
+        });
+
+        this.renderer = new Renderer(
+            this.canvas,
+            this.sizes,
+            this.scene,
+            this.camera
         );
 
-        this.keyLight =
-            new THREE.DirectionalLight(
-                0xffffff,
-                4
-            );
+        this.world = new World({
+            scene: this.scene,
+            renderer: this.renderer.instance,
+            debug: this.debug,
+            config: this.config,
+            isMobile: this.isMobile
+        });
 
-        this.keyLight.position.set(
-            -10,
-            10,
-            10
+        await this.setControls();
+        await this.world.init();
+
+        this.onResize = () => this.resize();
+        this.onTick = () => this.update();
+
+        window.addEventListener('sizes:resize', this.onResize);
+
+        this.time = new Time();
+        window.addEventListener('time:tick', this.onTick);
+    }
+
+    /** OrbitControls solo en #debug (en producción el corazón se inclina con el puntero). */
+    async setControls() {
+        if (!this.debug.active) return;
+
+        const { OrbitControls } = await import(
+            'three/examples/jsm/controls/OrbitControls.js'
         );
 
-        this.scene.add(
-            this.keyLight
-        );
-
-        this.fillLight =
-            new THREE.DirectionalLight(
-                0xfff5e8,
-                1.5
-            );
-
-        this.fillLight.position.set(
-            5,
-            2,
-            8
-        );
-
-        this.scene.add(
-            this.fillLight
-        );
-
-        this.rimLight =
-            new THREE.DirectionalLight(
-                0xffffff,
-                1
-            );
-
-        this.rimLight.position.set(
-            10,
-            5,
-            -10
-        );
-
-        this.scene.add(
-            this.rimLight
-        );
+        this.controls = new OrbitControls(this.camera.instance, this.canvas);
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.05;
     }
 
     resize() {
@@ -187,14 +83,20 @@ export default class Experience {
     }
 
     update() {
-        this.controls.update();
-
-        this.heart.update();
-        //this.balls.update();
-        //this.heartBalls.update();
-        //this.heartSurfacePoints.update();
-        this.heartPackedBalls.update();
+        this.controls?.update();
+        this.world.update();
         this.renderer.update();
+    }
 
+    dispose() {
+        window.removeEventListener('sizes:resize', this.onResize);
+        window.removeEventListener('time:tick', this.onTick);
+
+        this.time?.dispose();
+        this.sizes.dispose();
+        this.controls?.dispose();
+        this.world?.dispose();
+        this.renderer?.dispose();
+        this.debug.dispose();
     }
 }

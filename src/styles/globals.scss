@@ -1,3 +1,11 @@
+// Tokens
+$color-bg-center: #15284a;
+$color-bg-mid: #0b1730;
+$color-bg-edge: #060d1c;
+$color-text: #f3e6d2; // contraste > 12:1 sobre el fondo
+$color-text-muted: #d2c0a4; // contraste > 8:1 sobre el fondo
+$font-stack: 'Helvetica Neue', Arial, system-ui, sans-serif;
+
 html,
 body {
   width: 100%;
@@ -6,11 +14,63 @@ body {
 
 body {
   overflow: hidden;
-  margin: 0;
+  background-color: $color-bg-mid;
+  // Fondo en CSS (no en WebGL): coste cero y visible aunque falle WebGL
+  background-image: radial-gradient(
+    ellipse at 50% 42%,
+    $color-bg-center 0%,
+    $color-bg-mid 55%,
+    $color-bg-edge 100%
+  );
+  color: $color-text;
+  font-family: $font-stack;
 }
 
 .webgl {
   position: fixed;
   inset: 0;
-  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+  touch-action: none;
+}
+
+// Bloque BEM: hero
+.hero {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 1.5rem 1rem calc(1.5rem + env(safe-area-inset-bottom));
+  text-align: center;
+  pointer-events: none;
+
+  &__title {
+    font-size: clamp(1.125rem, 2.4vw, 1.5rem);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  &__text {
+    margin-top: 0.35rem;
+    color: $color-text-muted;
+    font-size: clamp(0.875rem, 1.6vw, 1rem);
+  }
+}
+
+// Sin WebGL: el texto pasa al centro de la pantalla
+.no-webgl .hero,
+.is-webgl-error .hero {
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

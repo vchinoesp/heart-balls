@@ -14,34 +14,28 @@ export default class Renderer {
         this.instance = new THREE.WebGLRenderer({
             canvas: this.canvas,
             antialias: true,
-            alpha: true
+            alpha: true,
+            powerPreference: 'high-performance'
         });
 
-        this.instance.setSize(
-            this.sizes.width,
-            this.sizes.height
-        );
+        this.instance.setClearColor(0x000000, 0);
+        this.instance.outputColorSpace = THREE.SRGBColorSpace;
+        this.instance.toneMapping = THREE.ACESFilmicToneMapping;
+        this.instance.toneMappingExposure = 1;
 
-        this.instance.setPixelRatio(
-            Math.min(window.devicePixelRatio, 2)
-        );
+        this.resize();
     }
 
     resize() {
-        this.instance.setSize(
-            this.sizes.width,
-            this.sizes.height
-        );
-
-        this.instance.setPixelRatio(
-            Math.min(window.devicePixelRatio, 2)
-        );
+        this.instance.setSize(this.sizes.width, this.sizes.height);
+        this.instance.setPixelRatio(this.sizes.pixelRatio);
     }
 
     update() {
-        this.instance.render(
-            this.scene,
-            this.camera.instance
-        );
+        this.instance.render(this.scene, this.camera.instance);
+    }
+
+    dispose() {
+        this.instance.dispose();
     }
 }
