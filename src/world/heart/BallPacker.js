@@ -55,11 +55,11 @@ export default class BallPacker {
     }
 
     pack() {
-        const { passes, relax, separation } = this.options;
+        const { passes, relax, gapFill } = this.options;
         const pool = this.createCandidatePool();
         const state = this.createState();
 
-        const [primary, ...fills] = passes;
+        const [primary] = passes;
 
         if (typeof this.shape.getFaces === 'function' && this.options.lattice) {
             // Corazón tallado: rejilla hexagonal perfecta en cada cara plana
@@ -72,8 +72,9 @@ export default class BallPacker {
 
         this.rebuildHash(state);
 
-        for (const pass of fills) {
-            this.placePass(state, pool, pass, separation);
+        // Huecos: cada hueco recibe la bola más grande que cabe (sin solaparse)
+        for (const layer of gapFill) {
+            this.fillGaps(state, pool, layer);
         }
 
         this.grow(state);
@@ -85,7 +86,7 @@ export default class BallPacker {
             positions: state.positions.slice(0, count * 3),
             normals: state.normals.slice(0, count * 3),
             radii: state.radii.slice(0, count),
-            core: this.placeCore(pool)
+            core: this.placeCore(pool, state)
         };
     }
 
@@ -98,7 +99,11 @@ export default class BallPacker {
 
         return {
             count: 0,
-            cellSize: largest * maxGrow * 2,
+            // Suficiente para buscar vecinos de las bolas y del núcleo
+            cellSize: Math.max(
+                largest * maxGrow * 2,
+                this.options.core.radius + largest * maxGrow
+            ),
             hash: null,
             surface: new Float32Array(maxBalls * 3),
             positions: new Float32Array(maxBalls * 3),
@@ -240,6 +245,91 @@ export default class BallPacker {
         state.count++;
 
         return true;
+    }
+
+    /**
+     * Relleno de huecos "la mayor bola que quepa":
+     * para cada candidato (a una profundidad dada) se mide el espacio libre
+     * hasta la bola más cercana y, si cabe al menos `min`, se coloca una bola
+     * de radio min(espacio, max). Nunca hay solapes, así que ninguna bola
+     * queda "cortada" por otra, y los huecos se cierran con bolas pequeñas.
+     */
+    fillGaps(state, pool, { depth, min, max, onlyUnderGaps = 0 }) {
+        const inset = this.options.inset + depth;
+        const surfaceInset = this.options.inset;
+
+        for (let o = 0; o < pool.count && state.count < this.options.maxBalls; o++) {
+            const i3 = pool.order[o] * 3;
+            const nx = pool.normals[i3];
+            const ny = pool.normals[i3 + 1];
+            const nz = pool.normals[i3 + 2];
+            const x = pool.points[i3] - nx * inset;
+            const y = pool.points[i3 + 1] - ny * inset;
+            const z = pool.points[i3 + 2] - nz * inset;
+
+            // Capas profundas: solo donde hay un hueco encima (si no, no se verían)
+            if (onlyUnderGaps > 0) {
+                const above = this.freeRadius(
+                    state,
+                    pool.points[i3] - nx * surfaceInset,
+                    pool.points[i3 + 1] - ny * surfaceInset,
+                    pool.points[i3 + 2] - nz * surfaceInset,
+                    onlyUnderGaps
+                );
+
+                if (above < onlyUnderGaps) continue;
+            }
+
+            const free = this.freeRadius(state, x, y, z, max);
+
+            if (free < min) continue;
+
+            this.insertBall(
+                state,
+                [pool.points[i3], pool.points[i3 + 1], pool.points[i3 + 2]],
+                [nx, ny, nz],
+                [x, y, z],
+                free
+            );
+        }
+    }
+
+    /** Radio libre alrededor de un punto (distancia a la superficie de la bola más cercana). */
+    freeRadius(state, x, y, z, cap) {
+        const { positions, radii } = state;
+        let free = cap;
+
+        state.hash.forEachNear(x, y, z, (j) => {
+            const j3 = j * 3;
+            const gap =
+                Math.hypot(positions[j3] - x, positions[j3 + 1] - y, positions[j3 + 2] - z) -
+                radii[j];
+
+            if (gap < free) free = gap;
+
+            return free > 0;
+        });
+
+        return free;
+    }
+
+    insertBall(state, surfacePoint, normal, center, radius) {
+        const b = state.count;
+        const b3 = b * 3;
+
+        state.surface[b3] = surfacePoint[0];
+        state.surface[b3 + 1] = surfacePoint[1];
+        state.surface[b3 + 2] = surfacePoint[2];
+        state.normals[b3] = normal[0];
+        state.normals[b3 + 1] = normal[1];
+        state.normals[b3 + 2] = normal[2];
+        state.positions[b3] = center[0];
+        state.positions[b3 + 1] = center[1];
+        state.positions[b3 + 2] = center[2];
+        state.radii[b] = radius;
+
+        state.hash.insert(b, center[0], center[1], center[2]);
+        state.count++;
     }
 
     /** Poisson-disk sobre el pool con radios en [pass.min, pass.max]. */
@@ -457,7 +547,11 @@ export default class BallPacker {
         );
     }
 
-    placeCore(pool) {
+    /**
+     * Núcleo de seguridad, muy profundo y sin tocar ninguna bola visible:
+     * solo existe para que nunca se vea el fondo a través del corazón.
+     */
+    placeCore(pool, state) {
         const { radius, inset, spacing } = this.options.core;
         const hash = new SpatialHash(radius * spacing);
         const positions = new Float32Array(pool.count * 3);
@@ -489,6 +583,8 @@ export default class BallPacker {
             });
 
             if (!free || !this.isInside(x, y, z, radius)) continue;
+            // Puede rozar bolas profundas (en sombra) pero nunca las de la superficie
+            if (this.freeRadius(state, x, y, z, radius) < radius * this.options.core.clearance) continue;
 
             positions[count * 3] = x;
             positions[count * 3 + 1] = y;

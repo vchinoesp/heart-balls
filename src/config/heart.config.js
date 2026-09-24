@@ -38,12 +38,21 @@ const heartConfig = {
 
     packing: {
         // Pasada 1 = principal (se relaja en filas). Resto = relleno de huecos.
-        // `sink`: cuánto más se hunden las de relleno (se asoman entre las grandes)
-        passes: [
-            { min: 0.018, max: 0.021 },
-            { min: 0.014, max: 0.018, sink: 0.002 },
-            { min: 0.010, max: 0.014, sink: 0.004 },
-            { min: 0.007, max: 0.010, sink: 0.006 }
+        // Solo modo suave: radios de la pasada principal
+        passes: [{ min: 0.018, max: 0.021 }],
+        // Relleno de huecos por capas: en cada hueco entra la bola más grande que
+        // cabe (sin solaparse). `depth` = profundidad extra bajo la superficie.
+        gapFill: [
+            // Huecos grandes en la superficie (aristas entre caras)
+            { depth: 0, min: 0.009, max: 0.018 },
+            // Bolas pequeñas encajadas entre las grandes
+            { depth: 0.005, min: 0.006, max: 0.012 },
+            // Bolitas en los huecos que quedan en la superficie
+            { depth: 0.003, min: 0.0042, max: 0.008 },
+            // Segunda capa: lo que se ve por los huecos son más bolas, no fondo
+            { depth: 0.024, min: 0.012, max: 0.02, onlyUnderGaps: 0.005 },
+            // Relleno fino final
+            { depth: 0.012, min: 0.005, max: 0.01, onlyUnderGaps: 0.005 }
         ],
         // Modo tallado: rejilla hexagonal perfecta en cada cara
         lattice: {
@@ -58,7 +67,7 @@ const heartConfig = {
         // Cuánto se hunde el centro de cada bola bajo la superficie (unidades normalizadas)
         inset: 0.012,
         // Separación mínima relativa entre bolas (1 = tocándose)
-        separation: 0.96,
+        separation: 1.0,
         // Relajación de la pasada principal (orden hexagonal)
         relax: {
             initialSeparation: 0.8,
@@ -71,9 +80,11 @@ const heartConfig = {
         maxGrow: 1.15,
         // Núcleo oscuro interior que tapa los huecos (no lleva número)
         core: {
-            radius: 0.04,
-            inset: 0.045,
-            spacing: 1.3
+            radius: 0.035,
+            inset: 0.065,
+            spacing: 1.0,
+            // Fracción del radio que debe quedar libre (1 = no toca ninguna bola)
+            clearance: 0.45
         },
         // Límite de bolas (protección rendimiento)
         maxBalls: 12000
@@ -84,7 +95,7 @@ const heartConfig = {
         colorVariation: 0.07,
         roughness: 0.62,
         numberColor: '#3f342a',
-        coreColor: '#4a3220',
+        coreColor: '#2e1f12',
         maxRoll: 0.18
     }
 };

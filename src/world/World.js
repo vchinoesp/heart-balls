@@ -94,11 +94,15 @@ export default class World {
 
         const packFolder = gui.addFolder('Empaquetado');
 
-        packing.passes.forEach((pass, index) => {
-            const label = index === 0 ? 'principal (suave)' : `relleno ${index}`;
+        packFolder.add(packing.passes[0], 'min', 0.004, 0.06, 0.001).name('radio min (suave)');
+        packFolder.add(packing.passes[0], 'max', 0.004, 0.06, 0.001).name('radio max (suave)');
 
-            packFolder.add(pass, 'min', 0.004, 0.06, 0.001).name(`${label} min`);
-            packFolder.add(pass, 'max', 0.004, 0.06, 0.001).name(`${label} max`);
+        packing.gapFill.forEach((layer, index) => {
+            const label = `hueco ${index + 1}`;
+
+            packFolder.add(layer, 'depth', 0, 0.05, 0.001).name(`${label} profundidad`);
+            packFolder.add(layer, 'min', 0.002, 0.03, 0.0005).name(`${label} min`);
+            packFolder.add(layer, 'max', 0.002, 0.03, 0.0005).name(`${label} max`);
         });
 
         packFolder.add(packing.lattice, 'radius', 0.008, 0.04, 0.0005).name('radio bolas (tallado)');
