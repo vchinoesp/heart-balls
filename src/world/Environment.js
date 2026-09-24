@@ -27,7 +27,7 @@ export default class Environment {
 
         this.environmentMap = pmrem.fromScene(room, 0.04).texture;
         this.scene.environment = this.environmentMap;
-        this.scene.environmentIntensity = 0.22;
+        this.scene.environmentIntensity = 0.16;
 
         room.dispose();
         pmrem.dispose();

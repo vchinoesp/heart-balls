@@ -74,6 +74,12 @@ export default class World {
 
         const shapeFolder = gui.addFolder('Forma');
 
+        shapeFolder.add(shape, 'mode', ['faceted', 'smooth']).name('modo');
+        shapeFolder.add(shape, 'facetDetail', [0, 1]).name('caras (0=32, 1=122)');
+        shapeFolder.add(shape.facetRotation, 'x', -Math.PI, Math.PI, 0.01).name('giro caras X');
+        shapeFolder.add(shape.facetRotation, 'y', -Math.PI, Math.PI, 0.01).name('giro caras Y');
+        shapeFolder.add(shape.facetRotation, 'z', -Math.PI, Math.PI, 0.01).name('giro caras Z');
+
         shapeFolder.add(shape, 'lobeX', 0.1, 0.45, 0.005).name('separación lóbulos');
         shapeFolder.add(shape, 'lobeY', 0.5, 0.9, 0.005).name('altura lóbulos');
         shapeFolder.add(shape, 'lobeRadius', 0.15, 0.45, 0.005).name('radio lóbulos');
@@ -89,10 +95,14 @@ export default class World {
         const packFolder = gui.addFolder('Empaquetado');
 
         packing.passes.forEach((pass, index) => {
-            packFolder.add(pass, 'min', 0.004, 0.06, 0.001).name(`pasada ${index + 1} min`);
-            packFolder.add(pass, 'max', 0.004, 0.06, 0.001).name(`pasada ${index + 1} max`);
+            const label = index === 0 ? 'principal (suave)' : `relleno ${index}`;
+
+            packFolder.add(pass, 'min', 0.004, 0.06, 0.001).name(`${label} min`);
+            packFolder.add(pass, 'max', 0.004, 0.06, 0.001).name(`${label} max`);
         });
 
+        packFolder.add(packing.lattice, 'radius', 0.008, 0.04, 0.0005).name('radio bolas (tallado)');
+        packFolder.add(packing.lattice, 'jitter', 0, 0.3, 0.01).name('variación tamaño');
         packFolder.add(packing, 'candidates', 10000, 300000, 1000).name('candidatos');
         packFolder.add(packing, 'inset', 0, 0.04, 0.001).name('hundimiento');
         packFolder.add(packing, 'separation', 0.85, 1.2, 0.01).name('separación');

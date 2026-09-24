@@ -134,7 +134,7 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
                 cavity = mix(uCavity.x, uCavity.y, cavity);
 
                 float facing = dot(normalize(vSurfaceNormal), uLightDirection);
-                float surfaceShade = mix(uSurfaceShade, 1.0, smoothstep(-0.25, 0.75, facing));
+                float surfaceShade = mix(uSurfaceShade, 1.0, smoothstep(-0.15, 0.9, facing));
 
                 reflectedLight.directDiffuse *= cavity * surfaceShade;
                 reflectedLight.indirectDiffuse *= cavity * mix(0.45, 1.0, surfaceShade);

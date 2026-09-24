@@ -1,4 +1,5 @@
 import HeartShape from './HeartShape.js';
+import FacetedHeartShape from './FacetedHeartShape.js';
 import BallPacker from './BallPacker.js';
 
 /**
@@ -21,7 +22,7 @@ const HEADER_BYTES = 32;
 
 export default class HeartLayout {
     static generate(config) {
-        const shape = new HeartShape(config.shape);
+        const shape = HeartLayout.createShape(config.shape);
         const packer = new BallPacker(shape, config.packing, config.seed);
         const { count, positions, normals, radii, core } = packer.pack();
 
@@ -33,6 +34,13 @@ export default class HeartLayout {
             height: shape.height,
             core
         };
+    }
+
+    /** 'faceted' = corazón tallado (caras planas); 'smooth' = redondeado. */
+    static createShape(shapeConfig) {
+        return shapeConfig.mode === 'faceted'
+            ? new FacetedHeartShape(shapeConfig)
+            : new HeartShape(shapeConfig);
     }
 
     static toBuffer(layout) {

@@ -19,6 +19,34 @@ import SpatialHash from '../../utils/SpatialHash.js';
  *
  * Devuelve arrays tipados en unidades normalizadas (corazón ≈ 1 de alto).
  */
+/** Base ortonormal (u = "derecha" horizontal, v = "arriba") para un plano. */
+const FacetedBasis = {
+    fromNormal(n, u, v) {
+        // u = up × n
+        u[0] = n[2];
+        u[1] = 0;
+        u[2] = -n[0];
+
+        let length = Math.hypot(u[0], u[1], u[2]);
+
+        if (length < 1e-4) {
+            u[0] = 1;
+            u[1] = 0;
+            u[2] = 0;
+            length = 1;
+        }
+
+        u[0] /= length;
+        u[1] /= length;
+        u[2] /= length;
+
+        // v = n × u
+        v[0] = n[1] * u[2] - n[2] * u[1];
+        v[1] = n[2] * u[0] - n[0] * u[2];
+        v[2] = n[0] * u[1] - n[1] * u[0];
+    }
+};
+
 export default class BallPacker {
     constructor(shape, options, seed) {
         this.shape = shape;
@@ -33,8 +61,15 @@ export default class BallPacker {
 
         const [primary, ...fills] = passes;
 
-        this.placePass(state, pool, primary, relax.initialSeparation);
-        this.relax(state);
+        if (typeof this.shape.getFaces === 'function' && this.options.lattice) {
+            // Corazón tallado: rejilla hexagonal perfecta en cada cara plana
+            this.placeLattice(state);
+        } else {
+            // Corazón suave: Poisson comprimido + relajación
+            this.placePass(state, pool, primary, relax.initialSeparation);
+            this.relax(state);
+        }
+
         this.rebuildHash(state);
 
         for (const pass of fills) {
@@ -56,7 +91,10 @@ export default class BallPacker {
 
     createState() {
         const { maxBalls, passes, maxGrow } = this.options;
-        const largest = Math.max(...passes.map((pass) => pass.max));
+        const largest = Math.max(
+            ...passes.map((pass) => pass.max),
+            this.options.lattice?.radius ?? 0
+        );
 
         return {
             count: 0,
@@ -110,6 +148,100 @@ export default class BallPacker {
         return { points, normals, order, count, used: new Uint8Array(count) };
     }
 
+    /**
+     * Rejilla hexagonal por cara: filas perfectas como en la creatividad.
+     * Solo se aceptan puntos donde esa cara es la superficie real del corazón
+     * (evaluate = 0), así cada cara queda recortada por sus vecinas.
+     */
+    placeLattice(state) {
+        const { radius, jitter, spacing, edgeScales = [1] } = this.options.lattice;
+        const faces = this.shape.getFaces();
+        const step = radius * 2 * spacing;
+        const rowStep = step * Math.sqrt(3) * 0.5;
+        const center = [0, this.shape.height * 0.5, 0];
+        const extent = Math.max(this.shape.height, this.shape.halfWidth * 2);
+        const u = [0, 0, 0];
+        const v = [0, 0, 0];
+
+        this.random.shuffle(faces);
+
+        for (const face of faces) {
+            const n = face.normal;
+
+            FacetedBasis.fromNormal(n, u, v);
+
+            // Centro del corazón proyectado sobre el plano de la cara
+            const offset = n[0] * center[0] + n[1] * center[1] + n[2] * center[2] - face.distance;
+            const ox = center[0] - n[0] * offset;
+            const oy = center[1] - n[1] * offset;
+            const oz = center[2] - n[2] * offset;
+
+            // Desfase aleatorio: cada cara tiene su propia rejilla
+            const shiftU = this.random.next() * step;
+            const shiftV = this.random.next() * rowStep;
+            const rows = Math.ceil(extent / rowStep);
+            const cols = Math.ceil(extent / step);
+
+            for (let j = -rows; j <= rows; j++) {
+                const rowShift = (j & 1) * step * 0.5;
+
+                for (let i = -cols; i <= cols; i++) {
+                    const a = i * step + rowShift + shiftU;
+                    const b = j * rowStep + shiftV;
+                    const x = ox + u[0] * a + v[0] * b;
+                    const y = oy + u[1] * a + v[1] * b;
+                    const z = oz + u[2] * a + v[2] * b;
+
+                    if (Math.abs(this.shape.evaluate(x, y, z)) > 1e-7) continue;
+
+                    const r = radius * (1 - this.random.next() * jitter);
+                    const point = [x, y, z];
+
+                    // Cerca de las aristas no cabe la bola entera: probamos más pequeñas
+                    // (las bolas pequeñas de las costuras de la creatividad)
+                    for (const scale of edgeScales) {
+                        const sink = (1 - scale) * radius * 0.5;
+
+                        if (this.addBall(state, point, n, r * scale, sink)) break;
+                    }
+                }
+            }
+        }
+    }
+
+    addBall(state, surfacePoint, normal, radius, sink = 0) {
+        if (state.count >= this.options.maxBalls) return false;
+
+        const inset = this.options.inset + sink;
+        const center = [
+            surfacePoint[0] - normal[0] * inset,
+            surfacePoint[1] - normal[1] * inset,
+            surfacePoint[2] - normal[2] * inset
+        ];
+
+        if (!state.hash) this.rebuildHash(state);
+        if (!this.fits(state, center, radius, this.options.separation)) return false;
+
+        const b = state.count;
+        const b3 = b * 3;
+
+        state.surface[b3] = surfacePoint[0];
+        state.surface[b3 + 1] = surfacePoint[1];
+        state.surface[b3 + 2] = surfacePoint[2];
+        state.normals[b3] = normal[0];
+        state.normals[b3 + 1] = normal[1];
+        state.normals[b3 + 2] = normal[2];
+        state.positions[b3] = center[0];
+        state.positions[b3 + 1] = center[1];
+        state.positions[b3 + 2] = center[2];
+        state.radii[b] = radius;
+
+        state.hash.insert(b, center[0], center[1], center[2]);
+        state.count++;
+
+        return true;
+    }
+
     /** Poisson-disk sobre el pool con radios en [pass.min, pass.max]. */
     placePass(state, pool, pass, separation) {
         const { maxBalls } = this.options;
@@ -131,7 +263,8 @@ export default class BallPacker {
                 pool.points[i3 + 2],
                 pool.normals[i3],
                 pool.normals[i3 + 1],
-                pool.normals[i3 + 2]
+                pool.normals[i3 + 2],
+                pass.sink ?? 0
             );
 
             if (!this.fits(state, center, radius, separation)) continue;
@@ -158,8 +291,8 @@ export default class BallPacker {
     }
 
     /** El centro de la bola se hunde ligeramente bajo la superficie. */
-    centerFrom(x, y, z, nx, ny, nz) {
-        const inset = this.options.inset;
+    centerFrom(x, y, z, nx, ny, nz, sink = 0) {
+        const inset = this.options.inset + sink;
 
         return [x - nx * inset, y - ny * inset, z - nz * inset];
     }
