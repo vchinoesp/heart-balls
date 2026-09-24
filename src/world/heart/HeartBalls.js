@@ -24,8 +24,8 @@ export default class HeartBalls {
         this.group.name = 'HeartBalls';
         this.scene.add(this.group);
 
-        // Pivot interior con la inclinación base; `group` queda libre para
-        // interacciones (tilt, repulsión, intro) sin pisar la pose base.
+        // Pivot interior con la inclinación base; `group` lo giran los controles
+        // (arrastrar/teclado) sin pisar la pose base.
         this.pivot = new THREE.Group();
         this.pivot.rotation.x = config.view.pitch;
         this.group.add(this.pivot);
@@ -73,12 +73,10 @@ export default class HeartBalls {
         this.writeMatrices(mesh, layout, scale, offsetY, random);
         this.writeColors(mesh, random);
 
+        this.numbers = this.createNumbers(this.count, random);
         this.geometry.setAttribute(
             'aNumber',
-            new THREE.InstancedBufferAttribute(
-                this.createNumbers(this.count, random),
-                1
-            )
+            new THREE.InstancedBufferAttribute(this.numbers, 1)
         );
 
         this.mesh = mesh;
@@ -129,6 +127,11 @@ export default class HeartBalls {
         const fallback = new THREE.Vector3(1, 0, 0);
         const roll = new THREE.Quaternion();
 
+        // Copia en CPU (espacio local del mesh) para el picking por rayo
+        this.centers = new Float32Array(this.count * 3);
+        this.radii = new Float32Array(this.count);
+        this.surfaceNormals = new Float32Array(this.count * 3);
+
         for (let i = 0; i < this.count; i++) {
             const i3 = i * 3;
 
@@ -158,9 +161,21 @@ export default class HeartBalls {
             );
 
             mesh.setMatrixAt(i, matrix);
+
+            this.centers[i3] = positions[i3] * scale;
+            this.centers[i3 + 1] = positions[i3 + 1] * scale + offsetY;
+            this.centers[i3 + 2] = positions[i3 + 2] * scale;
+            this.radii[i] = radius;
+            this.surfaceNormals[i3] = normal.x;
+            this.surfaceNormals[i3 + 1] = normal.y;
+            this.surfaceNormals[i3 + 2] = normal.z;
         }
 
         mesh.instanceMatrix.needsUpdate = true;
+    }
+
+    getNumber(index) {
+        return Math.round(this.numbers[index]);
     }
 
     writeColors(mesh, random) {

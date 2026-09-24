@@ -1,10 +1,4 @@
-// Tokens
-$color-bg-center: #15284a;
-$color-bg-mid: #0b1730;
-$color-bg-edge: #060d1c;
-$color-text: #f3e6d2; // contraste > 12:1 sobre el fondo
-$color-text-muted: #d2c0a4; // contraste > 8:1 sobre el fondo
-$font-stack: 'Helvetica Neue', Arial, system-ui, sans-serif;
+@use 'tokens' as *;
 
 html,
 body {
@@ -33,6 +27,28 @@ body {
   height: 100%;
   outline: none;
   touch-action: none;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  // Foco visible solo con teclado (WCAG 2.4.7)
+  &:focus-visible {
+    outline: 3px solid $color-focus;
+    outline-offset: -6px;
+  }
+}
+
+// Utilidad: oculto visualmente pero legible por lectores de pantalla
+.u-visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 // Bloque BEM: hero
@@ -41,7 +57,7 @@ body {
   right: 0;
   bottom: 0;
   left: 0;
-  padding: 1.5rem 1rem calc(1.5rem + env(safe-area-inset-bottom));
+  padding: 1.25rem 1rem calc(1.25rem + env(safe-area-inset-bottom));
   text-align: center;
   pointer-events: none;
 
@@ -56,6 +72,28 @@ body {
     color: $color-text-muted;
     font-size: clamp(0.875rem, 1.6vw, 1rem);
   }
+
+  &__hint {
+    margin-top: 0.6rem;
+    color: $color-text-muted;
+    font-size: 0.8125rem;
+    letter-spacing: 0.02em;
+  }
+
+  // Instrucción según el tipo de puntero
+  &__hint-touch {
+    display: none;
+  }
+
+  @media (pointer: coarse) {
+    &__hint-touch {
+      display: inline;
+    }
+
+    &__hint-mouse {
+      display: none;
+    }
+  }
 }
 
 // Sin WebGL: el texto pasa al centro de la pantalla
@@ -64,6 +102,11 @@ body {
   top: 50%;
   bottom: auto;
   transform: translateY(-50%);
+}
+
+.no-webgl .hero__hint,
+.is-webgl-error .hero__hint {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

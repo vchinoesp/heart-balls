@@ -1,0 +1,187 @@
+@use '../tokens' as *;
+
+// Bloque BEM: popup "Esta es tu corazonada"
+.ball-modal {
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(6, 13, 28, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  &[hidden] {
+    display: none;
+  }
+
+  &__panel {
+    position: relative;
+    display: grid;
+    grid-template-areas:
+      'title'
+      'stage'
+      'actions';
+    gap: 0.5rem;
+    width: min(100%, 52rem);
+    max-height: calc(100dvh - 2rem);
+    overflow: auto;
+    padding: clamp(1.5rem, 5vw, 4rem) clamp(1.25rem, 6vw, 6rem);
+    border-radius: clamp(1.75rem, 4vw, 3rem);
+    background: $color-panel;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+    will-change: transform;
+  }
+
+  &__close {
+    position: absolute;
+    top: clamp(1rem, 3vw, 2.25rem);
+    right: clamp(1rem, 3vw, 2.25rem);
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: $color-gold;
+    cursor: pointer;
+    transition: transform 0.4s $ease-out-expo;
+
+    &:hover {
+      transform: rotate(90deg);
+    }
+  }
+
+  &__title {
+    grid-area: title;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-right: 3rem;
+    font-size: clamp(1.25rem, 3vw, 1.75rem);
+    font-weight: 400;
+    line-height: 1.15;
+    text-transform: uppercase;
+  }
+
+  &__title-accent {
+    color: $color-gold;
+  }
+
+  &__title-main {
+    color: #fff;
+  }
+
+  &__stage {
+    position: relative;
+    grid-area: stage;
+    height: clamp(13rem, 42vw, 17rem);
+  }
+
+  &__canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  &__shadow {
+    position: absolute;
+    bottom: 2%;
+    left: 50%;
+    width: 42%;
+    height: 10%;
+    margin-left: -21%;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+    pointer-events: none;
+  }
+
+  &__actions {
+    grid-area: actions;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+  }
+
+  &__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: min(100%, 13.5rem);
+    min-height: 3rem; // objetivo táctil > 44px
+    padding: 0.75rem 1.5rem;
+    border: 0;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      transform 0.4s $ease-out-expo,
+      box-shadow 0.4s $ease-out-expo;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    &--primary {
+      background: $color-gold;
+      color: $color-ink;
+    }
+
+    &--secondary {
+      background: #fff;
+      color: $color-gold-dark;
+    }
+  }
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 2.75rem;
+    color: #fff;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    text-underline-offset: 0.3em;
+
+    svg {
+      color: $color-gold;
+    }
+  }
+
+  // Foco visible en todos los controles del popup
+  a:focus-visible,
+  button:focus-visible {
+    outline: 3px solid $color-focus;
+    outline-offset: 3px;
+  }
+
+  // Desktop: bola a la izquierda, acciones a la derecha (como la creatividad)
+  @media (min-width: 48rem) {
+    &__panel {
+      grid-template-columns: 1.1fr 1fr;
+      grid-template-areas:
+        'title title'
+        'stage actions';
+      column-gap: 2rem;
+    }
+
+    &__stage {
+      height: 19rem;
+    }
+
+    &__actions {
+      align-self: center;
+    }
+  }
+}

@@ -1,7 +1,7 @@
 import Environment from './Environment.js';
 import HeartBalls from './heart/HeartBalls.js';
 import HeartLayout from './heart/HeartLayout.js';
-import HeartTilt from './heart/HeartTilt.js';
+import BallFx from './heart/BallFx.js';
 
 /**
  * World
@@ -11,7 +11,7 @@ import HeartTilt from './heart/HeartTilt.js';
  * - #debug: genera el layout en vivo y permite ajustar forma/empaquetado.
  */
 export default class World {
-    constructor({ scene, renderer, debug, config, isMobile }) {
+    constructor({ scene, renderer, debug, config, isMobile, reducedMotion }) {
         this.scene = scene;
         this.debug = debug;
         this.config = config;
@@ -22,7 +22,8 @@ export default class World {
             detail: isMobile ? 3 : 4
         });
 
-        this.tilt = new HeartTilt(this.heartBalls.group);
+        // Repulsión / hover / selección (uniforms del shader animados con GSAP)
+        this.fx = new BallFx(this.heartBalls.material.uniforms, { reducedMotion });
     }
 
     async init() {
@@ -125,13 +126,22 @@ export default class World {
         lookFolder.add(uniforms.uLabelSize.value, 'y', 0.2, 0.8, 0.01).name('alto número');
         lookFolder.close();
 
+        const fxFolder = gui.addFolder('Interacción');
+
+        fxFolder.add(uniforms.uRepelRadius, 'value', 0.1, 1.5, 0.01).name('radio repulsión');
+        fxFolder.add(uniforms.uRepelPush, 'value', 0, 0.3, 0.005).name('empuje lateral');
+        fxFolder.add(uniforms.uRepelLift, 'value', 0, 0.3, 0.005).name('elevación');
+        fxFolder.add(uniforms.uHoverLift, 'value', 0, 0.4, 0.005).name('subida bola hover');
+        fxFolder.add(uniforms.uHoverScale, 'value', 0, 1, 0.01).name('crecimiento hover');
+        fxFolder.close();
+
         gui.add({ regenerate: () => this.regenerate() }, 'regenerate').name('↻ Regenerar corazón');
     }
 
     update() {}
 
     dispose() {
-        this.tilt.dispose();
+        this.fx.dispose();
         this.heartBalls.dispose();
         this.environment.dispose();
     }

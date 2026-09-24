@@ -5,6 +5,10 @@ import * as THREE from 'three';
  *
  * Cámara en perspectiva que encuadra el corazón automáticamente
  * (responsive: en móvil vertical manda el ancho, en desktop el alto).
+ *
+ * `view` lo modifican los controles (HeartControls):
+ *  - ratio: 1 = corazón completo encuadrado, <1 = más cerca (zoom)
+ *  - panX / panY: desplazamiento del punto de mira (para acercarse a una zona)
  */
 export default class Camera {
     constructor(sizes, scene, debug, { subjectWidth, subjectHeight }) {
@@ -17,6 +21,7 @@ export default class Camera {
 
         // Margen alrededor del corazón (1 = justo al borde)
         this.framing = { vertical: 1.3, horizontal: 1.14 };
+        this.view = { ratio: 1, panX: 0, panY: 0 };
 
         this.setInstance();
         this.fit();
@@ -27,17 +32,17 @@ export default class Camera {
         this.instance = new THREE.PerspectiveCamera(
             30,
             this.sizes.width / this.sizes.height,
-            0.1,
+            0.05,
             100
         );
 
         this.scene.add(this.instance);
     }
 
-    /** Calcula la distancia para que el corazón entre en pantalla. */
+    /** Distancia a la que el corazón entra completo en pantalla. */
     fit() {
-        const { aspect, fov } = this.instance;
-        const halfTan = Math.tan(THREE.MathUtils.degToRad(fov) * 0.5);
+        const { aspect } = this.instance;
+        const halfTan = this.halfTan();
 
         const byHeight =
             (this.subjectHeight * this.framing.vertical) / (2 * halfTan);
@@ -45,8 +50,29 @@ export default class Camera {
             (this.subjectWidth * this.framing.horizontal) /
             (2 * halfTan * aspect);
 
-        this.instance.position.set(0, 0, Math.max(byHeight, byWidth));
-        this.instance.lookAt(0, 0, 0);
+        this.fitDistance = Math.max(byHeight, byWidth);
+        this.applyView();
+    }
+
+    halfTan() {
+        return Math.tan(THREE.MathUtils.degToRad(this.instance.fov) * 0.5);
+    }
+
+    /** Medio alto/ancho visibles en el plano z = 0 para un ratio de zoom. */
+    halfExtents(ratio = this.view.ratio) {
+        const halfHeight = this.fitDistance * ratio * this.halfTan();
+
+        return {
+            halfHeight,
+            halfWidth: halfHeight * this.instance.aspect
+        };
+    }
+
+    applyView() {
+        const { ratio, panX, panY } = this.view;
+
+        this.instance.position.set(panX, panY, this.fitDistance * ratio);
+        this.instance.lookAt(panX, panY, 0);
     }
 
     setDebug() {
@@ -73,5 +99,7 @@ export default class Camera {
         this.fit();
     }
 
-    update() {}
+    update() {
+        this.applyView();
+    }
 }

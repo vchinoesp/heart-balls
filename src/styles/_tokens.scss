@@ -1,0 +1,13 @@
+// Tokens de diseño compartidos
+$color-bg-center: #15284a;
+$color-bg-mid: #0b1730;
+$color-bg-edge: #060d1c;
+$color-text: #f3e6d2; // contraste > 12:1 sobre el fondo
+$color-text-muted: #d2c0a4; // contraste > 8:1 sobre el fondo
+$color-gold: #d4a25c; // dorado de la creatividad
+$color-gold-dark: #94601f; // dorado sobre blanco: 4.9:1 (AA)
+$color-ink: #1b1f2b; // texto sobre dorado: 7.9:1 (AA)
+$color-panel: rgba(38, 42, 56, 0.94);
+$color-focus: #ffd58a;
+$font-stack: 'Helvetica Neue', Arial, system-ui, sans-serif;
+$ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);

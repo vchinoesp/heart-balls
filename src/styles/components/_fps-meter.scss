@@ -1,0 +1,31 @@
+@use '../tokens' as *;
+
+// Contador de FPS (#fps o #debug en la URL)
+.fps-meter {
+  position: fixed;
+  z-index: 20;
+  top: calc(0.5rem + env(safe-area-inset-top));
+  left: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.4rem;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font:
+    600 0.75rem/1.2 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  pointer-events: none;
+
+  &[data-level='good'] {
+    color: #7dff9b;
+  }
+
+  &[data-level='ok'] {
+    color: #ffe27d;
+  }
+
+  &[data-level='bad'] {
+    color: #ff8a7d;
+  }
+}

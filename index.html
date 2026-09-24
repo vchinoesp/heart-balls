@@ -8,7 +8,7 @@
     <title>Un corazón hecho de números · Heart Balls</title>
     <meta
       name="description"
-      content="Experiencia interactiva: un gran corazón formado por miles de bolas de madera numeradas del 00000 al 99999."
+      content="Experiencia interactiva: navega por un gran corazón formado por miles de bolas de madera numeradas del 00000 al 99999 y elige tu corazonada."
     />
 
     <meta property="og:type" content="website" />
@@ -16,7 +16,7 @@
     <meta property="og:title" content="Un corazón hecho de números" />
     <meta
       property="og:description"
-      content="Miles de bolas de madera numeradas del 00000 al 99999 forman un gran corazón."
+      content="Miles de bolas de madera numeradas del 00000 al 99999 forman un gran corazón. Encuentra tu corazonada."
     />
     <!-- TODO: añadir og:image (1200x630, WebP/JPG) y og:url cuando haya dominio -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -27,15 +27,65 @@
   <body>
     <canvas
       class="webgl"
-      role="img"
+      tabindex="0"
+      role="application"
+      aria-roledescription="corazón interactivo"
       aria-label="Corazón formado por bolas de madera numeradas del 00000 al 99999"
+      aria-describedby="heart-instructions"
     ></canvas>
 
     <main class="hero">
       <!-- Copy provisional: pendiente de creatividad final -->
       <h1 class="hero__title">Un corazón hecho de números</h1>
       <p class="hero__text">Del 00000 al 99999, cada bola cuenta.</p>
+      <p class="hero__hint" id="heart-instructions">
+        <span class="hero__hint-touch">Arrastra para girar · pellizca para acercar · toca dos veces una bola para elegirla</span>
+        <span class="hero__hint-mouse">Arrastra para girar · rueda para acercar · haz clic en una bola para elegirla</span>
+        <span class="u-visually-hidden">Con el teclado: flechas para girar, más y menos para acercar, Intro para elegir la bola del centro.</span>
+      </p>
     </main>
+
+    <div
+      class="ball-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ball-modal-title"
+      aria-describedby="ball-modal-number"
+      hidden
+    >
+      <div class="ball-modal__panel">
+        <button class="ball-modal__close" type="button" data-action="close" aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" width="36" height="36" aria-hidden="true" focusable="false">
+            <path d="M4 4l16 16M20 4L4 20" fill="none" stroke="currentColor" stroke-width="1.4" />
+          </svg>
+        </button>
+
+        <h2 class="ball-modal__title" id="ball-modal-title">
+          <span class="ball-modal__title-accent">Esta es tu corazonada.</span>
+          <span class="ball-modal__title-main">Hazte con ella.</span>
+        </h2>
+
+        <div class="ball-modal__stage">
+          <canvas class="ball-modal__canvas" aria-hidden="true"></canvas>
+          <span class="ball-modal__shadow" aria-hidden="true"></span>
+          <p class="u-visually-hidden" id="ball-modal-number" data-ball-number aria-live="polite"></p>
+        </div>
+
+        <div class="ball-modal__actions">
+          <!-- TODO: URL real de compra (el número está en data-number) -->
+          <a class="ball-modal__button ball-modal__button--primary" href="#" data-action="buy">Compra tu décimo</a>
+          <button class="ball-modal__button ball-modal__button--secondary" type="button" data-action="another">Elige otra</button>
+          <!-- TODO: URL real del buscador de puntos de venta -->
+          <a class="ball-modal__link" href="#">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+              <path d="M12 22s7-7.2 7-12.5A7 7 0 0 0 5 9.5C5 14.8 12 22 12 22z" fill="none" stroke="currentColor" stroke-width="1.5" />
+              <circle cx="12" cy="9.5" r="2.5" fill="currentColor" />
+            </svg>
+            Buscar punto de venta
+          </a>
+        </div>
+      </div>
+    </div>
 
     <script type="module" src="/src/main.js"></script>
   </body>

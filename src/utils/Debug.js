@@ -1,13 +1,24 @@
 /**
  * Debug
  *
- * Solo se activa con #debug en la URL (p. ej. http://localhost:5173/#debug).
- * lil-gui se importa dinámicamente: no entra en el bundle de producción
- * salvo como chunk separado que nunca se descarga sin #debug.
+ * Se controla con el hash de la URL (se pueden combinar con & o ,):
+ *   #debug      -> panel lil-gui + controles + contador de FPS
+ *   #fps        -> solo el contador de FPS (ideal para probar en móvil)
+ *   #debug&fps  -> ambos
+ *
+ * lil-gui se importa dinámicamente: nunca se descarga sin #debug.
  */
 export default class Debug {
     constructor() {
-        this.active = window.location.hash === '#debug';
+        const flags = new Set(
+            window.location.hash
+                .slice(1)
+                .split(/[&,]/)
+                .filter(Boolean)
+        );
+
+        this.active = flags.has('debug');
+        this.showFps = this.active || flags.has('fps');
         this.gui = null;
     }
 
@@ -17,6 +28,7 @@ export default class Debug {
         const { default: GUI } = await import('lil-gui');
 
         this.gui = new GUI({ width: 320, title: 'Heart Balls · debug' });
+        this.gui.close();
     }
 
     dispose() {

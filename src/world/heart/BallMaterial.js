@@ -10,6 +10,10 @@ import * as THREE from 'three';
  *   Como cada instancia está orientada con +Z = normal de la superficie del
  *   corazón, basta con la Z local del fragmento. Da la sensación de bolas
  *   apretadas con sombras de contacto sin shadow maps (clave en móvil).
+ * - Interacción en el vertex shader (0 coste CPU por bola):
+ *   · Repulsión: las bolas cercanas al puntero se apartan y se elevan.
+ *   · Hover: la bola señalada sube y crece (con salida suave de la anterior).
+ *   · Selección: la bola elegida se encoge hasta desaparecer (va al popup).
  */
 export default class BallMaterial extends THREE.MeshStandardMaterial {
     constructor({ digits, color, roughness, numberColor }) {
@@ -30,7 +34,22 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
             uCavity: { value: new THREE.Vector2(0.18, 1.0) },
             // Sombreado global del corazón: la cara que no mira a la luz se oscurece
             uLightDirection: { value: new THREE.Vector3(-0.75, 0.45, 0.5).normalize() },
-            uSurfaceShade: { value: 0.22 }
+            uSurfaceShade: { value: 0.22 },
+
+            // Interacción (espacio local del InstancedMesh)
+            uPointer: { value: new THREE.Vector3(0, 0, 999) },
+            uRepel: { value: 0 },
+            uRepelRadius: { value: 0.55 },
+            uRepelPush: { value: 0.035 },
+            uRepelLift: { value: 0.09 },
+            uHoverId: { value: -1 },
+            uHover: { value: 0 },
+            uPrevHoverId: { value: -1 },
+            uPrevHover: { value: 0 },
+            uHoverLift: { value: 0.12 },
+            uHoverScale: { value: 0.35 },
+            uSelectedId: { value: -1 },
+            uSelectedScale: { value: 1 }
         };
     }
 
@@ -43,9 +62,23 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
                 /* glsl */ `
                 #include <common>
                 attribute float aNumber;
+                uniform vec3 uPointer;
+                uniform float uRepel;
+                uniform float uRepelRadius;
+                uniform float uRepelPush;
+                uniform float uRepelLift;
+                uniform float uHoverId;
+                uniform float uHover;
+                uniform float uPrevHoverId;
+                uniform float uPrevHover;
+                uniform float uHoverLift;
+                uniform float uHoverScale;
+                uniform float uSelectedId;
+                uniform float uSelectedScale;
                 varying vec3 vLocal;
                 varying float vNumber;
                 varying vec3 vSurfaceNormal;
+                varying float vHover;
                 `
             )
             .replace(
@@ -56,6 +89,37 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
                 vNumber = aNumber;
                 // +Z de la instancia = normal de la superficie del corazón (en mundo)
                 vSurfaceNormal = normalize(mat3(modelMatrix) * mat3(instanceMatrix) * vec3(0.0, 0.0, 1.0));
+                `
+            )
+            .replace(
+                '#include <project_vertex>',
+                /* glsl */ `
+                float instanceId = float(gl_InstanceID);
+                vec3 ballCenter = instanceMatrix[3].xyz;
+                vec3 ballNormal = normalize(instanceMatrix[2].xyz);
+                vec3 ballLocal = (instanceMatrix * vec4(transformed, 1.0)).xyz - ballCenter;
+
+                // Hover (actual + anterior saliendo)
+                float hover = 0.0;
+                if (abs(instanceId - uHoverId) < 0.5) hover = uHover;
+                if (abs(instanceId - uPrevHoverId) < 0.5) hover = max(hover, uPrevHover);
+                vHover = hover;
+
+                // Repulsión: se apartan en el plano tangente y se elevan un poco
+                vec3 fromPointer = ballCenter - uPointer;
+                float field = (1.0 - smoothstep(0.0, uRepelRadius, length(fromPointer))) * uRepel;
+                vec3 tangent = fromPointer - ballNormal * dot(fromPointer, ballNormal);
+                float tangentLength = length(tangent);
+                vec3 push = tangentLength > 1e-4 ? tangent / tangentLength : vec3(0.0);
+                field *= 1.0 - hover;
+
+                vec3 offset = push * field * uRepelPush + ballNormal * (field * uRepelLift + hover * uHoverLift);
+
+                float selected = abs(instanceId - uSelectedId) < 0.5 ? uSelectedScale : 1.0;
+                ballLocal *= (1.0 + hover * uHoverScale) * selected;
+
+                vec4 mvPosition = modelViewMatrix * vec4(ballCenter + ballLocal + offset, 1.0);
+                gl_Position = projectionMatrix * mvPosition;
                 `
             );
 
@@ -74,6 +138,7 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
                 varying vec3 vLocal;
                 varying float vNumber;
                 varying vec3 vSurfaceNormal;
+                varying float vHover;
 
                 float digitPower(float index) {
                     if (index < 0.5) return 10000.0;
@@ -132,9 +197,12 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
 
                 float cavity = smoothstep(-0.55, 0.85, local.z);
                 cavity = mix(uCavity.x, uCavity.y, cavity);
+                // La bola señalada sale de la sombra y brilla un poco más
+                cavity = mix(cavity, 1.15, vHover * 0.8);
 
                 float facing = dot(normalize(vSurfaceNormal), uLightDirection);
                 float surfaceShade = mix(uSurfaceShade, 1.0, smoothstep(-0.15, 0.9, facing));
+                surfaceShade = mix(surfaceShade, 1.0, vHover * 0.6);
 
                 reflectedLight.directDiffuse *= cavity * surfaceShade;
                 reflectedLight.indirectDiffuse *= cavity * mix(0.45, 1.0, surfaceShade);
@@ -145,6 +213,6 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
     }
 
     customProgramCacheKey() {
-        return 'BallMaterial_v2';
+        return 'BallMaterial_v3';
     }
 }
