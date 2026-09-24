@@ -23,7 +23,10 @@ export default class World {
         });
 
         // Repulsión / hover / selección (uniforms del shader animados con GSAP)
-        this.fx = new BallFx(this.heartBalls.material.uniforms, { reducedMotion });
+        this.fx = new BallFx(this.heartBalls.material.uniforms, {
+            reducedMotion,
+            pointerSmoothing: config.interaction.pointerSmoothing
+        });
     }
 
     async init() {
@@ -128,11 +131,12 @@ export default class World {
 
         const fxFolder = gui.addFolder('Interacción');
 
-        fxFolder.add(uniforms.uRepelRadius, 'value', 0.1, 1.5, 0.01).name('radio repulsión');
+        fxFolder.add(uniforms.uRepelRadius, 'value', 0.1, 3, 0.01).name('radio repulsión');
         fxFolder.add(uniforms.uRepelPush, 'value', 0, 0.3, 0.005).name('empuje lateral');
         fxFolder.add(uniforms.uRepelLift, 'value', 0, 0.3, 0.005).name('elevación');
         fxFolder.add(uniforms.uHoverLift, 'value', 0, 0.4, 0.005).name('subida bola hover');
         fxFolder.add(uniforms.uHoverScale, 'value', 0, 1, 0.01).name('crecimiento hover');
+        fxFolder.add(this.config.interaction, 'hoverMaxSpeed', 0.1, 5, 0.05).name('vel. máx. para destacar');
         fxFolder.close();
 
         gui.add({ regenerate: () => this.regenerate() }, 'regenerate').name('↻ Regenerar corazón');

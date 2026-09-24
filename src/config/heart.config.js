@@ -48,12 +48,15 @@ const heartConfig = {
             // Bolas pequeñas encajadas entre las grandes
             { depth: 0.005, min: 0.006, max: 0.012 },
             // Bolitas en los huecos que quedan en la superficie
-            { depth: 0.003, min: 0.0042, max: 0.008 },
+            { depth: 0.003, min: 0.0055, max: 0.008 },
             // Segunda capa: lo que se ve por los huecos son más bolas, no fondo
             { depth: 0.024, min: 0.012, max: 0.02, onlyUnderGaps: 0.005 },
             // Relleno fino final
             { depth: 0.012, min: 0.005, max: 0.01, onlyUnderGaps: 0.005 }
         ],
+        // Candidatos casi en un hueco (espacio libre > holeSearch·min) se
+        // recolocan en el centro del hueco antes de descartarlos
+        holeSearch: 0.2,
         // Modo tallado: rejilla hexagonal perfecta en cada cara
         lattice: {
             radius: 0.0195,
@@ -97,6 +100,25 @@ const heartConfig = {
         numberColor: '#3f342a',
         coreColor: '#2e1f12',
         maxRoll: 0.18
+    },
+
+    /**
+     * Interacción con el puntero. Estos son los valores por defecto;
+     * en #debug → "Interacción" se pueden probar en vivo y luego copiar aquí.
+     */
+    interaction: {
+        // Repulsión alrededor del puntero (unidades de escena; bola ≈ 0.1)
+        repelRadius: 1.5,
+        repelPush: 0.18, // empuje lateral
+        repelLift: 0.025, // elevación hacia fuera
+        // Bola bajo el puntero
+        hoverLift: 0.035, // subida
+        hoverScale: 0.1, // crecimiento (0.1 = +10 %)
+        // Suavizado del seguimiento del puntero (segundos): más = más suave
+        pointerSmoothing: 0.55,
+        // Por encima de esta velocidad (pantallas/segundo) no se destaca bola:
+        // al barrer con el ratón no "saltan" bolas, solo al frenar
+        hoverMaxSpeed: 0.9
     }
 };
 

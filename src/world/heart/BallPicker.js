@@ -22,7 +22,7 @@ export default class BallPicker {
      * @param {HeartBalls} heartBalls
      * @returns {{ index: number, point: THREE.Vector3 } | null} punto en espacio local del mesh
      */
-    pick(x, y, heartBalls) {
+    pick(x, y, heartBalls, { minRadius = 0 } = {}) {
         const mesh = heartBalls.mesh;
 
         if (!mesh) return null;
@@ -40,6 +40,8 @@ export default class BallPicker {
         let bestT = Infinity;
 
         for (let i = 0; i < count; i++) {
+            if (radii[i] < minRadius) continue;
+
             const i3 = i * 3;
             const ox = origin.x - centers[i3];
             const oy = origin.y - centers[i3 + 1];
@@ -63,5 +65,22 @@ export default class BallPicker {
         this.localRay.at(bestT, this.hitPoint);
 
         return { index: best, point: this.hitPoint };
+    }
+
+    /**
+     * Distancia (relativa a su radio) del último rayo al centro de una bola.
+     * < 1 = el rayo atraviesa la bola. Se usa para la histéresis del hover.
+     */
+    relativeDistance(index, heartBalls) {
+        const { centers, radii } = heartBalls;
+        const { origin, direction } = this.localRay;
+        const i3 = index * 3;
+        const ox = centers[i3] - origin.x;
+        const oy = centers[i3 + 1] - origin.y;
+        const oz = centers[i3 + 2] - origin.z;
+        const along = ox * direction.x + oy * direction.y + oz * direction.z;
+        const distanceSq = ox * ox + oy * oy + oz * oz - along * along;
+
+        return Math.sqrt(Math.max(distanceSq, 0)) / radii[index];
     }
 }

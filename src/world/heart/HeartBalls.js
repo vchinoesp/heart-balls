@@ -35,7 +35,8 @@ export default class HeartBalls {
             digits: this.digits.texture,
             color: config.ball.color,
             roughness: config.ball.roughness,
-            numberColor: config.ball.numberColor
+            numberColor: config.ball.numberColor,
+            interaction: config.interaction
         });
 
         // Núcleo: bolas oscuras y de baja resolución, solo tapan huecos
@@ -54,6 +55,10 @@ export default class HeartBalls {
         this.count = layout.count;
 
         const scale = this.config.worldHeight / layout.height;
+
+        // Radio de referencia (bola "normal"): las muy pequeñas de relleno
+        // no se destacan al pasar el ratón (serían saltos raros)
+        this.referenceRadius = (this.config.packing.lattice?.radius ?? 0.02) * scale;
         const offsetY = -layout.height * 0.5 * scale;
         const random = new SeededRandom(this.config.seed + 7);
 

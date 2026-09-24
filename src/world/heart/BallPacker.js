@@ -280,9 +280,39 @@ export default class BallPacker {
                 if (above < onlyUnderGaps) continue;
             }
 
-            const free = this.freeRadius(state, x, y, z, max);
+            let free = this.freeRadius(state, x, y, z, max);
+
+            // Cerca de un hueco: centrar el candidato en el hueco antes de decidir
+            if (free < min && free > min * this.options.holeSearch) {
+                const centered = this.centerInHole(
+                    state,
+                    [pool.points[i3], pool.points[i3 + 1], pool.points[i3 + 2]],
+                    inset,
+                    max
+                );
+
+                if (centered && centered.free >= min) {
+                    this.insertBall(state, centered.surface, centered.normal, centered.center, centered.free);
+                }
+
+                continue;
+            }
 
             if (free < min) continue;
+
+            // También las que ya caben: centradas, llenan mejor el hueco
+            const centered = this.centerInHole(
+                state,
+                [pool.points[i3], pool.points[i3 + 1], pool.points[i3 + 2]],
+                inset,
+                max
+            );
+
+            if (centered && centered.free > free) {
+                this.insertBall(state, centered.surface, centered.normal, centered.center, centered.free);
+
+                continue;
+            }
 
             this.insertBall(
                 state,
@@ -292,6 +322,95 @@ export default class BallPacker {
                 free
             );
         }
+    }
+
+    /**
+     * Busca el centro del hueco: desplaza el punto (sobre la superficie)
+     * alejándolo de la bola más cercana mientras el espacio libre crezca.
+     * Así la bolita de relleno queda encajada en medio y no "a un lado".
+     */
+    centerInHole(state, surfacePoint, inset, max) {
+        const surface = surfacePoint.slice();
+        const normal = [0, 0, 0];
+
+        if (!this.shape.project(surface, normal, 4)) return null;
+
+        let center = [
+            surface[0] - normal[0] * inset,
+            surface[1] - normal[1] * inset,
+            surface[2] - normal[2] * inset
+        ];
+        let best = this.nearestBall(state, center, max);
+        let step = Math.max(best.free, max * 0.25) * 0.5;
+
+        for (let iteration = 0; iteration < 10 && step > max * 0.02; iteration++) {
+            if (best.index < 0) break;
+
+            // Alejarse de la bola más cercana (en el plano tangente)
+            const j3 = best.index * 3;
+            let dx = center[0] - state.positions[j3];
+            let dy = center[1] - state.positions[j3 + 1];
+            let dz = center[2] - state.positions[j3 + 2];
+            const along = dx * normal[0] + dy * normal[1] + dz * normal[2];
+
+            dx -= normal[0] * along;
+            dy -= normal[1] * along;
+            dz -= normal[2] * along;
+
+            const length = Math.hypot(dx, dy, dz);
+
+            if (length < 1e-6) break;
+
+            const trySurface = [
+                surface[0] + (dx / length) * step,
+                surface[1] + (dy / length) * step,
+                surface[2] + (dz / length) * step
+            ];
+            const tryNormal = [0, 0, 0];
+
+            if (!this.shape.project(trySurface, tryNormal, 4)) break;
+
+            const tryCenter = [
+                trySurface[0] - tryNormal[0] * inset,
+                trySurface[1] - tryNormal[1] * inset,
+                trySurface[2] - tryNormal[2] * inset
+            ];
+            const attempt = this.nearestBall(state, tryCenter, max);
+
+            if (attempt.free > best.free) {
+                surface.splice(0, 3, ...trySurface);
+                normal.splice(0, 3, ...tryNormal);
+                center = tryCenter;
+                best = attempt;
+            } else {
+                step *= 0.5;
+            }
+        }
+
+        return { surface, normal, center, free: best.free };
+    }
+
+    /** Espacio libre y bola más cercana a un punto. */
+    nearestBall(state, [x, y, z], cap) {
+        const { positions, radii } = state;
+        let free = cap;
+        let index = -1;
+
+        state.hash.forEachNear(x, y, z, (j) => {
+            const j3 = j * 3;
+            const gap =
+                Math.hypot(positions[j3] - x, positions[j3 + 1] - y, positions[j3 + 2] - z) -
+                radii[j];
+
+            if (gap < free) {
+                free = gap;
+                index = j;
+            }
+
+            return true;
+        });
+
+        return { free, index };
     }
 
     /** Radio libre alrededor de un punto (distancia a la superficie de la bola más cercana). */

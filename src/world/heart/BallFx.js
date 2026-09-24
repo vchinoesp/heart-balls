@@ -8,13 +8,14 @@ import gsap from 'gsap';
  * Todo el movimiento de las bolas ocurre en el vertex shader.
  */
 export default class BallFx {
-    constructor(uniforms, { reducedMotion = false } = {}) {
+    constructor(uniforms, { reducedMotion = false, pointerSmoothing = 0.5 } = {}) {
         this.uniforms = uniforms;
         this.reducedMotion = reducedMotion;
         this.hoverIndex = -1;
 
         const pointer = uniforms.uPointer.value;
-        const follow = { duration: 0.35, ease: 'power3.out' };
+        // Seguimiento suave: el campo de repulsión "persigue" al puntero
+        const follow = { duration: pointerSmoothing, ease: 'power3.out' };
 
         this.pointerX = gsap.quickTo(pointer, 'x', follow);
         this.pointerY = gsap.quickTo(pointer, 'y', follow);

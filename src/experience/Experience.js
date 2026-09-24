@@ -98,6 +98,7 @@ export default class Experience {
             heartBalls,
             fx: this.world.fx,
             element: this.canvas,
+            interaction: this.config.interaction,
             onSelect: ({ number }) => this.onBallSelected(number)
         });
 

@@ -4,40 +4,56 @@ import BallPicker from '../world/heart/BallPicker.js';
  * BallSelection
  *
  * Une controles, picking y efectos para "buscar tu corazonada":
- *  - Ratón: al pasar por encima la bola sube (hover) y sus vecinas se apartan;
- *    clic = elegir.
+ *  - Ratón: el campo de repulsión sigue al puntero de forma suave; la bola
+ *    bajo el puntero se destaca solo cuando el ratón va despacio o se para
+ *    (al barrer rápido no "saltan" bolas). Clic = elegir.
  *  - Táctil: al arrastrar, las bolas se apartan bajo el dedo; primer toque en
- *    una bola la destaca, segundo toque en la misma la elige (evita elegir sin
- *    querer con bolas pequeñas en pantalla).
+ *    una bola la destaca, segundo toque en la misma la elige.
  *  - Teclado: Enter/Espacio elige la bola del centro de la pantalla.
  *
- * El picking se hace como mucho una vez por frame (en update).
+ * Anti-saltos:
+ *  - El picking se hace una vez por frame con la última posición conocida
+ *    (también si el corazón sigue girando por inercia con el ratón quieto).
+ *  - Pasar por un hueco entre bolas no apaga la repulsión (tolerancia de frames).
+ *  - Histéresis: la bola destacada se mantiene mientras el puntero siga cerca
+ *    de ella, aunque el rayo toque ya a una vecina.
+ *  - Las bolitas de relleno no se destacan (solo las de tamaño normal).
  */
 export default class BallSelection {
-    constructor({ camera, heartBalls, fx, element, onSelect }) {
+    constructor({ camera, heartBalls, fx, element, interaction, onSelect }) {
         this.heartBalls = heartBalls;
         this.fx = fx;
         this.element = element;
+        this.interaction = interaction;
         this.onSelect = onSelect;
 
         this.picker = new BallPicker(camera);
-        this.pending = undefined;
+
+        this.pointer = null; // última posición ndc conocida
         this.pointerType = 'mouse';
+        this.lastPointer = null;
+        this.lastTime = performance.now();
+        this.speed = 0;
+
         this.armedIndex = -1;
         this.locked = false;
         this.hadPointer = false;
+        this.missFrames = 0;
+
+        this.maxMissFrames = 10;
+        this.hoverRelease = 1.25; // la bola destacada se suelta al alejarse 1.25 radios
     }
 
     /** Llamado por HeartControls en cada movimiento (ndc o null). */
     hover(ndc, pointerType) {
-        this.pending = ndc;
+        this.pointer = ndc;
         this.pointerType = pointerType;
     }
 
     tap(ndc, pointerType) {
         if (this.locked) return;
 
-        const hit = this.picker.pick(ndc.x, ndc.y, this.heartBalls);
+        const hit = this.pickHoverable(ndc);
 
         if (!hit) {
             this.armedIndex = -1;
@@ -61,7 +77,7 @@ export default class BallSelection {
     selectCenter() {
         if (this.locked) return;
 
-        const hit = this.picker.pick(0, 0, this.heartBalls);
+        const hit = this.pickHoverable({ x: 0, y: 0 });
 
         if (hit) this.select(hit.index);
     }
@@ -81,34 +97,71 @@ export default class BallSelection {
     release() {
         this.fx.restore();
         this.locked = false;
+        this.hadPointer = false;
+    }
+
+    /** Primero cualquier bola; si es una bolita de relleno, la normal más cercana tras ella. */
+    pickHoverable(ndc) {
+        const minRadius = this.heartBalls.referenceRadius * 0.55;
+        const hit = this.picker.pick(ndc.x, ndc.y, this.heartBalls);
+
+        if (!hit || this.heartBalls.radii[hit.index] >= minRadius) return hit;
+
+        return this.picker.pick(ndc.x, ndc.y, this.heartBalls, { minRadius }) ?? hit;
+    }
+
+    updateSpeed() {
+        const now = performance.now();
+        const dt = Math.max(now - this.lastTime, 1) / 1000;
+
+        if (this.pointer && this.lastPointer) {
+            // ndc va de -1 a 1: /2 para tener "pantallas por segundo"
+            const distance =
+                Math.hypot(this.pointer.x - this.lastPointer.x, this.pointer.y - this.lastPointer.y) / 2;
+            const instant = distance / dt;
+
+            // Suavizado exponencial para no reaccionar a un solo frame
+            this.speed = this.speed * 0.75 + instant * 0.25;
+        } else {
+            this.speed = 0;
+        }
+
+        this.lastPointer = this.pointer ? { ...this.pointer } : null;
+        this.lastTime = now;
+    }
+
+    leave() {
+        this.fx.setRepel(false);
+
+        if (this.pointerType === 'mouse') this.fx.setHover(-1);
+
+        this.element.style.cursor = '';
+        this.hadPointer = false;
+        this.missFrames = 0;
     }
 
     update() {
-        if (this.pending === undefined || this.locked) return;
+        if (this.locked) return;
 
-        const ndc = this.pending;
+        this.updateSpeed();
 
-        this.pending = undefined;
-
-        if (!ndc) {
-            this.fx.setRepel(false);
-            if (this.pointerType === 'mouse') this.fx.setHover(-1);
-            this.element.style.cursor = '';
-            this.hadPointer = false;
+        if (!this.pointer) {
+            if (this.hadPointer) this.leave();
 
             return;
         }
 
-        const hit = this.picker.pick(ndc.x, ndc.y, this.heartBalls);
+        const hit = this.picker.pick(this.pointer.x, this.pointer.y, this.heartBalls);
 
         if (!hit) {
-            this.fx.setRepel(false);
-            if (this.pointerType === 'mouse') this.fx.setHover(-1);
-            this.element.style.cursor = '';
-            this.hadPointer = false;
+            // Hueco entre bolas o borde: margen antes de apagar el efecto
+            this.missFrames++;
+            if (this.missFrames > this.maxMissFrames && this.hadPointer) this.leave();
 
             return;
         }
+
+        this.missFrames = 0;
 
         // Al entrar al corazón el campo aparece en el punto (sin "viajar")
         this.fx.setPointer(hit.point, !this.hadPointer);
@@ -116,8 +169,31 @@ export default class BallSelection {
         this.hadPointer = true;
 
         if (this.pointerType === 'mouse') {
-            this.fx.setHover(hit.index);
             this.element.style.cursor = 'pointer';
+            this.updateMouseHover();
         }
+    }
+
+    updateMouseHover() {
+        const current = this.fx.hoverIndex;
+        const tooFast = this.speed > this.interaction.hoverMaxSpeed;
+
+        // Histéresis: mantener la bola actual mientras el puntero siga cerca
+        if (current >= 0) {
+            const distance = this.picker.relativeDistance(current, this.heartBalls);
+
+            if (distance < this.hoverRelease) return;
+            if (tooFast) {
+                this.fx.setHover(-1);
+
+                return;
+            }
+        }
+
+        if (tooFast) return;
+
+        const hit = this.pickHoverable(this.pointer);
+
+        this.fx.setHover(hit ? hit.index : -1);
     }
 }

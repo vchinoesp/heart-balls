@@ -16,7 +16,7 @@ import * as THREE from 'three';
  *   · Selección: la bola elegida se encoge hasta desaparecer (va al popup).
  */
 export default class BallMaterial extends THREE.MeshStandardMaterial {
-    constructor({ digits, color, roughness, numberColor }) {
+    constructor({ digits, color, roughness, numberColor, interaction }) {
         super({
             color: 0xffffff,
             roughness,
@@ -39,15 +39,15 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
             // Interacción (espacio local del InstancedMesh)
             uPointer: { value: new THREE.Vector3(0, 0, 999) },
             uRepel: { value: 0 },
-            uRepelRadius: { value: 0.55 },
-            uRepelPush: { value: 0.035 },
-            uRepelLift: { value: 0.09 },
+            uRepelRadius: { value: interaction.repelRadius },
+            uRepelPush: { value: interaction.repelPush },
+            uRepelLift: { value: interaction.repelLift },
             uHoverId: { value: -1 },
             uHover: { value: 0 },
             uPrevHoverId: { value: -1 },
             uPrevHover: { value: 0 },
-            uHoverLift: { value: 0.12 },
-            uHoverScale: { value: 0.35 },
+            uHoverLift: { value: interaction.hoverLift },
+            uHoverScale: { value: interaction.hoverScale },
             uSelectedId: { value: -1 },
             uSelectedScale: { value: 1 }
         };
