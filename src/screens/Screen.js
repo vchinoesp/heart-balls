@@ -53,7 +53,8 @@ export default class Screen {
             timeline.fromTo(
                 this.animated,
                 { opacity: 0, y: 28 },
-                { opacity: 1, y: 0, duration: 1.1, ease: 'expo.out', stagger: 0.09 }
+                // clearProps: sin transform inline al acabar (si no, anula los :hover)
+                { opacity: 1, y: 0, duration: 1.1, ease: 'expo.out', stagger: 0.09, clearProps: 'transform' }
             );
         }
 

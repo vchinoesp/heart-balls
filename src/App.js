@@ -34,7 +34,6 @@ export default class App {
         this.current = null;
         this.previous = null;
         this.progress = { fonts: 0, experience: 0 };
-        this.introPlayed = false;
 
         this.setUi();
         this.setScreens();
@@ -156,6 +155,13 @@ export default class App {
         this.goTo('home');
     }
 
+    /**
+     * Cambio de pantalla en dos fases, sin solapes:
+     *  1. Salida: la pantalla actual, los botones de la cabecera que cambian,
+     *     el footer (si se va) y el corazón (si se va) desaparecen a la vez.
+     *  2. Entrada: con todo lo anterior ya fuera, se recoloca la cabecera
+     *     (logo grande/pequeño, botones), entra el footer y la nueva pantalla.
+     */
     async goTo(name) {
         if (this.current?.name === name || this.transitioning) return;
 
@@ -166,31 +172,32 @@ export default class App {
 
         this.previous = previous?.name ?? null;
 
-        // El footer se va a la vez que la pantalla anterior (así, al medir el
-        // encuadre del corazón, ya no ocupa sitio)
-        this.updateFooter(name);
+        // Fase 1: salida
+        await Promise.all([
+            previous?.leave(),
+            this.header.hide(name),
+            this.hideFooter(name),
+            this.hideHeart(name)
+        ]);
 
-        if (previous) await previous.leave();
-
+        // Fase 2: entrada
         this.current = next;
         this.body.dataset.screen = name;
 
         // Visible (aún transparente) antes de medir: el encuadre del corazón
-        // depende de dónde termina el copy
+        // depende de dónde quedan la cabecera y la ayuda
         next.show();
         gsap.set(next.root, { opacity: 0 });
 
-        this.header.update(name);
+        this.header.show(name);
         this.backdrop.update(name);
-        this.updateHeart(name);
+        this.showFooter(name);
+        this.showHeart(name);
 
         await next.enter();
 
         this.transitioning = false;
         next.focusTarget?.focus({ preventScroll: true });
-
-        // Tras la entrada (logo ya compacto), recalcular el encuadre exacto
-        if (name === 'heart') this.updateSafeArea();
 
         if (name === 'loading') this.runLoader();
     }
@@ -202,50 +209,79 @@ export default class App {
         this.goTo('home');
     }
 
-    updateFooter(name) {
-        const visible = name === 'age' || name === 'home' || name === 'video';
-
-        this.footer.inert = !visible;
-
-        if (visible) this.footer.hidden = false;
-
-        gsap.to(this.footer, {
-            autoAlpha: visible ? 1 : 0,
-            duration: visible ? 1 : 0.4,
-            delay: visible ? 0.3 : 0,
-            ease: 'power2.out',
-            overwrite: true,
-            // Oculto de verdad: deja de ocupar sitio (más espacio para el corazón)
-            onComplete: () => {
-                if (!visible) this.footer.hidden = true;
-            }
-        });
+    footerVisibleOn(name) {
+        return name === 'age' || name === 'home' || name === 'video';
     }
 
-    /** El corazón solo se ve (y solo se renderiza) en su pantalla. */
-    updateHeart(name) {
+    /** El footer se va (y deja de ocupar sitio) antes de que entre la pantalla. */
+    hideFooter(name) {
+        if (this.footerVisibleOn(name) || this.footer.hidden) return null;
+
+        this.footer.inert = true;
+
+        return gsap
+            .to(this.footer, {
+                autoAlpha: 0,
+                duration: 0.4,
+                ease: 'power2.in',
+                overwrite: true,
+                onComplete: () => {
+                    this.footer.hidden = true;
+                }
+            })
+            .then();
+    }
+
+    showFooter(name) {
+        if (!this.footerVisibleOn(name)) return;
+
+        const wasHidden = this.footer.hidden;
+
+        this.footer.hidden = false;
+        this.footer.inert = false;
+
+        if (!wasHidden && gsap.getProperty(this.footer, 'opacity') === 1) return;
+
+        gsap.fromTo(
+            this.footer,
+            { autoAlpha: 0, y: this.reducedMotion ? 0 : 16 },
+            { autoAlpha: 1, y: 0, duration: 1, delay: 0.2, ease: 'expo.out', overwrite: true, clearProps: 'transform' }
+        );
+    }
+
+    /** Salida del corazón: se funde y deja de renderizarse. */
+    hideHeart(name) {
         const experience = this.experience;
 
-        // Aún cargando en segundo plano (p. ej. en el selector de edad)
-        if (!experience?.ready) return;
+        if (!experience?.ready || name === 'heart' || this.current?.name !== 'heart') return null;
 
-        const visible = name === 'heart';
+        this.canvas.tabIndex = -1;
+        experience.setInteractive(false);
 
-        this.canvas.tabIndex = visible ? 0 : -1;
-
-        if (!visible) {
-            experience.setInteractive(false);
-            gsap.to(this.canvas, {
+        return gsap
+            .to(this.canvas, {
                 autoAlpha: 0,
                 duration: 0.5,
                 ease: 'power2.in',
                 overwrite: true,
                 onComplete: () => experience.pause()
-            });
+            })
+            .then();
+    }
 
-            return;
-        }
+    /**
+     * Entrada al corazón: siempre igual que la primera vez (vista inicial,
+     * sin zoom ni giro) y con la animación de generación.
+     */
+    showHeart(name) {
+        const experience = this.experience;
 
+        // Aún cargando en segundo plano (p. ej. en el selector de edad)
+        if (!experience?.ready || name !== 'heart') return;
+
+        this.canvas.tabIndex = 0;
+
+        experience.resetView();
         experience.resume();
 
         // Encuadre: el corazón ocupa todo el espacio entre cabecera y ayuda
@@ -255,12 +291,7 @@ export default class App {
 
         gsap.to(this.canvas, { autoAlpha: 1, duration: 0.6, ease: 'power2.out', overwrite: true });
 
-        if (!this.introPlayed) {
-            this.introPlayed = true;
-            experience.playIntro({ delay: 0.5 });
-        } else {
-            experience.setInteractive(true);
-        }
+        experience.playIntro({ delay: 0.35 });
     }
 
     updateSafeArea() {

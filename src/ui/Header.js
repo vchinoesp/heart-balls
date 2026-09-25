@@ -51,12 +51,56 @@ export default class Header {
         );
     }
 
-    update(screen) {
+    static watchVisibleOn(screen) {
+        return screen === 'home' || screen === 'heart';
+    }
+
+    static backVisibleOn(screen) {
+        return screen === 'heart' || screen === 'video';
+    }
+
+    static layoutFor(screen) {
+        return screen === 'video' ? 'back-only' : 'default';
+    }
+
+    /**
+     * Fase de salida: se van los botones que no siguen o que cambian de
+     * sitio (p. ej. "Volver" sube a la fila de "Ver el anuncio" en el vídeo).
+     * Devuelve una promesa que se cumple cuando ya no se ven.
+     */
+    hide(nextScreen) {
+        const layoutChanges = this.actions.dataset.layout !== Header.layoutFor(nextScreen);
+        const leaving = [];
+
+        if (!Header.watchVisibleOn(nextScreen)) leaving.push(this.watch);
+        if (!Header.backVisibleOn(nextScreen) || layoutChanges) leaving.push(this.back);
+
+        const visible = leaving.filter((element) => Number(gsap.getProperty(element, 'opacity')) > 0);
+
+        if (!visible.length) return Promise.resolve();
+
+        visible.forEach((element) => {
+            element.inert = true;
+        });
+
+        return gsap
+            .to(visible, {
+                autoAlpha: 0,
+                x: this.reducedMotion ? 0 : 12,
+                duration: 0.35,
+                ease: 'power2.in',
+                overwrite: true
+            })
+            .then();
+    }
+
+    /** Fase de entrada: recoloca y muestra lo que corresponde a la pantalla. */
+    show(screen) {
         this.reveal();
-        this.setAction(this.watch, screen === 'home' || screen === 'heart');
-        this.setAction(this.back, screen === 'heart' || screen === 'video');
-        this.actions.dataset.layout = screen === 'video' ? 'back-only' : 'default';
+        this.actions.dataset.layout = Header.layoutFor(screen);
         this.setCompact(screen === 'heart');
+        this.setAction(this.watch, Header.watchVisibleOn(screen));
+        this.setAction(this.back, Header.backVisibleOn(screen));
     }
 
     setCompact(compact) {
@@ -90,11 +134,16 @@ export default class Header {
     setAction(element, visible, immediate = false) {
         element.inert = !visible;
 
+        // Ya en su estado: no repetir la animación
+        const current = Number(gsap.getProperty(element, 'opacity'));
+
+        if (!immediate && ((visible && current === 1) || (!visible && current === 0))) return;
+
         gsap.to(element, {
             autoAlpha: visible ? 1 : 0,
             x: visible || this.reducedMotion ? 0 : 12,
             duration: immediate ? 0 : visible ? 0.9 : 0.35,
-            delay: visible && !immediate ? 0.35 : 0,
+            delay: visible && !immediate ? 0.1 : 0,
             ease: visible ? 'expo.out' : 'power2.in',
             overwrite: true
         });

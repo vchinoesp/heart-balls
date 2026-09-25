@@ -95,6 +95,17 @@ export default class BallSelection {
         this.fx.select(index).then(() => this.onSelect?.({ index, number }));
     }
 
+    /** Estado limpio al (re)entrar en el corazón. */
+    reset() {
+        this.pointer = null;
+        this.lastPointer = null;
+        this.speed = 0;
+        this.armedIndex = -1;
+        this.hadPointer = false;
+        this.missFrames = 0;
+        this.element.style.cursor = '';
+    }
+
     /** Tras cerrar el popup: la bola vuelve a su sitio. */
     release() {
         this.fx.restore();

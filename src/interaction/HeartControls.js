@@ -389,13 +389,19 @@ export default class HeartControls {
     }
 
     /** Vuelve a la vista inicial (p. ej. botón "centrar"). */
-    reset() {
+    reset({ immediate = false } = {}) {
         Object.assign(this.state, { rotX: 0, rotY: 0, ratio: 1, panX: 0, panY: 0 });
-        this.tweenRotX(0);
-        this.tweenRotY(0);
-        this.tweenRatio(1);
-        this.tweenPanX(0);
-        this.tweenPanY(0);
+        this.pointers.clear();
+        this.gesture = null;
+
+        // quickTo(valor, inicio): con inicio = valor el cambio es instantáneo
+        const start = (value) => (immediate ? value : undefined);
+
+        this.tweenRotX(0, start(0));
+        this.tweenRotY(0, start(0));
+        this.tweenRatio(1, start(1));
+        this.tweenPanX(0, start(0));
+        this.tweenPanY(0, start(0));
     }
 
     dispose() {

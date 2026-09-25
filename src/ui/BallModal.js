@@ -78,7 +78,8 @@ export default class BallModal {
             gsap.fromTo(
                 this.content,
                 { opacity: 0, y: 18 },
-                { opacity: 1, y: 0, duration: 0.9, ease: 'expo.out', stagger: 0.07, delay: 0.15 }
+                // clearProps: sin transform inline al acabar (si no, anula los :hover)
+                { opacity: 1, y: 0, duration: 0.9, ease: 'expo.out', stagger: 0.07, delay: 0.15, clearProps: 'transform' }
             );
         }
 

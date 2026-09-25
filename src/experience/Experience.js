@@ -170,11 +170,36 @@ export default class Experience {
      * El corazón se genera: las bolas llegan en espiral desde fuera, de abajo
      * arriba, mientras el corazón termina de girar hacia el frente.
      */
+    /**
+     * Vuelta al estado inicial antes de cada entrada al corazón: vista sin
+     * zoom ni giro, sin bola destacada y con las bolas "sin formar".
+     */
+    resetView() {
+        const heartBalls = this.world.heartBalls;
+
+        this.introTimeline?.kill();
+        this.setInteractive(false);
+        this.controls.reset({ immediate: true });
+        this.camera.applyView();
+
+        this.world.fx.setHover(-1);
+        this.world.fx.setRepel(false);
+        this.selection.reset();
+
+        heartBalls.group.rotation.set(0, -Math.PI * 0.9, 0);
+        heartBalls.group.position.set(0, -0.6, 0);
+        heartBalls.setIntro(this.reducedMotion ? 1 : 0);
+    }
+
     playIntro({ delay = 0 } = {}) {
         const heartBalls = this.world.heartBalls;
         const group = heartBalls.group;
 
+        this.introTimeline?.kill();
+
         if (this.reducedMotion) {
+            group.rotation.set(0, 0, 0);
+            group.position.set(0, 0, 0);
             heartBalls.setIntro(1);
             this.setInteractive(true);
 
@@ -206,6 +231,8 @@ export default class Experience {
                 { y: 0, duration: 3.4, ease: 'expo.out' },
                 0
             );
+
+        this.introTimeline = timeline;
 
         return timeline;
     }

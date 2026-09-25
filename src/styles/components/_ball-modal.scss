@@ -114,12 +114,14 @@
   }
 
   &__button {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: min(100%, 13.5rem);
     min-height: 3rem; // objetivo táctil > 44px
     padding: 0.75rem 1.5rem;
+    overflow: hidden;
     border: 0;
     border-radius: 999px;
     font: inherit;
@@ -130,22 +132,54 @@
     text-transform: uppercase;
     cursor: pointer;
     transition:
-      transform 0.4s $ease-out-expo,
-      box-shadow 0.4s $ease-out-expo;
+      transform 0.5s $ease-out-expo,
+      box-shadow 0.5s $ease-out-expo,
+      background-color 0.4s $ease-out-power3,
+      color 0.4s $ease-out-power3;
+
+    // Brillo que cruza el botón al pasar por encima
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%);
+      transform: translateX(-120%);
+      transition: transform 0.8s $ease-out-expo;
+      pointer-events: none;
+    }
 
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+      transform: translateY(-3px);
+      box-shadow:
+        0 12px 28px rgba(0, 0, 0, 0.35),
+        0 0 0 6px rgba(201, 147, 74, 0.18);
+
+      &::after {
+        transform: translateX(120%);
+      }
+    }
+
+    &:active {
+      transform: translateY(0) scale(0.98);
     }
 
     &--primary {
       background: $color-gold;
       color: $color-ink;
+
+      &:hover {
+        background: $color-gold-light;
+      }
     }
 
     &--secondary {
       background: #fff;
       color: $color-gold-dark;
+
+      &:hover {
+        background: #fbf3e6;
+        color: #7a4c14;
+      }
     }
   }
 
@@ -157,12 +191,35 @@
     color: #fff;
     font-size: 0.9375rem;
     font-weight: 500;
+    text-decoration: none;
     text-transform: uppercase;
-    text-underline-offset: 0.3em;
+    transition: color 0.4s $ease-out-power3;
 
     svg {
+      flex: none;
       color: $color-gold;
+      transition: transform 0.6s $ease-out-expo;
     }
+
+    &:hover {
+      color: $color-gold-light;
+
+      svg {
+        transform: translateY(-4px);
+      }
+    }
+  }
+
+  // Subrayado: al pasar por encima se recoge y vuelve a dibujarse
+  &__link-label {
+    padding-bottom: 0.15em;
+    background: linear-gradient(currentColor, currentColor) 100% 100% / 100% 1px no-repeat;
+    transition: background-size 0.6s $ease-out-expo;
+  }
+
+  &__link:hover &__link-label {
+    background-position: 0 100%;
+    animation: ball-modal-underline 0.9s $ease-out-expo;
   }
 
   // Foco visible en todos los controles del popup
@@ -189,5 +246,26 @@
     &__actions {
       align-self: center;
     }
+  }
+}
+
+@keyframes ball-modal-underline {
+  0% {
+    background-size: 100% 1px;
+    background-position: 100% 100%;
+  }
+
+  45% {
+    background-size: 0% 1px;
+    background-position: 100% 100%;
+  }
+
+  46% {
+    background-position: 0 100%;
+  }
+
+  100% {
+    background-size: 100% 1px;
+    background-position: 0 100%;
   }
 }

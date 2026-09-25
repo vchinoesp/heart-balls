@@ -41,8 +41,12 @@ export default class LoaderScreen extends Screen {
 
         this.line.setAttribute('d', LoaderScreen.buildPath());
         this.length = this.line.getTotalLength();
-        this.line.style.strokeDasharray = `${this.length}`;
-        this.line.style.strokeDashoffset = `${this.length}`;
+
+        // pathLength = 1: el trazo visible y el punto usan exactamente la misma
+        // medida (evita que el punto quede por detrás de la línea)
+        this.line.setAttribute('pathLength', '1');
+        this.line.style.strokeDasharray = '1 1';
+        this.line.style.strokeDashoffset = '1';
 
         this.displayed = 0;
     }
@@ -108,7 +112,7 @@ export default class LoaderScreen extends Screen {
         const point = this.line.getPointAtLength(length);
         const percent = Math.round(progress * 100);
 
-        this.line.style.strokeDashoffset = `${this.length - length}`;
+        this.line.style.strokeDashoffset = `${1 - progress}`;
         this.dot.setAttribute('cx', point.x);
         this.dot.setAttribute('cy', point.y);
         this.glow.setAttribute('cx', point.x);
