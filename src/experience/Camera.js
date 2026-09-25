@@ -20,7 +20,7 @@ export default class Camera {
         this.subjectHeight = subjectHeight;
 
         // Margen alrededor del corazón (1 = justo al borde)
-        this.framing = { vertical: 1.08, horizontal: 1.12 };
+        this.framing = { vertical: 1.02, horizontal: 1.1 };
         this.view = { ratio: 1, panX: 0, panY: 0 };
         // Franja de pantalla (px) reservada arriba/abajo para el copy y el footer
         this.safeArea = { top: 0, bottom: 0 };
@@ -56,9 +56,9 @@ export default class Camera {
 
         const byHeight =
             (this.subjectHeight * this.framing.vertical) / (2 * halfTan * available);
-        const byWidth =
-            (this.subjectWidth * this.framing.horizontal) /
-            (2 * halfTan * aspect);
+        // En vertical (móvil) el corazón aprovecha casi todo el ancho
+        const horizontal = aspect < 1 ? Math.min(this.framing.horizontal, 1.02) : this.framing.horizontal;
+        const byWidth = (this.subjectWidth * horizontal) / (2 * halfTan * aspect);
 
         this.fitDistance = Math.max(byHeight, byWidth);
 

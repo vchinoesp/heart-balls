@@ -125,21 +125,44 @@
           </div>
         </section>
 
-        <!-- 3. Home + 4. Selector de bola (popup) -->
+        <!-- 3. Home (copy + CTA) -->
         <section class="screen screen--home" data-screen="home" aria-labelledby="home-title" hidden>
           <div class="intro">
             <h2 class="intro__title" id="home-title" tabindex="-1">Esta Navidad tengo una corazonada.</h2>
-            <p class="intro__text">
-              Navega con los dedos desde tu móvil o con el ratón desde tu ordenador a través de nuestro corazón.
+            <!-- El texto cambia según el dispositivo (ratón / táctil) -->
+            <p class="intro__text intro__text--mouse">
+              Navega con el ratón desde tu ordenador a través de nuestro corazón.
               <br class="intro__break" />
               Sumérgete y encuentra ese presentimiento que te dice, que ese número, es el número.
             </p>
-            <p class="intro__cta">Elige el tuyo y mucha suerte.</p>
-            <p class="u-visually-hidden" id="heart-instructions">
-              Con el teclado: tabula hasta el corazón, usa las flechas para girarlo, más y menos para acercarte e
-              Intro para elegir la bola del centro.
+            <p class="intro__text intro__text--touch">
+              Navega con los dedos desde tu móvil a través de nuestro corazón.
+              <br class="intro__break" />
+              Sumérgete y encuentra ese presentimiento que te dice, que ese número, es el número.
             </p>
+            <button class="intro__cta" type="button" data-action="start">Elige el tuyo y mucha suerte</button>
           </div>
+        </section>
+
+        <!-- 4. Corazón (navegación + selector de bola / popup) -->
+        <section class="screen screen--heart" data-screen="heart" aria-labelledby="heart-title" hidden>
+          <h2 class="u-visually-hidden" id="heart-title">Elige tu número en el corazón</h2>
+          <p class="heart-help" id="heart-instructions">
+            <span class="heart-help__text heart-help__text--mouse">
+              <span class="heart-help__item">Arrastra para girar</span>
+              <span class="heart-help__item">Rueda para acercar</span>
+              <span class="heart-help__item">Haz clic en una bola para elegirla</span>
+            </span>
+            <span class="heart-help__text heart-help__text--touch">
+              <span class="heart-help__item">Arrastra con un dedo para girar</span>
+              <span class="heart-help__item">Pellizca para acercar</span>
+              <span class="heart-help__item">Toca una bola para destacarla y otra vez para elegirla</span>
+            </span>
+            <span class="u-visually-hidden">
+              Con el teclado: usa las flechas para girar el corazón, más y menos para acercarte e Intro para elegir
+              la bola del centro.
+            </span>
+          </p>
         </section>
 
         <!-- 5. Visor de YouTube -->

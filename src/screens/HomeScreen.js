@@ -3,25 +3,22 @@ import Screen from './Screen.js';
 /**
  * HomeScreen
  *
- * Copy de la home sobre el corazón. El corazón (WebGL) lo gestiona
- * Experience; esta pantalla solo anima el texto y mide cuánto ocupa para
- * que la cámara encuadre el corazón en el espacio libre de debajo.
+ * Portada: copy centrado + CTA "Elige el tuyo y mucha suerte", que lleva
+ * a la pantalla del corazón (HeartScreen). El texto cambia según el
+ * dispositivo (ratón / táctil) desde el CSS.
  */
 export default class HomeScreen extends Screen {
-    constructor(root, options) {
+    constructor(root, { onStart, ...options }) {
         super(root, options);
 
         this.intro = root.querySelector('.intro');
+        this.cta = root.querySelector('[data-action="start"]');
+
+        this.cta.addEventListener('click', () => onStart?.());
     }
 
     get animated() {
-        return [...this.intro.children].filter((element) => !element.classList.contains('u-visually-hidden'));
-    }
-
-    /** Parte inferior del copy en px (para la "safe area" de la cámara). */
-    getContentBottom() {
-        const rect = this.intro.getBoundingClientRect();
-
-        return rect.bottom;
+        // Solo los elementos visibles (el texto de la otra variante está oculto)
+        return [...this.intro.children].filter((element) => element.offsetParent !== null);
     }
 }

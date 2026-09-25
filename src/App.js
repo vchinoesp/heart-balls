@@ -7,14 +7,16 @@ import Backdrop from './ui/Backdrop.js';
 import AgeGateScreen from './screens/AgeGateScreen.js';
 import LoaderScreen from './screens/LoaderScreen.js';
 import HomeScreen from './screens/HomeScreen.js';
+import HeartScreen from './screens/HeartScreen.js';
 import VideoScreen from './screens/VideoScreen.js';
 
 /**
  * App
  *
- * One-page con 5 estados:
- *   age (selector de edad) -> loading (ECG) -> home (corazón)
- *   home ⇄ video (anuncio / making of);  home -> popup de la bola (BallModal)
+ * One-page con estos estados:
+ *   age (selector de edad) -> loading (ECG) -> home (copy + CTA)
+ *   home -> heart (corazón grande + ayuda) -> popup de la bola (BallModal)
+ *   home / heart ⇄ video (anuncio / making of)
  *
  * La carga del corazón (datos + WebGL) empieza nada más abrir la web, en
  * segundo plano, así el loading suele ir tan rápido como su animación.
@@ -30,6 +32,7 @@ export default class App {
         this.footer = document.querySelector('.site-footer');
 
         this.current = null;
+        this.previous = null;
         this.progress = { fonts: 0, experience: 0 };
         this.introPlayed = false;
 
@@ -41,7 +44,7 @@ export default class App {
         this.header = new Header(document.querySelector('.site-header'), {
             reducedMotion: this.reducedMotion,
             onWatch: () => this.goTo('video'),
-            onBack: () => this.goTo('home')
+            onBack: () => this.back()
         });
 
         this.backdrop = new Backdrop(document.querySelector('.backdrop'), {
@@ -65,7 +68,8 @@ export default class App {
                 ...options,
                 minDuration: this.config.loader.minDuration
             }),
-            home: new HomeScreen(find('home'), options),
+            home: new HomeScreen(find('home'), { ...options, onStart: () => this.goTo('heart') }),
+            heart: new HeartScreen(find('heart'), options),
             video: new VideoScreen(find('video'), { ...options, videos: this.config.videos })
         };
 
@@ -141,6 +145,17 @@ export default class App {
     /* Navegación entre pantallas                                         */
     /* ------------------------------------------------------------------ */
 
+    /** Volver: desde el corazón a la home; desde el vídeo, a donde se estaba. */
+    back() {
+        if (this.current?.name === 'video') {
+            this.goTo(this.previous === 'heart' ? 'heart' : 'home');
+
+            return;
+        }
+
+        this.goTo('home');
+    }
+
     async goTo(name) {
         if (this.current?.name === name || this.transitioning) return;
 
@@ -148,6 +163,12 @@ export default class App {
 
         const previous = this.current;
         const next = this.screens[name];
+
+        this.previous = previous?.name ?? null;
+
+        // El footer se va a la vez que la pantalla anterior (así, al medir el
+        // encuadre del corazón, ya no ocupa sitio)
+        this.updateFooter(name);
 
         if (previous) await previous.leave();
 
@@ -161,13 +182,15 @@ export default class App {
 
         this.header.update(name);
         this.backdrop.update(name);
-        this.updateFooter(name);
         this.updateHeart(name);
 
         await next.enter();
 
         this.transitioning = false;
         next.focusTarget?.focus({ preventScroll: true });
+
+        // Tras la entrada (logo ya compacto), recalcular el encuadre exacto
+        if (name === 'heart') this.updateSafeArea();
 
         if (name === 'loading') this.runLoader();
     }
@@ -182,23 +205,31 @@ export default class App {
     updateFooter(name) {
         const visible = name === 'age' || name === 'home' || name === 'video';
 
+        this.footer.inert = !visible;
+
+        if (visible) this.footer.hidden = false;
+
         gsap.to(this.footer, {
             autoAlpha: visible ? 1 : 0,
             duration: visible ? 1 : 0.4,
             delay: visible ? 0.3 : 0,
             ease: 'power2.out',
-            overwrite: true
+            overwrite: true,
+            // Oculto de verdad: deja de ocupar sitio (más espacio para el corazón)
+            onComplete: () => {
+                if (!visible) this.footer.hidden = true;
+            }
         });
     }
 
-    /** El corazón solo se ve (y solo se renderiza) en la home. */
+    /** El corazón solo se ve (y solo se renderiza) en su pantalla. */
     updateHeart(name) {
         const experience = this.experience;
 
         // Aún cargando en segundo plano (p. ej. en el selector de edad)
         if (!experience?.ready) return;
 
-        const visible = name === 'home';
+        const visible = name === 'heart';
 
         this.canvas.tabIndex = visible ? 0 : -1;
 
@@ -217,7 +248,7 @@ export default class App {
 
         experience.resume();
 
-        // Encuadre: el corazón vive entre el copy y el footer
+        // Encuadre: el corazón ocupa todo el espacio entre cabecera y ayuda
         this.updateSafeArea();
         this.onResize ??= () => gsap.delayedCall(0.05, () => this.updateSafeArea());
         window.addEventListener('resize', this.onResize);
@@ -233,12 +264,11 @@ export default class App {
     }
 
     updateSafeArea() {
-        if (this.current?.name !== 'home' || !this.experience) return;
+        if (this.current?.name !== 'heart' || !this.experience) return;
 
         const height = window.innerHeight;
-        const top = Math.min(this.screens.home.getContentBottom() + 16, height * 0.5);
-        const footerTop = this.footer.getBoundingClientRect().top;
-        const bottom = Math.max(height - footerTop + 8, 0);
+        const top = Math.min(this.header.getCompactBottom() + 8, height * 0.3);
+        const bottom = Math.min(this.screens.heart.getReservedBottom() + 6, height * 0.25);
 
         this.experience.setSafeArea({ top, bottom });
     }

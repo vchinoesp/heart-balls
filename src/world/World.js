@@ -123,11 +123,19 @@ export default class World {
 
         lookFolder.addColor(uniforms.uBaseColor, 'value').name('color madera');
         lookFolder.addColor(uniforms.uNumberColor, 'value').name('color número');
+
+        // Color del interior: proxy en hex (lo que se ve en config.ball.coreColor)
+        const core = { color: this.config.ball.coreColor };
+
+        lookFolder
+            .addColor(core, 'color')
+            .name('color interior')
+            .onChange((value) => this.heartBalls.coreMaterial.color.set(value));
         lookFolder.add(uniforms.uSurfaceShade, 'value', 0, 1, 0.01).name('sombra global');
         lookFolder.add(uniforms.uCavity.value, 'x', 0, 1, 0.01).name('sombra contacto');
         lookFolder.add(uniforms.uLabelSize.value, 'x', 0.6, 1.9, 0.01).name('ancho número');
         lookFolder.add(uniforms.uLabelSize.value, 'y', 0.2, 0.8, 0.01).name('alto número');
-        lookFolder.close();
+        lookFolder.open();
 
         const fxFolder = gui.addFolder('Interacción');
 

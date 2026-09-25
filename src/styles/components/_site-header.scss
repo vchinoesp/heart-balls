@@ -30,20 +30,36 @@
   }
 
   &__title-logo {
-    width: clamp(8.5rem, 25vw, 22.5rem);
+    // En pantallas bajas (portátiles pequeños) el logo también limita por alto
+    width: min(clamp(8.5rem, 25vw, 22.5rem), 38vh);
   }
 
   &__actions {
     position: relative;
     justify-self: end;
     display: grid;
+    grid-template-rows: auto auto;
+    row-gap: 0.5rem;
     margin-top: 0.4rem;
 
-    // Los dos botones ocupan la misma celda (se alternan)
     > * {
-      grid-area: 1 / 1;
       justify-self: end;
     }
+  }
+
+  // "Volver" va debajo de "Ver el anuncio"; en el vídeo ocupa su sitio
+  &__watch {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  &__back {
+    grid-row: 2;
+    grid-column: 1;
+  }
+
+  &__actions[data-layout='back-only'] &__back {
+    grid-row: 1;
   }
 
   @media (min-width: $bp-tablet) {

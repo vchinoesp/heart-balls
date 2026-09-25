@@ -18,6 +18,8 @@
 
   &__frame {
     position: relative;
+    // .layout no recibe eventos (deja pasar al canvas): el reproductor sí
+    pointer-events: auto;
     // 16:9 que quepa en ancho y en el alto libre entre cabecera y footer
     height: min(100% - 4rem, (100vw - 2rem) * 9 / 16, 42rem);
     aspect-ratio: 16 / 9;

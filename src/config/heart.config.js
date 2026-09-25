@@ -98,7 +98,8 @@ const heartConfig = {
         colorVariation: 0.07,
         roughness: 0.62,
         numberColor: '#3f342a',
-        coreColor: '#2e1f12',
+        // Interior del corazón (lo que se ve entre las bolas): granate
+        coreColor: '#5a0d1c',
         maxRoll: 0.18
     },
 

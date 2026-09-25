@@ -87,9 +87,14 @@ export default class HeroBall {
             })
         );
 
-        // pivot = giro del usuario / balanceo; ball.rotation = animación de entrada
+        // Tres niveles de giro independientes (así no se pisan las animaciones):
+        //  pivot      -> arrastre del usuario (gsap.quickTo)
+        //  swayGroup  -> balanceo automático (timeline GSAP)
+        //  ball       -> animación de entrada
         this.pivot = new THREE.Group();
-        this.pivot.add(this.ball);
+        this.swayGroup = new THREE.Group();
+        this.swayGroup.add(this.ball);
+        this.pivot.add(this.swayGroup);
         this.scene.add(this.pivot);
     }
 
@@ -105,8 +110,6 @@ export default class HeroBall {
         this.canvas.addEventListener('pointerdown', (event) => {
             this.canvas.setPointerCapture(event.pointerId);
             this.stopSway();
-            this.target.x = rotation.x;
-            this.target.y = rotation.y;
             this.drag = { x: event.clientX, y: event.clientY, vx: 0, time: performance.now() };
         });
 
@@ -118,7 +121,9 @@ export default class HeroBall {
             const dy = event.clientY - this.drag.y;
 
             this.drag.vx = dx / Math.max(now - this.drag.time, 1);
-            this.drag = { ...this.drag, x: event.clientX, y: event.clientY, time: now };
+            this.drag.x = event.clientX;
+            this.drag.y = event.clientY;
+            this.drag.time = now;
 
             this.target.y += dx * this.dragSpeed;
             this.target.x = gsap.utils.clamp(-0.6, 0.6, this.target.x + dy * this.dragSpeed);
@@ -129,10 +134,14 @@ export default class HeroBall {
         const release = () => {
             if (!this.drag) return;
 
-            // Inercia al soltar y vuelta al balanceo automático
-            if (!this.reducedMotion) this.rotateY(this.target.y + this.drag.vx * 160 * this.dragSpeed * 10);
+            // Inercia al soltar (solo si se soltó en movimiento)
+            if (!this.reducedMotion && performance.now() - this.drag.time < 80) {
+                this.target.y += this.drag.vx * 16 * this.dragSpeed * 10;
+                this.rotateY(this.target.y);
+            }
 
             this.drag = null;
+            this.target.x = 0;
             this.rotateX(0);
             this.swayCall?.kill();
             this.swayCall = gsap.delayedCall(1.6, () => this.startSway());
@@ -140,31 +149,35 @@ export default class HeroBall {
 
         this.canvas.addEventListener('pointerup', release);
         this.canvas.addEventListener('pointercancel', release);
+        this.canvas.addEventListener('lostpointercapture', release);
     }
 
-    /** Balanceo automático de lado a lado (continúa desde donde esté). */
+    /** Vuelve a dejar el número de frente y se balancea de lado a lado. */
     startSway() {
         if (this.reducedMotion) return;
 
-        const rotation = this.pivot.rotation;
-
         this.stopSway();
 
-        // Volver al número "de frente" más cercano y oscilar alrededor
-        const turns = Math.round(rotation.y / (Math.PI * 2)) * Math.PI * 2;
+        // Número de frente: la vuelta completa más cercana al giro del usuario
+        this.target.y = Math.round(this.target.y / (Math.PI * 2)) * Math.PI * 2;
+        this.rotateY(this.target.y);
+
+        const rotation = this.swayGroup.rotation;
+        const amplitude = this.swayAmplitude;
 
         this.sway = gsap
-            .timeline({ repeat: -1, yoyo: false })
-            .to(rotation, { y: turns + this.swayAmplitude, duration: 2.6, ease: 'sine.inOut' })
-            .to(rotation, { y: turns - this.swayAmplitude, duration: 5.2, ease: 'sine.inOut' })
-            .to(rotation, { y: turns, duration: 2.6, ease: 'sine.inOut' });
+            .timeline({ repeat: -1 })
+            .to(rotation, { y: amplitude, duration: 2.6, ease: 'sine.inOut' })
+            .to(rotation, { y: -amplitude, duration: 5.2, ease: 'sine.inOut' })
+            .to(rotation, { y: 0, duration: 2.6, ease: 'sine.inOut' });
     }
 
+    /** Detiene el balanceo donde esté (sin saltos) y cancela reanudaciones. */
     stopSway() {
         this.sway?.kill();
         this.sway = null;
         this.swayCall?.kill();
-        gsap.killTweensOf(this.pivot.rotation);
+        this.swayCall = null;
     }
 
     /** Textura de madera clara con el número "tostado" en el frente. */
@@ -247,9 +260,15 @@ export default class HeroBall {
 
         gsap.killTweensOf([this.ball.position, this.ball.rotation, this.ball.scale]);
         this.stopSway();
-        this.pivot.rotation.set(0, 0, 0);
+        this.drag = null;
+
+        // Reinicio completo del estado de giro (cada apertura empieza igual)
         this.target.x = 0;
         this.target.y = 0;
+        this.rotateX(0, 0);
+        this.rotateY(0, 0);
+        this.pivot.rotation.set(0, 0, 0);
+        this.swayGroup.rotation.set(0, 0, 0);
         gsap.ticker.add(this.render);
 
         if (this.reducedMotion) {

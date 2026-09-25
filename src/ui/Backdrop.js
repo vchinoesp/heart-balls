@@ -50,10 +50,10 @@ export default class Backdrop {
         this.bokeh.append(fragment);
     }
 
-    /** El bokeh solo acompaña al corazón (home). */
+    /** El bokeh acompaña a la home y al corazón. */
     update(screen) {
         gsap.to(this.bokeh, {
-            opacity: screen === 'home' ? 1 : 0,
+            opacity: screen === 'home' || screen === 'heart' ? 1 : 0,
             duration: 1.6,
             ease: 'power2.inOut',
             overwrite: true
