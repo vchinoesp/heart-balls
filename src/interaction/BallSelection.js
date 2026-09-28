@@ -17,7 +17,7 @@ import BallPicker from '../world/heart/BallPicker.js';
  *  - Pasar por un hueco entre bolas no apaga la repulsión (tolerancia de frames).
  *  - Histéresis: la bola destacada se mantiene mientras el puntero siga cerca
  *    de ella, aunque el rayo toque ya a una vecina.
- *  - Todas las bolas se pueden elegir; el picking usa la posición dibujada.
+ *  - Todas las bolas se pueden elegir (también las pequeñas de relleno).
  */
 export default class BallSelection {
     constructor({ camera, heartBalls, fx, element, interaction, onSelect, getCenterNdc }) {
@@ -47,6 +47,8 @@ export default class BallSelection {
         // Radio extra para saber si el puntero está "sobre el corazón": así las
         // costuras entre bolas no apagan la repulsión
         this.surfaceInflate = 1.35;
+        // Táctil: el segundo toque confirma si cae a menos de 1.6 radios
+        this.touchConfirmRadius = 1.6;
     }
 
     /** Llamado por HeartControls en cada movimiento (ndc o null). */
@@ -70,6 +72,18 @@ export default class BallSelection {
             this.picker.relativeDistance(hovered, this.heartBalls) < this.hoverRelease
         ) {
             this.select(hovered);
+
+            return;
+        }
+
+        // Táctil: segundo toque sobre (o muy cerca de) la bola ya destacada =
+        // elegirla. El dedo es impreciso y la bola destacada ha crecido.
+        if (
+            pointerType !== 'mouse' &&
+            this.armedIndex >= 0 &&
+            this.picker.relativeDistance(this.armedIndex, this.heartBalls) < this.touchConfirmRadius
+        ) {
+            this.select(this.armedIndex);
 
             return;
         }
@@ -136,11 +150,17 @@ export default class BallSelection {
     }
 
     /**
-     * La bola que se ve bajo el puntero (grande o pequeña, con la repulsión
-     * aplicada). Lo que se elige es siempre lo que el usuario está señalando.
+     * La bola bajo el puntero en su posición de reposo, grande o pequeña.
+     *
+     * Debe ser en reposo: la repulsión aparta TODAS las bolas cercanas al
+     * puntero, también la que está justo debajo, y solo la bola destacada
+     * vuelve a su sitio (y crece). Si se buscara con las posiciones
+     * desplazadas, bajo el puntero solo habría hueco y nunca se podría
+     * destacar ni elegir nada. En reposo, la bola destacada queda
+     * exactamente bajo el puntero: lo que se ve resaltado es lo que se elige.
      */
     pickHoverable(ndc) {
-        return this.picker.pick(ndc.x, ndc.y, this.heartBalls);
+        return this.picker.pick(ndc.x, ndc.y, this.heartBalls, { displayed: false });
     }
 
     updateSpeed() {

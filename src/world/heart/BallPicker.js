@@ -8,14 +8,13 @@ import * as THREE from 'three';
  * a triángulo): ~3.000 esferas = microsegundos, apto para cada frame en móvil.
  *
  * Dos modos:
- *  - displayed (por defecto): las esferas se prueban donde se DIBUJAN (con la
- *    repulsión y el hover del shader, ver HeartBalls.getDisplayedSphere).
- *    Para destacar/elegir: siempre la bola que se ve bajo el puntero.
- *  - reposo (displayed: false): posiciones fijas del layout, opcionalmente
- *    "infladas". Para saber si el puntero está sobre el corazón y dónde
- *    centrar la repulsión. No puede usar las posiciones desplazadas: la
- *    repulsión abre un hueco bajo el puntero, el rayo no toca nada, la
- *    repulsión se apaga, el hueco se cierra... (parpadeo continuo).
+ *  - reposo (por defecto): posiciones fijas del layout, opcionalmente
+ *    "infladas". Es lo que usa BallSelection para todo: la repulsión aparta
+ *    las bolas del puntero, así que con las posiciones desplazadas bajo el
+ *    puntero solo habría hueco (la bola destacada sí vuelve a su sitio).
+ *  - displayed: las esferas donde se DIBUJAN (repulsión, hover y selección
+ *    del shader, ver HeartBalls.getDisplayedSphere). Útil para depurar o
+ *    para efectos que necesiten la posición real en pantalla.
  */
 export default class BallPicker {
     constructor(camera) {
@@ -33,7 +32,7 @@ export default class BallPicker {
      * @param {HeartBalls} heartBalls
      * @returns {{ index: number, point: THREE.Vector3 } | null} punto en espacio local del mesh
      */
-    pick(x, y, heartBalls, { displayed = true, inflate = 1 } = {}) {
+    pick(x, y, heartBalls, { displayed = false, inflate = 1 } = {}) {
         const mesh = heartBalls.mesh;
 
         if (!mesh) return null;
