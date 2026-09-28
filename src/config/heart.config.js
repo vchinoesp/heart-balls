@@ -13,9 +13,14 @@ const heartConfig = {
         // 'faceted' = tallado en caras planas (creatividad) · 'smooth' = redondeado
         mode: 'faceted',
         // Caras: 0 = 32 (hexágonos + pentágonos) · 1 = 122 (más fino)
-        facetDetail: 0,
+        facetDetail: 1,
         // Orientación del conjunto de caras (radianes)
-        facetRotation: { x: 0, y: 0.2, z: 0.3 },
+        facetRotation: { x: 0, y: 0.25, z: 0.3 },
+        // Línea central: 'ridge' = arista hacia fuera (creatividad) ·
+        // 'valley' = las dos mitades se unen hundidas (versión anterior)
+        seam: 'ridge',
+        // Hendidura superior (solo 'ridge'): vértice de la "V" y su pendiente
+        notch: { y: 0.86, slope: 0.9 },
         // Lóbulos superiores
         lobeX: 0.25,
         lobeY: 0.68,

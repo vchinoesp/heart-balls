@@ -25,28 +25,117 @@ export default class FacetedHeartShape extends HeartShape {
 
         this.facetDetail = params.facetDetail ?? 0;
         this.facetRotation = params.facetRotation ?? { x: 0, y: 0, z: 0 };
+        this.seam = params.seam ?? 'valley';
+        this.notch = params.notch ?? { y: 0.86, slope: 0.9 };
 
         this.buildPlanes();
     }
 
-    /** Implícita de la gota izquierda suave (sin unión con la derecha). */
+    /**
+     * Altura (z) de la mitad izquierda suave en (x, y); -1 = fuera.
+     *  - seam 'valley': gota izquierda sola -> al unir las dos mitades la
+     *    línea central queda hundida.
+     *  - seam 'ridge': mitad izquierda del corazón completo (hasta x = 0) con
+     *    la distancia real al borde de la silueta. El punto más alto queda en
+     *    el centro -> arista central hacia fuera, como en la creatividad.
+     */
     smoothHalf(x, y) {
+        if (this.seam === 'ridge') return this.ridgeHeight(x, y);
+
         const sd = this.capsule(x, y);
         const edge = Math.max(1 + sd / this.roundness, 0);
 
         if (edge > 1) return -1;
 
-        const thickness =
-            this.depth * (1 - this.fold * Math.min(Math.abs(x) / this.halfWidth, 1));
+        return this.thicknessAt(x) * Math.sqrt(1 - edge * edge);
+    }
 
-        return thickness * Math.sqrt(1 - edge * edge);
+    thicknessAt(x) {
+        return this.depth * (1 - this.fold * Math.min(Math.abs(x) / this.halfWidth, 1));
+    }
+
+    ridgeHeight(x, y) {
+        if (x > 0 || this.silhouette(x, y) > 0) return -1;
+
+        const edge = Math.max(1 - this.boundaryDistance(x, y) / this.roundness, 0);
+
+        return this.thicknessAt(x) * Math.sqrt(1 - edge * edge);
+    }
+
+    /**
+     * Distancia real al contorno de la silueta. La SDF de una unión (min) se
+     * queda corta por dentro justo en la costura central: por eso el centro
+     * se hundía. Aquí se mide contra puntos del contorno (solo en el bake).
+     */
+    boundaryDistance(x, y) {
+        this.contour ??= this.sampleContour();
+
+        let best = Infinity;
+        const points = this.contour;
+
+        for (let i = 0; i < points.length; i += 2) {
+            const dx = points[i] - x;
+            const dy = points[i + 1] - y;
+            const d = dx * dx + dy * dy;
+
+            if (d < best) best = d;
+        }
+
+        return Math.sqrt(best);
+    }
+
+    /** Puntos del contorno de la silueta (cambios de signo en una rejilla fina). */
+    sampleContour() {
+        const step = 0.002;
+        const { minX, maxX, maxY } = this.bounds;
+        const points = [];
+
+        for (let y = -step; y <= maxY + step; y += step) {
+            let previous = this.silhouette(minX - step, y);
+
+            for (let x = minX; x <= maxX + step; x += step) {
+                const value = this.silhouette(x, y);
+
+                if (Math.sign(value) !== Math.sign(previous)) {
+                    const t = previous / (previous - value);
+
+                    points.push(x - step + step * t, y);
+                }
+
+                previous = value;
+            }
+        }
+
+        for (let x = minX - step; x <= maxX + step; x += step) {
+            let previous = this.silhouette(x, -step);
+
+            for (let y = 0; y <= maxY + step; y += step) {
+                const value = this.silhouette(x, y);
+
+                if (Math.sign(value) !== Math.sign(previous)) {
+                    const t = previous / (previous - value);
+
+                    points.push(x, y - step + step * t);
+                }
+
+                previous = value;
+            }
+        }
+
+        return new Float64Array(points);
     }
 
     buildPlanes() {
-        const directions = FacetedHeartShape.createDirections(
+        let directions = FacetedHeartShape.createDirections(
             this.facetDetail,
             this.facetRotation
         );
+
+        // Arista: solo direcciones que miran a la izquierda (o al centro); la
+        // derecha es su reflejo exacto -> las caras se encuentran en x = 0
+        if (this.seam === 'ridge') {
+            directions = directions.filter((d) => d[0] <= 1e-6);
+        }
         const supports = new Float64Array(directions.length).fill(-Infinity);
         const step = 0.004;
         const { minX, maxX, maxY } = this.bounds;
@@ -73,6 +162,8 @@ export default class FacetedHeartShape extends HeartShape {
             distance: supports[i]
         }));
 
+        if (this.seam === 'ridge') this.buildRidgePlanes();
+
         // El poliedro puede ser algo mayor que la forma suave: actualizamos límites
         const margin = 0.08;
 
@@ -84,6 +175,43 @@ export default class FacetedHeartShape extends HeartShape {
             minZ: this.bounds.minZ - margin,
             maxZ: this.bounds.maxZ + margin
         };
+    }
+
+    /**
+     * Modo arista: un único poliedro convexo y simétrico (caras izquierdas +
+     * sus reflejos) al que se le talla la hendidura superior con una "V".
+     */
+    buildRidgePlanes() {
+        const mirrored = this.planes
+            .filter(({ normal }) => normal[0] < -1e-6)
+            .map(({ normal, distance }) => ({
+                normal: [-normal[0], normal[1], normal[2]],
+                distance
+            }));
+
+        this.solidPlanes = [...this.planes, ...mirrored];
+
+        // Hendidura: y > notch.y + slope·|x| queda fuera
+        const { y, slope } = this.notch;
+        const length = Math.hypot(slope, 1);
+
+        this.notchPlanes = [
+            { normal: [slope / length, 1 / length, 0], distance: y / length },
+            { normal: [-slope / length, 1 / length, 0], distance: y / length }
+        ];
+    }
+
+    static maxPlane(planes, x, y, z) {
+        let value = -Infinity;
+
+        for (let i = 0; i < planes.length; i++) {
+            const { normal, distance } = planes[i];
+            const d = normal[0] * x + normal[1] * y + normal[2] * z - distance;
+
+            if (d > value) value = d;
+        }
+
+        return value;
     }
 
     /** Distancia (con signo) al poliedro de la mitad izquierda. */
@@ -101,6 +229,17 @@ export default class FacetedHeartShape extends HeartShape {
     }
 
     evaluate(x, y, z) {
+        if (this.seam === 'ridge') {
+            const solid = FacetedHeartShape.maxPlane(this.solidPlanes, x, y, z);
+            // Hendidura: min de los dos planos de la "V" (paredes interiores de los lóbulos)
+            const notch = Math.min(
+                FacetedHeartShape.maxPlane([this.notchPlanes[0]], x, y, z),
+                FacetedHeartShape.maxPlane([this.notchPlanes[1]], x, y, z)
+            );
+
+            return Math.max(solid, notch);
+        }
+
         return Math.min(this.half(x, y, z), this.half(-x, y, z));
     }
 
@@ -109,6 +248,13 @@ export default class FacetedHeartShape extends HeartShape {
      * La mitad derecha es el reflejo en X de la izquierda.
      */
     getFaces() {
+        if (this.seam === 'ridge') {
+            return [...this.solidPlanes, ...this.notchPlanes].map(({ normal, distance }) => ({
+                normal: [...normal],
+                distance
+            }));
+        }
+
         const faces = [];
 
         for (const { normal, distance } of this.planes) {
