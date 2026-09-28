@@ -1,6 +1,13 @@
 import * as THREE from 'three';
 
 export default class Renderer {
+    /** Color de salida común (corazón y bola del popup deben verse iguales). */
+    static applyColorSettings(renderer) {
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.toneMapping = THREE.NeutralToneMapping;
+        renderer.toneMappingExposure = 1.2;
+    }
+
     constructor(canvas, sizes, scene, camera) {
         this.canvas = canvas;
         this.sizes = sizes;
@@ -19,9 +26,7 @@ export default class Renderer {
         });
 
         this.instance.setClearColor(0x000000, 0);
-        this.instance.outputColorSpace = THREE.SRGBColorSpace;
-        this.instance.toneMapping = THREE.NeutralToneMapping;
-        this.instance.toneMappingExposure = 1.2;
+        Renderer.applyColorSettings(this.instance);
 
         this.resize();
     }

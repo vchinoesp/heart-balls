@@ -49,22 +49,23 @@ const heartConfig = {
         // cabe (sin solaparse). `depth` = profundidad extra bajo la superficie.
         gapFill: [
             // Huecos grandes en la superficie (aristas entre caras)
-            { depth: 0, min: 0.009, max: 0.018 },
+            { depth: 0, min: 0.0077, max: 0.0153 },
             // Bolas pequeñas encajadas entre las grandes
-            { depth: 0.005, min: 0.006, max: 0.012 },
+            { depth: 0.0043, min: 0.0051, max: 0.0102 },
             // Bolitas en los huecos que quedan en la superficie
-            { depth: 0.003, min: 0.0055, max: 0.008 },
+            { depth: 0.0026, min: 0.0047, max: 0.0068 },
             // Segunda capa: lo que se ve por los huecos son más bolas, no fondo
-            { depth: 0.024, min: 0.012, max: 0.02, onlyUnderGaps: 0.005 },
+            { depth: 0.0204, min: 0.0102, max: 0.017, onlyUnderGaps: 0.0043 },
             // Relleno fino final
-            { depth: 0.012, min: 0.005, max: 0.01, onlyUnderGaps: 0.005 }
+            { depth: 0.0102, min: 0.0043, max: 0.0085, onlyUnderGaps: 0.0043 }
         ],
         // Candidatos casi en un hueco (espacio libre > holeSearch·min) se
         // recolocan en el centro del hueco antes de descartarlos
         holeSearch: 0.2,
         // Modo tallado: rejilla hexagonal perfecta en cada cara
         lattice: {
-            radius: 0.0195,
+            // Tamaño de bola: más pequeño = más bolas (0.0166 ≈ 3.800 bolas)
+            radius: 0.0166,
             jitter: 0.1,
             spacing: 1.0,
             // En las aristas: si no cabe, se prueba con bolas más pequeñas
@@ -73,7 +74,7 @@ const heartConfig = {
         // Puntos candidatos sobre la superficie (más = empaquetado más denso)
         candidates: 150000,
         // Cuánto se hunde el centro de cada bola bajo la superficie (unidades normalizadas)
-        inset: 0.012,
+        inset: 0.0102,
         // Separación mínima relativa entre bolas (1 = tocándose)
         separation: 1.0,
         // Relajación de la pasada principal (orden hexagonal)

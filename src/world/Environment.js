@@ -9,41 +9,55 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
  * - Relleno frío y suave desde la derecha.
  * - Contraluz para separar la silueta del fondo azul.
  * - RoomEnvironment (PMREM) como luz ambiental/reflejos suaves: sin HDR externo.
+ *
+ * `Environment.apply()` monta exactamente la misma luz en otra escena: la
+ * bola del popup (HeroBall) se ilumina igual que las bolas del corazón.
  */
 export default class Environment {
-    constructor(scene, renderer, debug) {
-        this.scene = scene;
-        this.renderer = renderer;
-        this.debug = debug;
+    static settings = {
+        environmentIntensity: 0.15,
+        key: { color: '#ffe9cf', intensity: 4.8, position: [-5, 8, 6] },
+        fill: { color: '#c9d6ff', intensity: 0.2, position: [6, -1, 4] },
+        rim: { color: '#ffe7c4', intensity: 1.3, position: [3, 5, -7] }
+    };
 
-        this.setEnvironmentMap();
-        this.setLights();
-        this.setDebug();
-    }
-
-    setEnvironmentMap() {
-        const pmrem = new THREE.PMREMGenerator(this.renderer);
+    /** Mapa de entorno + luces en `scene`. Devuelve { environmentMap, keyLight, fillLight, rimLight }. */
+    static apply(scene, renderer) {
+        const { environmentIntensity, key, fill, rim } = Environment.settings;
+        const pmrem = new THREE.PMREMGenerator(renderer);
         const room = new RoomEnvironment();
+        const environmentMap = pmrem.fromScene(room, 0.04).texture;
 
-        this.environmentMap = pmrem.fromScene(room, 0.04).texture;
-        this.scene.environment = this.environmentMap;
-        this.scene.environmentIntensity = 0.15;
+        scene.environment = environmentMap;
+        scene.environmentIntensity = environmentIntensity;
 
         room.dispose();
         pmrem.dispose();
+
+        const createLight = ({ color, intensity, position }) => {
+            const light = new THREE.DirectionalLight(color, intensity);
+
+            light.position.fromArray(position);
+
+            return light;
+        };
+
+        const keyLight = createLight(key);
+        const fillLight = createLight(fill);
+        const rimLight = createLight(rim);
+
+        scene.add(keyLight, fillLight, rimLight);
+
+        return { environmentMap, keyLight, fillLight, rimLight };
     }
 
-    setLights() {
-        this.keyLight = new THREE.DirectionalLight('#ffe9cf', 4.8);
-        this.keyLight.position.set(-5, 8, 6);
+    constructor(scene, renderer, debug) {
+        this.scene = scene;
+        this.debug = debug;
 
-        this.fillLight = new THREE.DirectionalLight('#c9d6ff', 0.2);
-        this.fillLight.position.set(6, -1, 4);
+        Object.assign(this, Environment.apply(scene, renderer));
 
-        this.rimLight = new THREE.DirectionalLight('#ffe7c4', 1.3);
-        this.rimLight.position.set(3, 5, -7);
-
-        this.scene.add(this.keyLight, this.fillLight, this.rimLight);
+        this.setDebug();
     }
 
     setDebug() {

@@ -17,7 +17,7 @@ import BallPicker from '../world/heart/BallPicker.js';
  *  - Pasar por un hueco entre bolas no apaga la repulsión (tolerancia de frames).
  *  - Histéresis: la bola destacada se mantiene mientras el puntero siga cerca
  *    de ella, aunque el rayo toque ya a una vecina.
- *  - Las bolitas de relleno no se destacan (solo las de tamaño normal).
+ *  - Todas las bolas se pueden elegir; el picking usa la posición dibujada.
  */
 export default class BallSelection {
     constructor({ camera, heartBalls, fx, element, interaction, onSelect, getCenterNdc }) {
@@ -43,7 +43,7 @@ export default class BallSelection {
         this.missFrames = 0;
 
         this.maxMissFrames = 10;
-        this.hoverRelease = 1.25; // la bola destacada se suelta al alejarse 1.25 radios
+        this.hoverRelease = 1.08; // la bola destacada se suelta al salir de ella (+8 %)
     }
 
     /** Llamado por HeartControls en cada movimiento (ndc o null). */
@@ -113,14 +113,12 @@ export default class BallSelection {
         this.hadPointer = false;
     }
 
-    /** Primero cualquier bola; si es una bolita de relleno, la normal más cercana tras ella. */
+    /**
+     * La bola que se ve bajo el puntero (grande o pequeña, con la repulsión
+     * aplicada). Lo que se elige es siempre lo que el usuario está señalando.
+     */
     pickHoverable(ndc) {
-        const minRadius = this.heartBalls.referenceRadius * 0.55;
-        const hit = this.picker.pick(ndc.x, ndc.y, this.heartBalls);
-
-        if (!hit || this.heartBalls.radii[hit.index] >= minRadius) return hit;
-
-        return this.picker.pick(ndc.x, ndc.y, this.heartBalls, { minRadius }) ?? hit;
+        return this.picker.pick(ndc.x, ndc.y, this.heartBalls);
     }
 
     updateSpeed() {

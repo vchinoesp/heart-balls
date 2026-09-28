@@ -30,7 +30,7 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
             uNumberColor: { value: new THREE.Color(numberColor) },
             uBaseColor: { value: new THREE.Color(color) },
             // Ancho y alto del número en coordenadas de la esfera unidad
-            uLabelSize: { value: new THREE.Vector2(1.42, 0.62) },
+            uLabelSize: { value: new THREE.Vector2(1.52, 0.6) },
             uCavity: { value: new THREE.Vector2(0.12, 1.05) },
             // Sombreado global del corazón: la cara que no mira a la luz se oscurece
             uLightDirection: { value: new THREE.Vector3(-0.6, 0.62, 0.5).normalize() },
@@ -195,10 +195,24 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
                         return 0.0;
                     }
 
-                    float cell = label.x * 5.0;
-                    float index = floor(cell);
-                    float digit = mod(floor((number + 0.5) / digitPower(index)), 10.0);
-                    vec2 atlasUv = vec2((digit + fract(cell)) / 10.0, label.y);
+                    // Formato lotería "00.000": 2 dígitos, punto (media celda), 3 dígitos
+                    float cell = label.x * 5.5;
+                    float atlasCell;
+                    float cellFract;
+
+                    if (cell < 2.0) {
+                        atlasCell = mod(floor((number + 0.5) / digitPower(floor(cell))), 10.0);
+                        cellFract = fract(cell);
+                    } else if (cell < 2.5) {
+                        atlasCell = 10.0; // punto
+                        cellFract = (cell - 2.0) * 2.0;
+                    } else {
+                        float index = 2.0 + floor(cell - 2.5);
+                        atlasCell = mod(floor((number + 0.5) / digitPower(index)), 10.0);
+                        cellFract = fract(cell - 2.5);
+                    }
+
+                    vec2 atlasUv = vec2((atlasCell + cellFract) / 11.0, label.y);
 
                     // Trazo fino: se refuerza algo al alejarse (el mipmap lo aclara)
                     return smoothstep(0.06, 0.6, textureGrad(uDigits, atlasUv, gradX, gradY).a);
@@ -254,6 +268,6 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
     }
 
     customProgramCacheKey() {
-        return 'BallMaterial_v6';
+        return 'BallMaterial_v7';
     }
 }

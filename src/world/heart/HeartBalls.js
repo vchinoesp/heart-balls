@@ -206,6 +206,62 @@ export default class HeartBalls {
         if (this.coreMesh) this.coreMesh.visible = progress > 0.75;
     }
 
+    /**
+     * Esfera de la bola `i` tal y como la dibuja ahora el vertex shader
+     * (repulsión + hover + selección), en espacio local del mesh.
+     * El picking la usa para elegir exactamente la bola que se ve.
+     * Misma fórmula que BallMaterial (project_vertex).
+     */
+    getDisplayedSphere(i, out) {
+        const u = this.material.uniforms;
+        const i3 = i * 3;
+        const cx = this.centers[i3];
+        const cy = this.centers[i3 + 1];
+        const cz = this.centers[i3 + 2];
+        const nx = this.surfaceNormals[i3];
+        const ny = this.surfaceNormals[i3 + 1];
+        const nz = this.surfaceNormals[i3 + 2];
+
+        let hover = 0;
+
+        if (i === u.uHoverId.value) hover = u.uHover.value;
+        if (i === u.uPrevHoverId.value) hover = Math.max(hover, u.uPrevHover.value);
+
+        const pointer = u.uPointer.value;
+        const fx = cx - pointer.x;
+        const fy = cy - pointer.y;
+        const fz = cz - pointer.z;
+        const distance = Math.hypot(fx, fy, fz);
+        const t = Math.min(Math.max(distance / u.uRepelRadius.value, 0), 1);
+        let field = (1 - t * t * (3 - 2 * t)) * u.uRepel.value * (1 - Math.min(hover, 1));
+
+        const along = fx * nx + fy * ny + fz * nz;
+        let tx = fx - nx * along;
+        let ty = fy - ny * along;
+        let tz = fz - nz * along;
+        const tangentLength = Math.hypot(tx, ty, tz);
+
+        if (tangentLength > 1e-4) {
+            tx /= tangentLength;
+            ty /= tangentLength;
+            tz /= tangentLength;
+        } else {
+            tx = ty = tz = 0;
+        }
+
+        const boost = u.uHoverBoost.value;
+        const push = field * u.uRepelPush.value;
+        const lift = field * u.uRepelLift.value + hover * u.uHoverLift.value * boost;
+        const selected = i === u.uSelectedId.value ? u.uSelectedScale.value : 1;
+
+        out.x = cx + tx * push + nx * lift;
+        out.y = cy + ty * push + ny * lift;
+        out.z = cz + tz * push + nz * lift;
+        out.radius = this.radii[i] * (1 + hover * u.uHoverScale.value * boost) * selected;
+
+        return out;
+    }
+
     getNumber(index) {
         return Math.round(this.numbers[index]);
     }

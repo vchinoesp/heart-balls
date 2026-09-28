@@ -1,23 +1,31 @@
 import * as THREE from 'three';
 import gsap from 'gsap';
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+
+import Environment from '../world/Environment.js';
+import Renderer from '../experience/Renderer.js';
+import BallMaterial from '../world/heart/BallMaterial.js';
 
 /**
  * HeroBall
  *
  * La bola elegida, grande, dentro del popup. Usa su propio canvas/renderer
- * pequeño (solo existe mientras el popup está abierto) para poder vivir
- * encima del panel del popup. El número se pinta en una textura
- * equirectangular que envuelve la esfera: al girar se lee de izq. a dcha.
+ * pequeño (solo se renderiza mientras el popup está abierto) para poder vivir
+ * encima del panel del popup.
+ *
+ * Es la MISMA bola que en el corazón: mismo material (BallMaterial, con el
+ * atlas de dígitos compartido), misma luz (Environment.apply) y mismo color
+ * de salida (Renderer.applyColorSettings). Solo se desactivan los efectos
+ * que dependen del corazón (sombra entre vecinas, sombra cenital).
  *
  * Entrada: llega rodando desde la izquierda (gira de izq. a dcha.).
  * Después se balancea sola y se puede girar arrastrando (ratón o dedo), con
  * inercia; al soltarla vuelve a balancearse sola.
  */
 export default class HeroBall {
-    constructor(canvas, { reducedMotion = false } = {}) {
+    constructor(canvas, { reducedMotion = false, ball } = {}) {
         this.canvas = canvas;
         this.reducedMotion = reducedMotion;
+        this.ballOptions = ball;
         this.render = this.render.bind(this);
 
         // Amplitud del balanceo automático (rad) y sensibilidad del arrastre
@@ -38,8 +46,7 @@ export default class HeroBall {
         });
 
         this.renderer.setClearColor(0x000000, 0);
-        this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        Renderer.applyColorSettings(this.renderer);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     }
 
@@ -48,44 +55,34 @@ export default class HeroBall {
         this.camera = new THREE.PerspectiveCamera(26, 1, 0.1, 50);
         this.camera.position.set(0, 0, 6.2);
 
-        const pmrem = new THREE.PMREMGenerator(this.renderer);
-        const room = new RoomEnvironment();
-
-        this.environment = pmrem.fromScene(room, 0.04).texture;
-        this.scene.environment = this.environment;
-        this.scene.environmentIntensity = 0.45;
-
-        room.dispose();
-        pmrem.dispose();
-
-        const key = new THREE.DirectionalLight('#fff1dc', 2.6);
-
-        key.position.set(-3, 4, 5);
-
-        const rim = new THREE.DirectionalLight('#ffe2b0', 1.2);
-
-        rim.position.set(4, 2, -3);
-
-        this.scene.add(key, rim);
+        ({ environmentMap: this.environment } = Environment.apply(this.scene, this.renderer));
     }
 
     setBall() {
-        this.labelCanvas = document.createElement('canvas');
-        this.labelCanvas.width = 2048;
-        this.labelCanvas.height = 1024;
+        const { digits, color, roughness, numberColor, interaction } = this.ballOptions;
 
-        this.texture = new THREE.CanvasTexture(this.labelCanvas);
-        this.texture.colorSpace = THREE.SRGBColorSpace;
-        this.texture.anisotropy = 8;
+        this.material = new BallMaterial({ digits, color, roughness, numberColor, interaction });
 
-        this.ball = new THREE.Mesh(
-            new THREE.SphereGeometry(1, 96, 64),
-            new THREE.MeshStandardMaterial({
-                map: this.texture,
-                roughness: 0.48,
-                metalness: 0
-            })
+        const uniforms = this.material.uniforms;
+
+        // Sin vecinas ni corazón alrededor: fuera la sombra de contacto fuerte,
+        // el sombreado por cara y la sombra cenital
+        uniforms.uCavity.value.set(0.82, 1.0);
+        uniforms.uSurfaceShade.value = 1;
+        uniforms.uHeightShade.value.set(-100, -99, 1);
+
+        this.geometry = new THREE.SphereGeometry(1, 96, 64);
+        this.numberAttribute = new THREE.InstancedBufferAttribute(new Float32Array(1), 1);
+        this.geometry.setAttribute('aNumber', this.numberAttribute);
+        this.geometry.setAttribute(
+            'aIntro',
+            new THREE.InstancedBufferAttribute(new Float32Array(2), 2)
         );
+
+        // Una sola instancia (matriz identidad: el número mira a cámara, +Z)
+        this.ball = new THREE.InstancedMesh(this.geometry, this.material, 1);
+        this.ball.setMatrixAt(0, new THREE.Matrix4());
+        this.ball.frustumCulled = false;
 
         // Tres niveles de giro independientes (así no se pisan las animaciones):
         //  pivot      -> arrastre del usuario (gsap.quickTo)
@@ -180,68 +177,10 @@ export default class HeroBall {
         this.swayCall = null;
     }
 
-    /** Textura de madera clara con el número "tostado" en el frente. */
-    paintLabel(number) {
-        const context = this.labelCanvas.getContext('2d');
-        const { width, height } = this.labelCanvas;
-        const text = HeroBall.format(number);
-
-        // Madera
-        const gradient = context.createLinearGradient(0, 0, 0, height);
-
-        gradient.addColorStop(0, '#ddb062');
-        gradient.addColorStop(0.5, '#f0cb83');
-        gradient.addColorStop(1, '#d4a354');
-        context.fillStyle = gradient;
-        context.fillRect(0, 0, width, height);
-
-        // Veta sutil
-        context.globalAlpha = 0.06;
-        context.strokeStyle = '#7a5427';
-
-        for (let y = 0; y < height; y += 9) {
-            context.lineWidth = 1 + ((y * 7) % 3);
-            context.beginPath();
-
-            for (let x = 0; x <= width; x += 32) {
-                const wave = Math.sin(x * 0.004 + y * 0.05) * 6;
-
-                if (x === 0) context.moveTo(x, y + wave);
-                else context.lineTo(x, y + wave);
-            }
-
-            context.stroke();
-        }
-
-        context.globalAlpha = 1;
-
-        // Agujero superior (como las bolas del bombo)
-        const hole = context.createLinearGradient(0, 0, 0, height * 0.04);
-
-        hole.addColorStop(0, '#3a2412');
-        hole.addColorStop(1, 'rgba(58, 36, 18, 0)');
-        context.fillStyle = hole;
-        context.fillRect(0, 0, width, height * 0.04);
-
-        // Número: centrado en u = 0.25 (frente de la esfera en Three.js)
-        const centerX = width * 0.25;
-        const centerY = height * 0.52;
-
-        // Tipografía fina (Source Sans 3 Light), "tostada" sobre la madera
-        context.font = `300 ${height * 0.34}px "Source Sans 3", "Helvetica Neue", Arial, sans-serif`;
-        context.textAlign = 'center';
-        context.textBaseline = 'middle';
-
-        context.filter = 'blur(1.5px)';
-        context.fillStyle = 'rgba(255, 236, 200, 0.5)';
-        context.fillText(text, centerX + 2, centerY + 3);
-
-        context.filter = 'blur(0.8px)';
-        context.fillStyle = '#6e4827';
-        context.fillText(text, centerX, centerY);
-        context.filter = 'none';
-
-        this.texture.needsUpdate = true;
+    /** Número de la bola (el shader lo pinta con formato "00.000"). */
+    setNumber(number) {
+        this.numberAttribute.array[0] = number;
+        this.numberAttribute.needsUpdate = true;
     }
 
     resize() {
@@ -255,7 +194,7 @@ export default class HeroBall {
     }
 
     open(number) {
-        this.paintLabel(number);
+        this.setNumber(number);
         this.resize();
 
         gsap.killTweensOf([this.ball.position, this.ball.rotation, this.ball.scale]);
@@ -317,7 +256,7 @@ export default class HeroBall {
 
     /** Compila shaders y sube texturas antes del primer uso (sin tirón al abrir). */
     prewarm() {
-        this.paintLabel(0);
+        this.setNumber(0);
         this.render();
     }
 
@@ -334,9 +273,9 @@ export default class HeroBall {
 
     dispose() {
         this.close();
-        this.ball.geometry.dispose();
-        this.ball.material.dispose();
-        this.texture.dispose();
+        this.geometry.dispose();
+        this.material.dispose();
+        this.ball.dispose();
         this.environment.dispose();
         this.renderer.dispose();
     }

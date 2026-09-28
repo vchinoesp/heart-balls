@@ -10,8 +10,10 @@ import HeroBall from './HeroBall.js';
  * vuelve al elemento que lo abrió. Animaciones de entrada/salida con GSAP.
  */
 export default class BallModal {
-    constructor({ root, links = {}, reducedMotion = false, onClose }) {
+    constructor({ root, links = {}, reducedMotion = false, ball, onClose }) {
         this.root = root;
+        // Material/atlas de las bolas del corazón: la del popup es idéntica
+        this.ball = ball;
         this.links = links;
         this.reducedMotion = reducedMotion;
         this.onClose = onClose;
@@ -90,7 +92,7 @@ export default class BallModal {
     }
 
     createHero() {
-        this.hero ??= new HeroBall(this.canvas, { reducedMotion: this.reducedMotion });
+        this.hero ??= new HeroBall(this.canvas, { reducedMotion: this.reducedMotion, ball: this.ball });
     }
 
     /** Se llama durante el loading: el primer popup se abre sin tirones. */

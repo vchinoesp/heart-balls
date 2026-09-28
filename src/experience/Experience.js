@@ -119,6 +119,13 @@ export default class Experience {
             root: this.modalRoot,
             links: this.links,
             reducedMotion: this.reducedMotion,
+            ball: {
+                digits: heartBalls.digits.texture,
+                color: this.config.ball.color,
+                roughness: this.config.ball.roughness,
+                numberColor: this.config.ball.numberColor,
+                interaction: this.config.interaction
+            },
             onClose: () => this.onModalClose()
         });
 
