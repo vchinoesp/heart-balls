@@ -7,9 +7,15 @@ import * as THREE from 'three';
  * Mucho más barato que Raycaster sobre el InstancedMesh (que prueba triángulo
  * a triángulo): ~3.000 esferas = microsegundos, apto para cada frame en móvil.
  *
- * Las esferas se prueban donde se DIBUJAN (con la repulsión y el hover del
- * shader aplicados, ver HeartBalls.getDisplayedSphere): la bola elegida es
- * siempre la primera que se ve bajo el puntero, sea grande o pequeña.
+ * Dos modos:
+ *  - displayed (por defecto): las esferas se prueban donde se DIBUJAN (con la
+ *    repulsión y el hover del shader, ver HeartBalls.getDisplayedSphere).
+ *    Para destacar/elegir: siempre la bola que se ve bajo el puntero.
+ *  - reposo (displayed: false): posiciones fijas del layout, opcionalmente
+ *    "infladas". Para saber si el puntero está sobre el corazón y dónde
+ *    centrar la repulsión. No puede usar las posiciones desplazadas: la
+ *    repulsión abre un hueco bajo el puntero, el rayo no toca nada, la
+ *    repulsión se apaga, el hueco se cierra... (parpadeo continuo).
  */
 export default class BallPicker {
     constructor(camera) {
@@ -27,7 +33,7 @@ export default class BallPicker {
      * @param {HeartBalls} heartBalls
      * @returns {{ index: number, point: THREE.Vector3 } | null} punto en espacio local del mesh
      */
-    pick(x, y, heartBalls) {
+    pick(x, y, heartBalls, { displayed = true, inflate = 1 } = {}) {
         const mesh = heartBalls.mesh;
 
         if (!mesh) return null;
@@ -45,8 +51,19 @@ export default class BallPicker {
         let best = -1;
         let bestT = Infinity;
 
+        const { centers, radii } = heartBalls;
+
         for (let i = 0; i < heartBalls.count; i++) {
-            heartBalls.getDisplayedSphere(i, sphere);
+            if (displayed) {
+                heartBalls.getDisplayedSphere(i, sphere);
+            } else {
+                const i3 = i * 3;
+
+                sphere.x = centers[i3];
+                sphere.y = centers[i3 + 1];
+                sphere.z = centers[i3 + 2];
+                sphere.radius = radii[i] * inflate;
+            }
 
             if (sphere.radius <= 0) continue;
 

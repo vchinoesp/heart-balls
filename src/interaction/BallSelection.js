@@ -43,7 +43,10 @@ export default class BallSelection {
         this.missFrames = 0;
 
         this.maxMissFrames = 10;
-        this.hoverRelease = 1.08; // la bola destacada se suelta al salir de ella (+8 %)
+        this.hoverRelease = 1.15; // la bola destacada se suelta al alejarse 1.15 radios
+        // Radio extra para saber si el puntero está "sobre el corazón": así las
+        // costuras entre bolas no apagan la repulsión
+        this.surfaceInflate = 1.35;
     }
 
     /** Llamado por HeartControls en cada movimiento (ndc o null). */
@@ -55,7 +58,26 @@ export default class BallSelection {
     tap(ndc, pointerType) {
         if (this.locked) return;
 
-        const hit = this.pickHoverable(ndc);
+        let hit = this.pickHoverable(ndc);
+
+        // Ratón: se elige la bola destacada (la que el usuario está viendo
+        // resaltada), aunque el clic caiga justo en su borde
+        const hovered = this.fx.hoverIndex;
+
+        if (
+            pointerType === 'mouse' &&
+            hovered >= 0 &&
+            this.picker.relativeDistance(hovered, this.heartBalls) < this.hoverRelease
+        ) {
+            this.select(hovered);
+
+            return;
+        }
+
+        // Táctil: si el dedo cae en un hueco, la bola más cercana en reposo
+        if (!hit && pointerType !== 'mouse') {
+            hit = this.picker.pick(ndc.x, ndc.y, this.heartBalls, { displayed: false, inflate: 1.2 });
+        }
 
         if (!hit) {
             this.armedIndex = -1;
@@ -162,7 +184,11 @@ export default class BallSelection {
             return;
         }
 
-        const hit = this.picker.pick(this.pointer.x, this.pointer.y, this.heartBalls);
+        // Posiciones en reposo (sin la repulsión): estable, sin realimentación
+        const hit = this.picker.pick(this.pointer.x, this.pointer.y, this.heartBalls, {
+            displayed: false,
+            inflate: this.surfaceInflate
+        });
 
         if (!hit) {
             // Hueco entre bolas o borde: margen antes de apagar el efecto
