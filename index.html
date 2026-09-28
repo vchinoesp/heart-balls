@@ -80,7 +80,7 @@
           <button class="play-button site-header__watch" type="button" data-action="watch">
             <span class="play-button__label">Ver el anuncio</span>
             <span class="play-button__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false"><path d="M9 6.5v11l9-5.5z" /></svg>
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#0b1730"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M21.4086 9.35258C23.5305 10.5065 23.5305 13.4935 21.4086 14.6474L8.59662 21.6145C6.53435 22.736 4 21.2763 4 18.9671L4 5.0329C4 2.72368 6.53435 1.26402 8.59661 2.38548L21.4086 9.35258Z" fill="#0b1730"></path> </g></svg>
             </span>
           </button>
 
@@ -174,7 +174,7 @@
               <button class="video__poster" type="button" data-action="play-video" aria-label="Reproducir el vídeo">
                 <img class="video__poster-image" alt="" width="1280" height="720" />
                 <span class="video__poster-play" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" focusable="false"><path d="M9 6.5v11l9-5.5z" /></svg>
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#0b1730"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M21.4086 9.35258C23.5305 10.5065 23.5305 13.4935 21.4086 14.6474L8.59662 21.6145C6.53435 22.736 4 21.2763 4 18.9671L4 5.0329C4 2.72368 6.53435 1.26402 8.59661 2.38548L21.4086 9.35258Z" fill="#0b1730"></path> </g></svg>
                 </span>
               </button>
             </div>
@@ -182,7 +182,7 @@
             <button class="play-button play-button--gold video__switch" type="button" data-action="switch-video">
               <span class="play-button__label">Ver making of</span>
               <span class="play-button__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" focusable="false"><path d="M9 6.5v11l9-5.5z" /></svg>
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#0b1730"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M21.4086 9.35258C23.5305 10.5065 23.5305 13.4935 21.4086 14.6474L8.59662 21.6145C6.53435 22.736 4 21.2763 4 18.9671L4 5.0329C4 2.72368 6.53435 1.26402 8.59661 2.38548L21.4086 9.35258Z" fill="#0b1730"></path> </g></svg>
               </span>
             </button>
           </div>
@@ -301,6 +301,29 @@
           </a>
         </div>
       </div>
+    </div>
+
+    <!-- 5. Móvil en horizontal (alto < 450px): pedir girar el móvil -->
+    <div
+      class="rotate-notice"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="rotate-notice-text"
+      hidden
+    >
+      <svg class="rotate-notice__icon" viewBox="0 0 80 80" aria-hidden="true" focusable="false">
+        <path d="M18 18a30 30 0 0 1 44 0" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+        <path d="M55 17.5l7.5.5-.5-7.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+        <g class="rotate-notice__phone">
+          <rect x="28" y="14" width="24" height="44" rx="4" fill="none" stroke="#fff" stroke-width="2.5" />
+          <path d="M36 19h8" stroke="#fff" stroke-width="2" stroke-linecap="round" />
+          <circle cx="40" cy="52.5" r="1.8" fill="#fff" />
+        </g>
+      </svg>
+      <p class="rotate-notice__text" id="rotate-notice-text" tabindex="-1">
+        Para una mejor experiencia
+        <span class="rotate-notice__highlight">gira tu móvil</span>
+      </p>
     </div>
 
     <noscript>

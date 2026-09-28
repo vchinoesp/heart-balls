@@ -102,9 +102,9 @@
       box-shadow 0.5s $ease-out-expo;
 
     svg {
-      width: 55%;
-      height: 55%;
-      margin-left: 8%;
+      width: 45%;
+      height: 45%;
+      margin-left: 0%;
       fill: $color-ink;
     }
   }
@@ -140,14 +140,16 @@
     }
   }
 
-  // En móvil el header solo muestra el círculo (el texto queda para lectores)
+  // En móvil el texto de "Ver el anuncio" va debajo del círculo
   @media (max-width: 47.99rem) {
-    &.site-header__watch &__label {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip-path: inset(50%);
+    &.site-header__watch {
+      flex-direction: column-reverse;
+      gap: 0.3rem;
+      font-size: 0.6875rem;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      white-space: nowrap;
+      border-radius: 0.75rem;
     }
   }
 }

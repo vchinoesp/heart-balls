@@ -10,6 +10,12 @@ import Screen from './Screen.js';
  *
  * El porcentaje refleja la carga real (fuentes + datos + WebGL) pero nunca
  * va más rápido que `minDuration`: la animación siempre se ve completa.
+ *
+ * Sincronía línea / punto: la línea NO se dibuja con stroke-dasharray (cada
+ * navegador mide el trazo a su manera: pathLength, subtrazos, Safari...).
+ * El ECG es una polilínea conocida, así que en cada frame se calcula a mano
+ * el punto de la cabeza y la línea visible se construye hasta ese mismo
+ * punto. Línea y punto salen del mismo número: imposible que se desfasen.
  */
 const BASELINE = 80;
 
@@ -26,7 +32,9 @@ const SEQUENCE = [
     { x: 330, beat: BIG_BEAT, scale: 1 },
     { x: 468, beat: SMALL_BEAT, scale: 1 }
 ];
+const START_X = 4;
 const END_X = 578;
+const TICK = 24; // marca vertical inicial
 
 export default class LoaderScreen extends Screen {
     constructor(root, { reducedMotion, minDuration = 2.8 }) {
@@ -39,29 +47,59 @@ export default class LoaderScreen extends Screen {
         this.glow = root.querySelector('.loader__glow');
         this.value = root.querySelector('.loader__value');
 
-        this.line.setAttribute('d', LoaderScreen.buildPath());
-        this.length = this.line.getTotalLength();
-
-        // pathLength = 1: el trazo visible y el punto usan exactamente la misma
-        // medida (evita que el punto quede por detrás de la línea)
-        this.line.setAttribute('pathLength', '1');
-        this.line.style.strokeDasharray = '1 1';
-        this.line.style.strokeDashoffset = '1';
+        this.segments = LoaderScreen.buildSegments();
+        this.length = this.segments.at(-1).end;
 
         this.displayed = 0;
+        this.render(0);
     }
 
-    static buildPath() {
-        // Marca vertical inicial + línea base con latidos
-        let d = `M4 ${BASELINE - 24} L4 ${BASELINE + 24} M4 ${BASELINE}`;
+    /**
+     * Tramos rectos del ECG con su longitud acumulada. `move` indica que el
+     * tramo empieza un subtrazo nuevo (la marca vertical va aparte).
+     */
+    static buildSegments() {
+        const points = [
+            { x: START_X, y: BASELINE - TICK, move: true },
+            { x: START_X, y: BASELINE + TICK },
+            { x: START_X, y: BASELINE, move: true }
+        ];
 
         for (const { x, beat, scale } of SEQUENCE) {
             for (const [dx, dy] of beat) {
-                d += ` L${x + dx} ${BASELINE + dy * scale}`;
+                points.push({ x: x + dx, y: BASELINE + dy * scale });
             }
         }
 
-        return `${d} L${END_X} ${BASELINE}`;
+        points.push({ x: END_X, y: BASELINE });
+
+        const segments = [];
+        let total = 0;
+
+        for (let i = 1; i < points.length; i++) {
+            const from = points[i - 1];
+            const to = points[i];
+
+            // Salto de subtrazo: no suma longitud (no se dibuja)
+            if (to.move) continue;
+
+            const length = Math.hypot(to.x - from.x, to.y - from.y);
+
+            if (length === 0) continue;
+
+            segments.push({
+                from,
+                to,
+                start: total,
+                end: total + length,
+                length,
+                move: Boolean(from.move) || segments.at(-1)?.to !== from
+            });
+
+            total += length;
+        }
+
+        return segments;
     }
 
     get animated() {
@@ -107,16 +145,36 @@ export default class LoaderScreen extends Screen {
         });
     }
 
+    /** Línea visible hasta `progress` y el punto exactamente en su extremo. */
     render(progress) {
-        const length = this.length * progress;
-        const point = this.line.getPointAtLength(length);
+        const head = this.length * progress;
+        let d = '';
+        let point = this.segments[0].from;
+
+        for (const segment of this.segments) {
+            if (segment.start >= head && d) break;
+
+            if (segment.move || !d) d += `M${segment.from.x} ${segment.from.y}`;
+
+            const t = Math.min(Math.max((head - segment.start) / segment.length, 0), 1);
+
+            point = {
+                x: segment.from.x + (segment.to.x - segment.from.x) * t,
+                y: segment.from.y + (segment.to.y - segment.from.y) * t
+            };
+
+            d += `L${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
+
+            if (t < 1) break;
+        }
+
         const percent = Math.round(progress * 100);
 
-        this.line.style.strokeDashoffset = `${1 - progress}`;
-        this.dot.setAttribute('cx', point.x);
-        this.dot.setAttribute('cy', point.y);
-        this.glow.setAttribute('cx', point.x);
-        this.glow.setAttribute('cy', point.y);
+        this.line.setAttribute('d', d);
+        this.dot.setAttribute('cx', point.x.toFixed(2));
+        this.dot.setAttribute('cy', point.y.toFixed(2));
+        this.glow.setAttribute('cx', point.x.toFixed(2));
+        this.glow.setAttribute('cy', point.y.toFixed(2));
 
         if (percent !== this.lastPercent) {
             this.lastPercent = percent;

@@ -1,0 +1,47 @@
+@use '../tokens' as *;
+
+// Bloque BEM: aviso "gira tu móvil" (móvil en horizontal, alto < 450px)
+.rotate-notice {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  padding: 1rem calc(1rem + env(safe-area-inset-right)) 1rem calc(1rem + env(safe-area-inset-left));
+  background: radial-gradient(ellipse 80% 90% at 50% 60%, $color-bg-floor 0%, $color-bg-mid 45%, $color-bg-top 100%);
+  text-align: center;
+
+  &[hidden] {
+    display: none;
+  }
+
+  &__icon {
+    width: 5rem;
+    height: 5rem;
+    overflow: visible;
+    color: $color-gold;
+  }
+
+  &__text {
+    margin: 0;
+    color: $color-text-soft;
+    font-size: 1.0625rem;
+    font-weight: 300;
+    line-height: 1.4;
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  &__highlight {
+    display: block;
+    color: $color-gold;
+    font-size: 1.375rem;
+    font-weight: 400;
+    text-transform: uppercase;
+  }
+}

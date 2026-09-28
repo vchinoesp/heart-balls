@@ -37,6 +37,7 @@ export default class Experience {
 
         this.hidden = true; // fuera de la home
         this.modalOpen = false;
+        this.blocked = false; // aviso "gira tu móvil" visible
 
         this.scene = new THREE.Scene();
         this.debug = new Debug();
@@ -44,7 +45,7 @@ export default class Experience {
     }
 
     get paused() {
-        return this.hidden || this.modalOpen;
+        return this.hidden || this.modalOpen || this.blocked;
     }
 
     async init({ onProgress } = {}) {
@@ -160,6 +161,11 @@ export default class Experience {
 
     resume() {
         this.hidden = false;
+    }
+
+    /** Con el aviso de girar el móvil delante no se renderiza. */
+    setBlocked(blocked) {
+        this.blocked = blocked;
     }
 
     setSafeArea({ top, bottom }) {

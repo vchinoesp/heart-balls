@@ -9,6 +9,7 @@ import LoaderScreen from './screens/LoaderScreen.js';
 import HomeScreen from './screens/HomeScreen.js';
 import HeartScreen from './screens/HeartScreen.js';
 import VideoScreen from './screens/VideoScreen.js';
+import RotateNotice from './ui/RotateNotice.js';
 
 /**
  * App
@@ -51,6 +52,13 @@ export default class App {
         });
 
         gsap.set([this.footer, this.canvas], { autoAlpha: 0 });
+
+        // Móvil en horizontal: pantalla "gira tu móvil" y render en pausa
+        this.rotateNotice = new RotateNotice(document.querySelector('.rotate-notice'), {
+            reducedMotion: this.reducedMotion,
+            blocked: [document.querySelector('.layout'), this.canvas, document.querySelector('.ball-modal')],
+            onChange: (active) => this.experience?.setBlocked?.(active)
+        });
     }
 
     setScreens() {
@@ -124,6 +132,8 @@ export default class App {
                 links: this.config.links
             });
 
+            this.experience.setBlocked(this.rotateNotice.active);
+
             await this.experience.init({
                 onProgress: (value) => {
                     this.progress.experience = value;
@@ -180,7 +190,10 @@ export default class App {
             this.hideHeart(name)
         ]);
 
-        // Fase 2: entrada
+        // Fase 2: entrada. El footer deja de ocupar sitio solo ahora, con la
+        // pantalla anterior ya oculta: su hueco no recoloca nada visible.
+        if (!this.footerVisibleOn(name)) this.footer.hidden = true;
+
         this.current = next;
         this.body.dataset.screen = name;
 
@@ -213,7 +226,10 @@ export default class App {
         return name === 'age' || name === 'home' || name === 'video';
     }
 
-    /** El footer se va (y deja de ocupar sitio) antes de que entre la pantalla. */
+    /**
+     * El footer se funde durante la salida pero sigue ocupando su sitio; el
+     * `hidden` (que lo quita del layout) lo pone goTo al empezar la entrada.
+     */
     hideFooter(name) {
         if (this.footerVisibleOn(name) || this.footer.hidden) return null;
 
@@ -224,10 +240,7 @@ export default class App {
                 autoAlpha: 0,
                 duration: 0.4,
                 ease: 'power2.in',
-                overwrite: true,
-                onComplete: () => {
-                    this.footer.hidden = true;
-                }
+                overwrite: true
             })
             .then();
     }
