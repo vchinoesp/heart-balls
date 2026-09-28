@@ -99,12 +99,14 @@ const heartConfig = {
     },
 
     ball: {
-        color: '#d8ab6c',
+        color: '#e6ae80',
         colorVariation: 0.07,
-        roughness: 0.62,
-        numberColor: '#3f342a',
+        roughness: 0.4,
+        numberColor: '#4b2d17',
         // Interior del corazón (lo que se ve entre las bolas): granate
         coreColor: '#5a0d1c',
+        // Luz que recibe el interior (1 = normal): más bajo = se lee como sombra
+        coreShade: 0.45,
         maxRoll: 0.18
     },
 
@@ -120,6 +122,8 @@ const heartConfig = {
         // Bola bajo el puntero
         hoverLift: 0.035, // subida
         hoverScale: 0.1, // crecimiento (0.1 = +10 %)
+        // Móvil: la bola preseleccionada sube y crece este múltiplo (2.8 = +28 %)
+        touchHoverBoost: 2.8,
         // Suavizado del seguimiento del puntero (segundos): más = más suave
         pointerSmoothing: 0.55,
         // Por encima de esta velocidad (pantallas/segundo) no se destaca bola:

@@ -27,17 +27,17 @@ export default class Environment {
 
         this.environmentMap = pmrem.fromScene(room, 0.04).texture;
         this.scene.environment = this.environmentMap;
-        this.scene.environmentIntensity = 0.16;
+        this.scene.environmentIntensity = 0.15;
 
         room.dispose();
         pmrem.dispose();
     }
 
     setLights() {
-        this.keyLight = new THREE.DirectionalLight('#fff1dc', 3.2);
-        this.keyLight.position.set(-7, 5, 5);
+        this.keyLight = new THREE.DirectionalLight('#ffe9cf', 4.8);
+        this.keyLight.position.set(-5, 8, 6);
 
-        this.fillLight = new THREE.DirectionalLight('#c9d6ff', 0.3);
+        this.fillLight = new THREE.DirectionalLight('#c9d6ff', 0.2);
         this.fillLight.position.set(6, -1, 4);
 
         this.rimLight = new THREE.DirectionalLight('#ffe7c4', 1.3);

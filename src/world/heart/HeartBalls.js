@@ -42,7 +42,8 @@ export default class HeartBalls {
         // Núcleo: bolas oscuras y de baja resolución, solo tapan huecos
         this.coreGeometry = new THREE.IcosahedronGeometry(1, 1);
         this.coreMaterial = new THREE.MeshStandardMaterial({
-            color: config.ball.coreColor,
+            // El interior se lee como sombra: su color, pero muy apagado
+            color: new THREE.Color(config.ball.coreColor).multiplyScalar(config.ball.coreShade ?? 1),
             roughness: 1,
             metalness: 0
         });

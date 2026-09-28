@@ -20,8 +20,8 @@ export default class Renderer {
 
         this.instance.setClearColor(0x000000, 0);
         this.instance.outputColorSpace = THREE.SRGBColorSpace;
-        this.instance.toneMapping = THREE.ACESFilmicToneMapping;
-        this.instance.toneMappingExposure = 1;
+        this.instance.toneMapping = THREE.NeutralToneMapping;
+        this.instance.toneMappingExposure = 1.2;
 
         this.resize();
     }

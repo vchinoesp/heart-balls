@@ -53,7 +53,12 @@ export default class BallFx {
         });
     }
 
-    setHover(index) {
+    /**
+     * Destaca una bola. `boost` multiplica subida y crecimiento: en táctil la
+     * preselección se exagera (y entra con un pequeño rebote) para que se note
+     * bajo el dedo.
+     */
+    setHover(index, { boost = 1 } = {}) {
         if (index === this.hoverIndex) return;
 
         const u = this.uniforms;
@@ -74,10 +79,14 @@ export default class BallFx {
 
         if (index < 0) return;
 
+        const boosted = boost > 1 && !this.reducedMotion;
+
+        u.uHoverBoost.value = this.reducedMotion ? 1 : boost;
+
         gsap.to(u.uHover, {
             value: 1,
-            duration: this.reducedMotion ? 0.01 : 0.5,
-            ease: 'expo.out',
+            duration: this.reducedMotion ? 0.01 : boosted ? 0.8 : 0.5,
+            ease: boosted ? 'elastic.out(1, 0.6)' : 'expo.out',
             overwrite: true
         });
     }

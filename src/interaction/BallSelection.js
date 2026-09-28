@@ -70,10 +70,10 @@ export default class BallSelection {
             return;
         }
 
-        // Táctil: primer toque destaca la bola
+        // Táctil: primer toque destaca la bola (más exagerado que con ratón)
         this.armedIndex = hit.index;
         this.fx.setPointer(hit.point, true);
-        this.fx.setHover(hit.index);
+        this.fx.setHover(hit.index, { boost: this.interaction.touchHoverBoost ?? 1 });
     }
 
     selectCenter() {
