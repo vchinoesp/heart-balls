@@ -10,6 +10,12 @@ import gsap from 'gsap';
  *  - Toque corto / clic: onTap (seleccionar bola).
  *  - Teclado (WCAG): flechas giran, +/- zoom, Enter/Espacio elige la bola central.
  *
+ * Zoom seguro: la cámara nunca se acerca a menos de `minSurfaceDistance` de
+ * la bola más cercana de la zona que se está mirando (getFrontDepth). Los
+ * laterales y la punta sobresalen más que el frente al girar el corazón, así
+ * que el límite se recalcula cada frame (update) y, si al girar la superficie
+ * se acerca, la cámara retrocede suavemente.
+ *
  * Se gira el corazón (no la cámara): la luz queda fija y las caras cambian de
  * tono al girar, como en un objeto real. Todo el suavizado va con gsap.quickTo.
  */
@@ -19,6 +25,8 @@ export default class HeartControls {
         camera,
         target,
         heartSize,
+        navigation = {},
+        getFrontDepth,
         onTap,
         onHover,
         onKeySelect,
@@ -28,6 +36,8 @@ export default class HeartControls {
         this.camera = camera;
         this.target = target;
         this.heartSize = heartSize;
+        this.navigation = navigation;
+        this.getFrontDepth = getFrontDepth;
         this.onTap = onTap;
         this.onHover = onHover;
         this.onKeySelect = onKeySelect;
@@ -35,7 +45,6 @@ export default class HeartControls {
 
         this.enabled = true;
         this.minRatio = 0.2;
-        this.maxRotX = 0.75;
 
         // Valores objetivo (los reales se interpolan hacia ellos)
         this.state = { rotX: 0, rotY: 0, ratio: 1, panX: 0, panY: 0 };
@@ -82,6 +91,50 @@ export default class HeartControls {
     /* ------------------------------------------------------------------ */
     /* Utilidades                                                          */
     /* ------------------------------------------------------------------ */
+
+    get maxRotX() {
+        return this.navigation.maxTilt ?? 0.75;
+    }
+
+    /**
+     * Zoom máximo permitido ahora mismo (ratio mínimo) mirando a (panX, panY):
+     * la cámara (en z = fitDistance·ratio) queda al menos a minSurfaceDistance
+     * de la bola más cercana de esa zona.
+     */
+    getMinRatio(panX = this.state.panX, panY = this.state.panY) {
+        const fitDistance = this.camera.fitDistance;
+
+        if (!this.getFrontDepth || !fitDistance) return this.minRatio;
+
+        // Zona que se ve con el zoom máximo (algo más amplia, por seguridad)
+        const { halfWidth, halfHeight } = this.camera.halfExtents(this.minRatio);
+        const front = this.getFrontDepth(panX, panY, halfWidth * 1.2, halfHeight * 1.2);
+
+        if (!Number.isFinite(front)) return this.minRatio;
+
+        const gap = this.navigation.minSurfaceDistance ?? 1.2;
+
+        return Math.min(Math.max(this.minRatio, (front + gap) / fitDistance), 1);
+    }
+
+    /** Cada frame: si al girar la superficie se acerca a la cámara, retroceder. */
+    update() {
+        if (this.state.ratio >= 1 && this.camera.view.ratio >= 0.999) return;
+
+        const minRatio = this.getMinRatio();
+
+        if (this.state.ratio < minRatio - 1e-4) {
+            this.state.ratio = minRatio;
+            this.clampPan();
+            this.tweenRatio(this.state.ratio);
+            this.tweenPanX(this.state.panX);
+            this.tweenPanY(this.state.panY);
+        }
+
+        // Red de seguridad: aunque el tween aún no haya llegado, la cámara
+        // nunca queda dentro del corazón (retrocede con el giro)
+        this.camera.minRatio = minRatio * 0.92;
+    }
 
     toNdc(clientX, clientY) {
         const rect = this.element.getBoundingClientRect();
@@ -304,7 +357,12 @@ export default class HeartControls {
 
     /** Zoom manteniendo fijo el punto bajo el puntero (zoom "hacia" ahí). */
     zoomTo(ratio, ndc = { x: 0, y: -(this.camera.ndcShiftY ?? 0) }) {
-        const next = gsap.utils.clamp(this.minRatio, 1, ratio);
+        // Límite de zoom según lo cerca que esté la superficie en esa zona
+        const current0 = this.camera.halfExtents(this.state.ratio);
+        const viewY0 = ndc.y + (this.camera.ndcShiftY ?? 0);
+        const targetX = this.state.panX + ndc.x * current0.halfWidth;
+        const targetY = this.state.panY + viewY0 * current0.halfHeight;
+        const next = gsap.utils.clamp(this.getMinRatio(targetX, targetY), 1, ratio);
         const current = this.camera.halfExtents(this.state.ratio);
         const after = this.camera.halfExtents(next);
 

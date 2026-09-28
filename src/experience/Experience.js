@@ -144,6 +144,9 @@ export default class Experience {
             camera: this.camera,
             target: heartBalls.group,
             heartSize: this.heartSize,
+            navigation: this.config.navigation,
+            getFrontDepth: (x, y, halfWidth, halfHeight) =>
+                heartBalls.getFrontDepth(x, y, halfWidth, halfHeight),
             reducedMotion: this.reducedMotion,
             onHover: (ndc, type) => this.selection.hover(ndc, type),
             onTap: (ndc, type) => this.selection.tap(ndc, type),
@@ -287,6 +290,7 @@ export default class Experience {
         if (this.paused) return;
 
         this.selection.update();
+        this.controls.update();
         this.camera.update();
         this.world.update();
         this.renderer.update();

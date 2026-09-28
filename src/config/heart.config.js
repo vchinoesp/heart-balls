@@ -41,6 +41,18 @@ const heartConfig = {
         pitch: 0.05
     },
 
+    // Navegación (arrastrar / zoom). En #debug → "Navegación" se prueban en vivo
+    navigation: {
+        // Inclinación máxima arriba/abajo (rad). 1.45 ≈ 83°: se llega a ver la
+        // punta desde abajo. Más de ~1.55 el corazón se daría la vuelta y el
+        // arrastre horizontal se invertiría.
+        maxTilt: 1.45,
+        // Distancia mínima (unidades de escena) entre la cámara y la bola más
+        // cercana: el zoom se para antes de "meterse" en el corazón, también
+        // en los laterales o en la punta al girarlo
+        minSurfaceDistance: 1.2
+    },
+
     packing: {
         // Pasada 1 = principal (se relaja en filas). Resto = relleno de huecos.
         // Solo modo suave: radios de la pasada principal

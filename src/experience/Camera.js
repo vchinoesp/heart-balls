@@ -22,6 +22,8 @@ export default class Camera {
         // Margen alrededor del corazón (1 = justo al borde)
         this.framing = { vertical: 1.02, horizontal: 1.1 };
         this.view = { ratio: 1, panX: 0, panY: 0 };
+        // Ratio mínimo absoluto (lo fija HeartControls según la superficie)
+        this.minRatio = 0;
         // Franja de pantalla (px) reservada arriba/abajo para el copy y el footer
         this.safeArea = { top: 0, bottom: 0 };
         this.ndcShiftY = 0;
@@ -99,7 +101,8 @@ export default class Camera {
     }
 
     applyView() {
-        const { ratio, panX, panY } = this.view;
+        const { panX, panY } = this.view;
+        const ratio = Math.max(this.view.ratio, this.minRatio);
 
         this.instance.position.set(panX, panY, this.fitDistance * ratio);
         this.instance.lookAt(panX, panY, 0);

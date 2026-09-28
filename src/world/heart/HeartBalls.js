@@ -262,6 +262,41 @@ export default class HeartBalls {
         return out;
     }
 
+    /**
+     * z (mundo) de la bola más cercana a la cámara entre las que caen dentro
+     * del rectángulo (x ± halfWidth, y ± halfHeight) de la vista.
+     * La usa HeartControls para no dejar que el zoom atraviese el corazón.
+     */
+    getFrontDepth(x, y, halfWidth, halfHeight) {
+        if (!this.mesh) return -Infinity;
+
+        this.mesh.updateWorldMatrix(true, false);
+
+        const e = this.mesh.matrixWorld.elements;
+        const { centers, radii } = this;
+        let front = -Infinity;
+
+        for (let i = 0; i < this.count; i++) {
+            const i3 = i * 3;
+            const lx = centers[i3];
+            const ly = centers[i3 + 1];
+            const lz = centers[i3 + 2];
+            const wx = e[0] * lx + e[4] * ly + e[8] * lz + e[12];
+
+            if (Math.abs(wx - x) > halfWidth) continue;
+
+            const wy = e[1] * lx + e[5] * ly + e[9] * lz + e[13];
+
+            if (Math.abs(wy - y) > halfHeight) continue;
+
+            const wz = e[2] * lx + e[6] * ly + e[10] * lz + e[14] + radii[i];
+
+            if (wz > front) front = wz;
+        }
+
+        return front;
+    }
+
     getNumber(index) {
         return Math.round(this.numbers[index]);
     }

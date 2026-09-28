@@ -147,6 +147,12 @@ export default class World {
         fxFolder.add(this.config.interaction, 'hoverMaxSpeed', 0.1, 5, 0.05).name('vel. máx. para destacar');
         fxFolder.close();
 
+        const navFolder = gui.addFolder('Navegación');
+
+        navFolder.add(this.config.navigation, 'maxTilt', 0.5, 1.55, 0.01).name('inclinación máx. (rad)');
+        navFolder.add(this.config.navigation, 'minSurfaceDistance', 0.2, 3, 0.05).name('distancia mín. al corazón');
+        navFolder.close();
+
         gui.add({ regenerate: () => this.regenerate() }, 'regenerate').name('↻ Regenerar corazón');
     }
 
