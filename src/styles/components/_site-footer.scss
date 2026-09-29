@@ -56,6 +56,32 @@
     width: 1.5rem;
   }
 
+  // Móvil: todos los logos en una sola línea (más pequeños)
+  @media (max-width: 47.99rem) {
+    &__logos {
+      flex-wrap: nowrap;
+      gap: 0.5rem;
+    }
+
+    &__age {
+      gap: 0.25rem;
+      font-size: clamp(0.4375rem, 2.2vw, 0.5625rem);
+      white-space: nowrap;
+
+      img {
+        width: 1.1rem;
+      }
+    }
+
+    &__logo-wide {
+      width: min(3.75rem, 16vw);
+    }
+
+    &__logos a > img[src*='mano'] {
+      width: 1.25rem;
+    }
+  }
+
   &__links {
     display: flex;
     flex-wrap: wrap;

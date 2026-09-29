@@ -7,7 +7,8 @@ import gsap from 'gsap';
  *  - home  -> "Ver el anuncio"
  *  - heart -> "Ver el anuncio" + "Volver" debajo; el logo del sorteo se
  *             hace pequeño para dejar sitio al corazón
- *  - video -> "Volver"
+ *  - video -> "Volver"; en desktop el logo del sorteo es más pequeño para
+ *             dejar más alto al visor (cambio real de tamaño, animado con FLIP)
  *  - resto -> sin acciones
  */
 export default class Header {
@@ -17,6 +18,7 @@ export default class Header {
 
         this.brand = root.querySelector('.site-header__brand');
         this.title = root.querySelector('.site-header__title');
+        this.titleLogo = root.querySelector('.site-header__title-logo');
         this.actions = root.querySelector('.site-header__actions');
         this.watch = root.querySelector('.site-header__watch');
         this.back = root.querySelector('.site-header__back');
@@ -98,9 +100,40 @@ export default class Header {
     show(screen) {
         this.reveal();
         this.actions.dataset.layout = Header.layoutFor(screen);
+        this.setVideoLayout(screen === 'video');
         this.setCompact(screen === 'heart');
         this.setAction(this.watch, Header.watchVisibleOn(screen));
         this.setAction(this.back, Header.backVisibleOn(screen));
+    }
+
+    /**
+     * En el vídeo (desktop) el logo ocupa menos alto de verdad (CSS
+     * .site-header--video), así el visor crece. FLIP: el tamaño final se
+     * aplica al instante (las medidas del layout son ya las buenas) y la
+     * escala anima desde el tamaño que se veía hasta el nuevo.
+     */
+    setVideoLayout(active) {
+        if (active === this.root.classList.contains('site-header--video')) return;
+
+        const before = this.titleLogo.getBoundingClientRect().width;
+
+        this.root.classList.toggle('site-header--video', active);
+
+        const after = this.titleLogo.offsetWidth;
+        const targetScale = this.compact ? this.compactScale : 1;
+
+        if (!before || !after || Math.abs(before - after * targetScale) < 1) return;
+
+        gsap.fromTo(
+            this.title,
+            { scale: before / after },
+            {
+                scale: targetScale,
+                duration: this.reducedMotion ? 0.01 : 1.1,
+                ease: 'expo.inOut',
+                overwrite: 'auto'
+            }
+        );
     }
 
     setCompact(compact) {

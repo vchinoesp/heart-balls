@@ -86,7 +86,9 @@ export default class App {
     start() {
         this.preloading = this.preload();
 
-        this.goTo(this.config.debugMode ? 'loading' : 'age');
+        const skipAgeGate = this.config.debugMode && !this.config.prod;
+
+        this.goTo(skipAgeGate ? 'loading' : 'age');
     }
 
     /* ------------------------------------------------------------------ */

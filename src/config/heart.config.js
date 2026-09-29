@@ -4,6 +4,8 @@
  * Todas las medidas de forma están normalizadas: el corazón mide ~1 de alto
  * (punta en y = 0) y luego se escala a `worldHeight` unidades de escena.
  */
+import numbersConfig from './numbers.config.js';
+
 const heartConfig = {
     seed: 1225,
 
@@ -109,6 +111,11 @@ const heartConfig = {
         },
         // Límite de bolas (protección rendimiento)
         maxBalls: 12000
+    },
+
+    // Números que no pueden salir en las bolas (ver numbers.config.js)
+    numbers: {
+        unavailable: numbersConfig.unavailable
     },
 
     ball: {

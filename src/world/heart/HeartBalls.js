@@ -84,7 +84,7 @@ export default class HeartBalls {
             new THREE.InstancedBufferAttribute(this.createIntroData(layout, random), 2)
         );
 
-        this.numbers = this.createNumbers(this.count, random);
+        this.numbers = this.createNumbers(this.count, random, this.config.numbers?.unavailable);
         this.geometry.setAttribute(
             'aNumber',
             new THREE.InstancedBufferAttribute(this.numbers, 1)
@@ -316,12 +316,18 @@ export default class HeartBalls {
         mesh.instanceColor.needsUpdate = true;
     }
 
-    /** Números únicos 00000-99999 repartidos al azar (Fisher-Yates parcial). */
-    createNumbers(count, random) {
-        const total = 100000;
-        const pool = new Uint32Array(total);
+    /**
+     * Números únicos 00000-99999 repartidos al azar (Fisher-Yates parcial),
+     * sin los no disponibles a la venta (numbers.config.js).
+     */
+    createNumbers(count, random, unavailable = []) {
+        const excluded = HeartBalls.parseNumbers(unavailable);
+        const pool = new Uint32Array(100000 - excluded.size);
+        let total = 0;
 
-        for (let i = 0; i < total; i++) pool[i] = i;
+        for (let n = 0; n < 100000; n++) {
+            if (!excluded.has(n)) pool[total++] = n;
+        }
 
         const numbers = new Float32Array(count);
         const limit = Math.min(count, total);
@@ -336,6 +342,19 @@ export default class HeartBalls {
         }
 
         return numbers;
+    }
+
+    /** [2845, '02845', '02.845'] -> Set de enteros válidos (0-99999). */
+    static parseNumbers(list = []) {
+        const set = new Set();
+
+        for (const value of list) {
+            const digits = String(value).replace(/\D/g, '');
+
+            if (digits && digits.length <= 5) set.add(Number(digits));
+        }
+
+        return set;
     }
 
     disposeMesh() {

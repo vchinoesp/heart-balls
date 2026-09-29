@@ -1,10 +1,21 @@
 /**
  * Configuración de la web (pantallas, vídeos, enlaces).
  *
- * debugMode: true  -> se salta el selector de edad (para probar animaciones
- *                     sin pasar por él cada vez). ¡Dejar en false en producción!
+ * prod: true -> versión de producción: sin #debug, #fps / #stats ni
+ *               debugMode. Se activa de cualquiera de estas formas:
+ *                 - `npm run build:prod` (vite build --mode prod)
+ *                 - variable de entorno VITE_PROD=true (Vercel: Settings →
+ *                   Environment Variables, marcada solo para "Production")
+ *                 - a mano: cambiar la línea de abajo por `const prod = true;`
+ *
+ * debugMode: true -> se salta el selector de edad (para probar animaciones
+ *                    sin pasar por él cada vez). En prod no tiene efecto.
  */
+const prod = import.meta.env?.VITE_PROD === 'true' || import.meta.env?.MODE === 'prod';
+
 const appConfig = {
+    prod,
+
     debugMode: false,
 
     ageGate: {
@@ -30,10 +41,13 @@ const appConfig = {
         }
     },
 
+    // Enlaces del popup de la bola elegida
     links: {
-        // TODO: URLs reales. {number} se sustituye por el número elegido (p. ej. 02845)
+        // "Compra tu décimo". {number} se sustituye por el número elegido con
+        // 5 cifras (p. ej. 02845). TODO: URL real
         buy: '#comprar-{number}',
-        pointsOfSale: '#puntos-de-venta'
+        // "Buscar punto de venta". Vacío ('') = el botón no se muestra
+        pointsOfSale: ''
     }
 };
 

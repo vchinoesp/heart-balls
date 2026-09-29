@@ -25,12 +25,18 @@ export default class BallModal {
         this.numberText = root.querySelector('[data-ball-number]');
         this.buyLink = root.querySelector('[data-action="buy"]');
         this.pointsLink = root.querySelector('[data-action="points"]');
+
+        // "Buscar punto de venta" solo se muestra si hay URL en app.config.js
+        if (links.pointsOfSale) {
+            this.pointsLink.href = links.pointsOfSale;
+        } else {
+            this.pointsLink.hidden = true;
+        }
+
         this.content = [
             root.querySelector('.ball-modal__title'),
-            ...root.querySelectorAll('.ball-modal__actions > *')
+            ...root.querySelectorAll('.ball-modal__actions > :not([hidden])')
         ];
-
-        if (links.pointsOfSale) this.pointsLink.href = links.pointsOfSale;
 
         this.handleKeyDown = this.handleKeyDown.bind(this);
         this.handleClick = this.handleClick.bind(this);

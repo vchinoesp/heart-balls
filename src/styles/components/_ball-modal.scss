@@ -185,6 +185,12 @@
 
   &__link {
     display: inline-flex;
+
+    // Sin URL de puntos de venta en app.config.js el enlace no se muestra
+    &[hidden] {
+      display: none;
+    }
+
     align-items: center;
     gap: 0.6rem;
     min-height: 2.75rem;

@@ -34,6 +34,31 @@
     width: min(clamp(8.5rem, 25vw, 22.5rem), 38vh);
   }
 
+  // Vídeo en desktop: logo más pequeño para que el visor sea más grande
+  // (Header.setVideoLayout anima el cambio)
+  @media (min-width: $bp-tablet) {
+    &--video &__title-logo {
+      width: min(clamp(6.5rem, 14vw, 13rem), 22vh);
+    }
+  }
+
+  // Pantalla del corazón: las bolas tienen un tono muy parecido al dorado del
+  // logo y de los botones; una sombra azul del fondo los separa del corazón
+  // cuando se hace zoom
+  &__title-logo,
+  &__watch,
+  &__back {
+    transition: filter 0.6s $ease-out-power3;
+  }
+
+  [data-screen='heart'] & {
+    &__title-logo,
+    &__watch,
+    &__back {
+      filter: drop-shadow(0 0 2px rgba($color-bg-top, 0.95)) drop-shadow(0 0 10px rgba($color-bg-top, 0.85));
+    }
+  }
+
   &__actions {
     position: relative;
     justify-self: end;
