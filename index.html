@@ -178,6 +178,17 @@
             </p>
             <button class="intro__cta" type="button" data-action="start">Elige el tuyo y mucha suerte</button>
           </div>
+
+          <!-- Bodegón de décimos + "Compra tu décimo" (URL en app.config.js → links.buyTicket).
+               Desktop: abajo a la derecha. Móvil: debajo del CTA. Se abre en abanico (TicketsFan). -->
+          <a class="tickets" href="#" target="_blank" rel="noopener noreferrer" data-action="buy-ticket">
+            <span class="tickets__stage" aria-hidden="true">
+              <img class="tickets__card tickets__card--back" src="/images/decimo3.webp" width="236" height="244" alt="" data-dx="40" data-dy="-18" data-tilt="38" decoding="async" />
+              <img class="tickets__card tickets__card--middle" src="/images/decimo2.webp" width="179" height="254" alt="" data-dx="0" data-dy="0" data-tilt="0" decoding="async" />
+              <img class="tickets__card tickets__card--front" src="/images/decimo1.webp" width="243" height="276" alt="" data-dx="-33" data-dy="-23" data-tilt="-24.5" decoding="async" />
+            </span>
+            <span class="tickets__label">Compra tu décimo<span class="u-visually-hidden"> (se abre en una pestaña nueva)</span></span>
+          </a>
         </section>
 
         <!-- 4. Corazón (navegación + selector de bola / popup) -->

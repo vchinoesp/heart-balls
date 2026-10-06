@@ -75,7 +75,11 @@ export default class App {
                 ...options,
                 minDuration: this.config.loader.minDuration
             }),
-            home: new HomeScreen(find('home'), { ...options, onStart: () => this.goTo('heart') }),
+            home: new HomeScreen(find('home'), {
+                ...options,
+                ticketsHref: this.config.links.buyTicket,
+                onStart: () => this.goTo('heart')
+            }),
             heart: new HeartScreen(find('heart'), options),
             video: new VideoScreen(find('video'), { ...options, videos: this.config.videos })
         };

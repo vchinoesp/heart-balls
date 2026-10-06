@@ -107,6 +107,30 @@
       display: inline;
     }
   }
+
+  // Móvil: todo algo más compacto para dejar sitio al bodegón de décimos
+  // (.tickets) debajo del CTA
+  @media (max-width: 47.99rem) {
+    &__title {
+      margin-bottom: 0.5rem;
+    }
+
+    &__title-art {
+      width: min(80vw, 22rem, 36vh);
+    }
+
+    &__text {
+      font-size: 0.9375rem;
+      line-height: 1.45;
+    }
+
+    &__cta {
+      min-height: 2.75rem;
+      margin-top: clamp(0.75rem, 2.5vh, 1.5rem);
+      padding: 0.65rem 1.75rem;
+      font-size: 0.9375rem;
+    }
+  }
 }
 
 // Bloque BEM: ayuda de navegación del corazón

@@ -2,6 +2,7 @@ import gsap from 'gsap';
 
 import Screen from './Screen.js';
 import SvgDraw from '../ui/SvgDraw.js';
+import TicketsFan from '../ui/TicketsFan.js';
 
 /**
  * HomeScreen
@@ -12,13 +13,18 @@ import SvgDraw from '../ui/SvgDraw.js';
  * (ratón / táctil) desde el CSS.
  */
 export default class HomeScreen extends Screen {
-    constructor(root, { onStart, ...options }) {
+    constructor(root, { onStart, ticketsHref, ...options }) {
         super(root, options);
 
         this.intro = root.querySelector('.intro');
         this.title = root.querySelector('.intro__title');
         this.cta = root.querySelector('[data-action="start"]');
         this.titleDraw = new SvgDraw(root.querySelector('.intro__title-art'), {
+            reducedMotion: this.reducedMotion
+        });
+
+        this.tickets = new TicketsFan(root.querySelector('.tickets'), {
+            href: ticketsHref,
             reducedMotion: this.reducedMotion
         });
 
@@ -47,12 +53,15 @@ export default class HomeScreen extends Screen {
 
         if (this.reducedMotion) {
             this.titleDraw.showFinal();
+            this.tickets.open();
             timeline.fromTo(this.animated, { opacity: 0 }, { opacity: 1, duration: 0.3 });
 
             return timeline;
         }
 
         this.titleDraw.play({ delay: 0.1 });
+        // El bodegón se abre en abanico mientras entra el texto (no se espera)
+        this.tickets.open({ delay: 0.9 });
 
         timeline.fromTo(
             this.animated,
@@ -66,6 +75,8 @@ export default class HomeScreen extends Screen {
     }
 
     leave() {
+        this.tickets.close();
+
         const timeline = super.leave();
 
         timeline.eventCallback('onComplete', () => {

@@ -47,7 +47,10 @@ const appConfig = {
         // 5 cifras (p. ej. 02845). TODO: URL real
         buy: '#comprar-{number}',
         // "Buscar punto de venta". Vacío ('') = el botón no se muestra
-        pointsOfSale: ''
+        pointsOfSale: '',
+        // Bodegón de décimos de la home ("Compra tu décimo").
+        // Vacío ('') = el bodegón no se muestra. TODO: URL real
+        buyTicket: 'https://www.loteriasyapuestas.es/es/loteria-nacional'
     }
 };
 

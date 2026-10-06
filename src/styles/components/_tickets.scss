@@ -1,0 +1,119 @@
+@use '../tokens' as *;
+
+// Bloque BEM: bodegón de décimos + "Compra tu décimo" (pantalla home)
+// Las medidas de las cartas van en unidades del bodegón (--u = ancho / 175),
+// así el abanico escala entero en desktop y en móvil.
+.tickets {
+  // Móvil: en fila (bodegón pequeño + texto) debajo del CTA
+  --stage: 5.25rem;
+  --u: calc(var(--stage) / 175);
+
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: clamp(0.75rem, 2.5vh, 1.5rem);
+  color: $color-gold;
+  text-decoration: none;
+  pointer-events: auto;
+  border-radius: 0.75rem;
+  -webkit-tap-highlight-color: transparent;
+
+  @include focus-ring(6px);
+
+  &[hidden] {
+    display: none;
+  }
+
+  &__stage {
+    position: relative;
+    display: block;
+    width: calc(var(--u) * 175);
+    height: calc(var(--u) * 140);
+    filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.45));
+  }
+
+  &__card {
+    position: absolute;
+    max-width: none;
+    height: auto;
+    transition: transform 0.6s $ease-out-expo;
+    user-select: none;
+  }
+
+  // Posición final de cada carta (abanico abierto). transform-origin = centro
+  // del décimo dentro del PNG (los PNG ya vienen girados)
+  &__card--back {
+    left: calc(var(--u) * -17);
+    top: calc(var(--u) * 2);
+    width: calc(var(--u) * 146);
+    transform-origin: 45% 45%;
+  }
+
+  &__card--middle {
+    left: calc(var(--u) * 40);
+    top: calc(var(--u) * -19);
+    width: calc(var(--u) * 111);
+    transform-origin: 44% 46%;
+  }
+
+  &__card--front {
+    left: calc(var(--u) * 53);
+    top: calc(var(--u) * -3);
+    width: calc(var(--u) * 151);
+    transform-origin: 46% 46%;
+  }
+
+  &__label {
+    font-size: clamp(0.9375rem, 1.1vw, 1.0625rem);
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    transition: color 0.4s $ease-out-power3;
+  }
+
+  // Hover / foco: el abanico se abre un poco más
+  &:hover,
+  &:focus-visible {
+    .tickets__card--back {
+      transform: translate(calc(var(--u) * -6), calc(var(--u) * -3)) rotate(-6deg);
+    }
+
+    .tickets__card--middle {
+      transform: translateY(calc(var(--u) * -6));
+    }
+
+    .tickets__card--front {
+      transform: translate(calc(var(--u) * 6), calc(var(--u) * -2)) rotate(6deg);
+    }
+
+    .tickets__label {
+      color: $color-gold-light;
+    }
+  }
+
+  // Desktop: abajo a la derecha, como en la creatividad
+  @media (min-width: $bp-tablet) {
+    --stage: clamp(8.5rem, 11vw, 10.5rem);
+    --u: calc(var(--stage) / 175);
+
+    position: absolute;
+    right: clamp(1.25rem, 3vw, 2.75rem);
+    bottom: clamp(0.5rem, 2vh, 1.5rem);
+    margin-top: 0;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  @media (min-width: $bp-tablet) and (max-height: 50rem) {
+    --stage: 8rem;
+    --u: calc(var(--stage) / 175);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__card {
+      transition: none;
+    }
+  }
+}
