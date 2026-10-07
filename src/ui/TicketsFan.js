@@ -14,20 +14,28 @@ import gsap from 'gsap';
  *  - data-tilt: giro que deshace la inclinación del PNG (queda recta)
  * La posición final (abanico abierto) es la del CSS: al acabar se limpian
  * los transform inline para que funcione el hover.
+ *
+ * Se usa en la home (enlace "Compra tu décimo", con href) y en el popup de
+ * la bola (decorativo, sin href, solo desktop).
  */
 export default class TicketsFan {
     constructor(root, { href, reducedMotion = false } = {}) {
         this.root = root;
         this.reducedMotion = reducedMotion;
         this.stage = root.querySelector('.tickets__stage');
-        this.label = root.querySelector('.tickets__label');
+        this.label = root.querySelector('.tickets__label'); // no existe en el popup
+        // Lo que aparece con fundido (bodegón + texto si lo hay)
+        this.faded = [this.stage, this.label].filter(Boolean);
         // De la carta de atrás a la de delante: la de delante se abre la última
         this.cards = [...root.querySelectorAll('.tickets__card')];
 
-        if (href) {
-            root.href = href;
-        } else {
-            root.hidden = true;
+        // Con enlace: sin URL en la config, el bodegón no se muestra
+        if (href !== undefined) {
+            if (href) {
+                root.href = href;
+            } else {
+                root.hidden = true;
+            }
         }
     }
 
@@ -46,22 +54,27 @@ export default class TicketsFan {
         };
     }
 
+    /** No visible (oculto o con display: none, p. ej. el del popup en móvil). */
+    get visible() {
+        return !this.root.hidden && this.root.offsetParent !== null;
+    }
+
     /** Entrada: aparece la baraja y se abre en abanico. */
     open({ delay = 0 } = {}) {
         this.timeline?.kill();
 
-        if (this.root.hidden) return gsap.timeline();
+        if (!this.visible) return gsap.timeline();
 
         if (this.reducedMotion) {
             gsap.set(this.cards, { clearProps: 'transform' });
 
-            return gsap.fromTo([this.stage, this.label], { opacity: 0 }, { opacity: 1, duration: 0.3, delay });
+            return gsap.fromTo(this.faded, { opacity: 0 }, { opacity: 1, duration: 0.3, delay });
         }
 
         const fanned = this.cards.filter((card) => card.dataset.tilt !== '0');
 
         // Oculto hasta que empiece (la entrada va con retardo)
-        gsap.set([this.stage, this.label], { opacity: 0 });
+        gsap.set(this.faded, { opacity: 0 });
 
         this.timeline = gsap
             .timeline({ delay })
@@ -90,13 +103,16 @@ export default class TicketsFan {
                     clearProps: 'transform'
                 },
                 0.35
-            )
-            .fromTo(
+            );
+
+        if (this.label) {
+            this.timeline.fromTo(
                 this.label,
                 { opacity: 0, y: 8 },
                 { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', clearProps: 'transform' },
                 0.6
             );
+        }
 
         return this.timeline;
     }
@@ -105,7 +121,7 @@ export default class TicketsFan {
     close() {
         this.timeline?.kill();
 
-        if (this.root.hidden || this.reducedMotion) return gsap.timeline();
+        if (!this.visible || this.reducedMotion) return gsap.timeline();
 
         const fanned = this.cards.filter((card) => card.dataset.tilt !== '0');
 

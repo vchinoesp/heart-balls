@@ -150,7 +150,8 @@ export default class Experience {
             reducedMotion: this.reducedMotion,
             onHover: (ndc, type) => this.selection.hover(ndc, type),
             onTap: (ndc, type) => this.selection.tap(ndc, type),
-            onKeySelect: () => this.selection.selectCenter()
+            onKeySelect: () => this.selection.selectCenter(),
+            onInteract: () => this.finishIntro()
         });
 
         this.setInteractive(false);
@@ -223,34 +224,46 @@ export default class Experience {
         }
 
         const state = { progress: 0 };
-        const timeline = gsap.timeline({
-            delay,
-            onComplete: () => this.setInteractive(true)
-        });
+        const timeline = gsap.timeline({ delay });
 
         timeline
             .to(state, {
                 progress: 1,
-                duration: 3.4,
+                duration: 2.6,
                 ease: 'power2.inOut',
                 onUpdate: () => heartBalls.setIntro(state.progress)
             })
             .fromTo(
                 group.rotation,
                 { y: -Math.PI * 0.9 },
-                { y: 0, duration: 3.8, ease: 'expo.out' },
+                { y: 0, duration: 2.8, ease: 'expo.out' },
                 0
             )
             .fromTo(
                 group.position,
                 { y: -0.6 },
-                { y: 0, duration: 3.4, ease: 'expo.out' },
+                { y: 0, duration: 2.6, ease: 'expo.out' },
                 0
-            );
+            )
+            // Se puede interactuar antes de que acabe: con el corazón ya casi
+            // formado. Si el usuario arrastra / hace zoom, el final se acelera
+            // (finishIntro) para que no se pelee con sus gestos.
+            .call(() => this.setInteractive(true), null, 1.5);
 
         this.introTimeline = timeline;
 
         return timeline;
+    }
+
+    /** El usuario empieza a navegar durante la intro: terminarla en ~0.3 s. */
+    finishIntro() {
+        const timeline = this.introTimeline;
+
+        if (!timeline?.isActive()) return;
+
+        const remaining = timeline.duration() - timeline.time();
+
+        if (remaining > 0.3) timeline.timeScale(remaining / 0.3);
     }
 
     /* ------------------------------------------------------------------ */

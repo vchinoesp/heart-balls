@@ -1,6 +1,7 @@
 import gsap from 'gsap';
 
 import HeroBall from './HeroBall.js';
+import TicketsFan from './TicketsFan.js';
 
 /**
  * BallModal
@@ -32,6 +33,11 @@ export default class BallModal {
         } else {
             this.pointsLink.hidden = true;
         }
+
+        // Bodegón de décimos sobre "Compra tu décimo" (solo desktop)
+        this.tickets = new TicketsFan(root.querySelector('.tickets--popup'), {
+            reducedMotion
+        });
 
         this.content = [
             root.querySelector('.ball-modal__title'),
@@ -92,6 +98,7 @@ export default class BallModal {
         }
 
         this.hero.open(number);
+        this.tickets.open({ delay: 0.35 });
 
         // Foco inicial en la acción principal
         this.root.querySelector('[data-action="buy"]').focus({ preventScroll: true });

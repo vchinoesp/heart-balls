@@ -30,6 +30,7 @@ export default class HeartControls {
         onTap,
         onHover,
         onKeySelect,
+        onInteract,
         reducedMotion = false
     }) {
         this.element = element;
@@ -41,6 +42,7 @@ export default class HeartControls {
         this.onTap = onTap;
         this.onHover = onHover;
         this.onKeySelect = onKeySelect;
+        this.onInteract = onInteract;
         this.reducedMotion = reducedMotion;
 
         this.enabled = true;
@@ -157,6 +159,8 @@ export default class HeartControls {
 
     onPointerDown(event) {
         if (!this.enabled) return;
+
+        this.onInteract?.();
 
         this.element.setPointerCapture(event.pointerId);
         this.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
@@ -348,6 +352,7 @@ export default class HeartControls {
         if (!this.enabled) return;
 
         event.preventDefault();
+        this.onInteract?.();
 
         const ndc = this.toNdc(event.clientX, event.clientY);
         const factor = Math.exp(gsap.utils.clamp(-60, 60, event.deltaY) * 0.004);
@@ -409,6 +414,8 @@ export default class HeartControls {
 
     onKeyDown(event) {
         if (!this.enabled) return;
+
+        this.onInteract?.();
 
         const { width, height } = this.element.getBoundingClientRect();
         const stepX = width * 0.08;

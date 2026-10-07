@@ -111,6 +111,27 @@
     --u: calc(var(--stage) / 175);
   }
 
+  // Variante del popup de la bola: decorativa, sobre "Compra tu décimo",
+  // solo en desktop
+  &--popup {
+    display: none;
+    pointer-events: none;
+
+    @media (min-width: $bp-tablet) {
+      --stage: 9rem;
+      --u: calc(var(--stage) / 175);
+
+      position: static;
+      display: flex;
+      margin-bottom: 0.25rem;
+    }
+
+    @media (min-width: $bp-tablet) and (max-height: 50rem) {
+      --stage: 7rem;
+      --u: calc(var(--stage) / 175);
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     &__card {
       transition: none;
