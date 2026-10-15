@@ -1,94 +1,76 @@
 /**
  * YouTubePlayer
  *
- * Envoltorio mínimo de la YouTube IFrame API:
- *  - La API solo se descarga la primera vez que se va a reproducir
- *    (no penaliza la carga inicial ni Lighthouse).
- *  - Usa youtube-nocookie.com (sin cookies hasta reproducir).
- *  - load(id, autoplay) cambia de vídeo sin recrear el iframe.
+ * Reproductor de YouTube en modo de privacidad mejorada, sin la IFrame API:
+ *  - Solo un <iframe> de www.youtube-nocookie.com/embed/… (no se descarga
+ *    ningún script de www.youtube.com).
+ *  - El iframe se crea la primera vez que se reproduce (no penaliza la carga
+ *    inicial ni Lighthouse, y hasta entonces no hay ninguna petición a YouTube).
+ *  - load(id) cambia de vídeo reutilizando el mismo iframe.
+ *  - pause() usa postMessage (enablejsapi=1), sin cargar la API.
  */
-let apiPromise = null;
-
-function loadApi() {
-    if (window.YT?.Player) return Promise.resolve(window.YT);
-
-    apiPromise ??= new Promise((resolve, reject) => {
-        const previous = window.onYouTubeIframeAPIReady;
-
-        window.onYouTubeIframeAPIReady = () => {
-            previous?.();
-            resolve(window.YT);
-        };
-
-        const script = document.createElement('script');
-
-        script.src = 'https://www.youtube.com/iframe_api';
-        script.async = true;
-        script.onerror = () => {
-            apiPromise = null;
-            reject(new Error('No se pudo cargar la API de YouTube'));
-        };
-        document.head.append(script);
-    });
-
-    return apiPromise;
-}
+const EMBED_ORIGIN = 'https://www.youtube-nocookie.com';
 
 export default class YouTubePlayer {
-    constructor(container, { onStateChange } = {}) {
+    constructor(container) {
         this.container = container;
-        this.onStateChange = onStateChange;
-        this.player = null;
-        this.ready = null;
+        this.iframe = null;
     }
 
-    async create(videoId, autoplay) {
-        const YT = await loadApi();
+    /** ¿Hay un vídeo cargado? */
+    get active() {
+        return Boolean(this.iframe);
+    }
 
-        this.ready = new Promise((resolve) => {
-            this.player = new YT.Player(this.container, {
-                host: 'https://www.youtube-nocookie.com',
-                videoId,
-                width: '100%',
-                height: '100%',
-                playerVars: {
-                    autoplay: autoplay ? 1 : 0,
-                    playsinline: 1,
-                    rel: 0,
-                    modestbranding: 1
-                },
-                events: {
-                    onReady: () => resolve(this.player),
-                    onStateChange: (event) => this.onStateChange?.(event.data)
-                }
-            });
+    static embedUrl(videoId, { autoplay = true } = {}) {
+        const params = new URLSearchParams({
+            autoplay: autoplay ? '1' : '0',
+            playsinline: '1',
+            rel: '0',
+            enablejsapi: '1',
+            origin: window.location.origin
         });
 
-        return this.ready;
+        return `${EMBED_ORIGIN}/embed/${encodeURIComponent(videoId)}?${params}`;
     }
 
-    /** Carga un vídeo; si el reproductor no existe aún, lo crea. */
-    async load(videoId, { autoplay = true } = {}) {
-        if (!this.player) {
-            const player = await this.create(videoId, autoplay);
+    createIframe(title) {
+        const iframe = document.createElement('iframe');
 
-            if (autoplay) player.playVideo();
+        iframe.title = title;
+        // fullscreen va en allow (con allowfullscreen además, Chrome avisa en consola)
+        iframe.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+        this.container.append(iframe);
 
-            return;
-        }
+        return iframe;
+    }
 
-        await this.ready;
+    /** Carga un vídeo (y crea el iframe si aún no existe). Resuelve al cargar. */
+    load(videoId, { autoplay = true, title = 'Vídeo de YouTube' } = {}) {
+        this.iframe ??= this.createIframe(title);
+        this.iframe.title = title;
 
-        if (autoplay) this.player.loadVideoById(videoId);
-        else this.player.cueVideoById(videoId);
+        return new Promise((resolve, reject) => {
+            const iframe = this.iframe;
+
+            iframe.addEventListener('load', () => resolve(iframe), { once: true });
+            iframe.addEventListener('error', () => reject(new Error('No se pudo cargar el vídeo')), {
+                once: true
+            });
+            iframe.src = YouTubePlayer.embedUrl(videoId, { autoplay });
+        });
     }
 
     pause() {
-        this.player?.pauseVideo?.();
+        this.iframe?.contentWindow?.postMessage(
+            JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }),
+            EMBED_ORIGIN
+        );
     }
 
     dispose() {
-        this.player?.destroy?.();
-        this.player = null;
+        this.iframe?.remove();
+        this.iframe = null;
     }
 }

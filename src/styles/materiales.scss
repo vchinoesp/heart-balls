@@ -1,0 +1,53 @@
+// Página de descarga de materiales (materiales.html).
+// Reutiliza los bloques BEM de la web (fondo, cabecera, footer).
+@use 'reset';
+@use 'tokens' as *;
+@use 'components/backdrop';
+@use 'components/site-header';
+@use 'components/site-footer';
+@use 'components/materials';
+
+html {
+  background-color: $color-bg-top;
+}
+
+body {
+  min-height: 100vh;
+  color: $color-text;
+  font-family: $font-stack;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.u-visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.noscript {
+  position: relative;
+  z-index: 1;
+  padding: 1rem;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

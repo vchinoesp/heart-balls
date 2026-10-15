@@ -87,12 +87,46 @@ export default class App {
         Object.values(this.screens).forEach((screen) => screen.hide());
     }
 
-    start() {
-        this.preloading = this.preload();
+    /**
+     * Arranque en dos tiempos para que la primera animación no dé tirones:
+     *  1. Se espera a las tipografías y a la carga de la página (máx. 2.5 s)
+     *     antes de animar nada.
+     *  2. La carga pesada (datos del corazón + WebGL + shaders) empieza cuando
+     *     la primera pantalla ya ha terminado de entrar.
+     */
+    async start() {
+        this.fontsLoading = this.loadFonts().finally(() => {
+            this.progress.fonts = 1;
+        });
+
+        await Promise.race([Promise.all([this.fontsLoading, App.pageLoaded()]), App.wait(2.5)]);
+        await App.nextFrame();
 
         const skipAgeGate = this.config.debugMode && !this.config.prod;
 
-        this.goTo(skipAgeGate ? 'loading' : 'age');
+        if (skipAgeGate) {
+            this.preloading = this.preload();
+            this.goTo('loading');
+
+            return;
+        }
+
+        await this.goTo('age');
+        this.preloading = this.preload();
+    }
+
+    static pageLoaded() {
+        if (document.readyState === 'complete') return Promise.resolve();
+
+        return new Promise((resolve) => window.addEventListener('load', resolve, { once: true }));
+    }
+
+    static wait(seconds) {
+        return new Promise((resolve) => gsap.delayedCall(seconds, resolve));
+    }
+
+    static nextFrame() {
+        return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     }
 
     /* ------------------------------------------------------------------ */
@@ -104,13 +138,7 @@ export default class App {
     }
 
     async preload() {
-        const fonts = this.loadFonts().finally(() => {
-            this.progress.fonts = 1;
-        });
-
-        const experience = this.loadExperience();
-
-        await Promise.all([fonts, experience]);
+        await Promise.all([this.fontsLoading, this.loadExperience()]);
     }
 
     /** Source Sans 3 (Google Fonts). Si tarda demasiado, seguimos igual. */

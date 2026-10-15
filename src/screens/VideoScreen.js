@@ -6,8 +6,9 @@ import YouTubePlayer from '../ui/YouTubePlayer.js';
 /**
  * VideoScreen
  *
- * Visor del anuncio / making of (YouTube IFrame API).
- *  - Póster propio con botón play (la API no se descarga hasta pulsar).
+ * Visor del anuncio / making of (YouTube en modo privacidad mejorada:
+ * youtube-nocookie.com, sin la IFrame API).
+ *  - Póster propio con botón play (no se conecta con YouTube hasta pulsar).
  *  - "Ver making of" ⇄ "Ver anuncio": cambia de vídeo y de texto.
  *  - Al salir de la pantalla el vídeo se pausa.
  */
@@ -54,7 +55,9 @@ export default class VideoScreen extends Screen {
     }
 
     setPoster() {
-        this.posterImage.src = `https://i.ytimg.com/vi/${this.video.id}/maxresdefault.jpg`;
+        // Póster propio (app.config.js → videos.*.poster) o, si no hay, la
+        // miniatura de YouTube (i.ytimg.com, imagen estática sin cookies)
+        this.posterImage.src = this.video.poster || `https://i.ytimg.com/vi/${this.video.id}/maxresdefault.jpg`;
         this.poster.hidden = false;
         gsap.set(this.poster, { opacity: 1 });
     }
@@ -63,7 +66,7 @@ export default class VideoScreen extends Screen {
         this.poster.setAttribute('aria-busy', 'true');
 
         try {
-            await this.player.load(this.video.id, { autoplay: true });
+            await this.player.load(this.video.id, { autoplay: true, title: this.video.title });
 
             gsap.to(this.poster, {
                 opacity: 0,
@@ -85,13 +88,13 @@ export default class VideoScreen extends Screen {
         this.updateTexts();
 
         // Transición: el marco se oscurece, cambia el vídeo y vuelve
-        const playing = Boolean(this.player.player) && this.poster.hidden;
+        const playing = this.player.active && this.poster.hidden;
 
         gsap.timeline()
             .to(this.frame, { opacity: 0, scale: 0.98, duration: 0.35, ease: 'power2.in' })
             .add(() => {
                 if (playing) {
-                    this.player.load(this.video.id, { autoplay: true });
+                    this.player.load(this.video.id, { autoplay: true, title: this.video.title });
                 } else {
                     this.setPoster();
                 }

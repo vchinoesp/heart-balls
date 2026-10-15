@@ -34,10 +34,16 @@ export default class BallModal {
             this.pointsLink.hidden = true;
         }
 
-        // Bodegón de décimos sobre "Compra tu décimo" (solo desktop)
-        this.tickets = new TicketsFan(root.querySelector('.tickets--popup'), {
-            reducedMotion
-        });
+        // Bodegón de décimos sobre "Compra tu décimo" (solo desktop). Sin URL
+        // de compra (links.buy vacío) no se muestran ni el botón ni el bodegón
+        const ticketsRoot = root.querySelector('.tickets--popup');
+
+        if (!links.buy) {
+            this.buyLink.hidden = true;
+            ticketsRoot.hidden = true;
+        }
+
+        this.tickets = new TicketsFan(ticketsRoot, { reducedMotion });
 
         this.content = [
             root.querySelector('.ball-modal__title'),
@@ -100,8 +106,9 @@ export default class BallModal {
         this.hero.open(number);
         this.tickets.open({ delay: 0.35 });
 
-        // Foco inicial en la acción principal
-        this.root.querySelector('[data-action="buy"]').focus({ preventScroll: true });
+        // Foco inicial en la acción principal visible ("Compra tu décimo" o,
+        // si está oculto, "Elige otra corazonada")
+        this.root.querySelector('.ball-modal__actions [data-action]:not([hidden])')?.focus({ preventScroll: true });
     }
 
     createHero() {

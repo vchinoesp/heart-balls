@@ -118,7 +118,15 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: min(100%, 13.5rem);
+    // Ancho mínimo común; "Elige otra corazonada" crece lo que necesite
+    min-width: min(100%, 13.5rem);
+    max-width: 100%;
+
+    // Sin URL de compra en app.config.js "Compra tu décimo" no se muestra
+    &[hidden] {
+      display: none;
+    }
+
     min-height: 3rem; // objetivo táctil > 44px
     padding: 0.75rem 1.5rem;
     overflow: hidden;

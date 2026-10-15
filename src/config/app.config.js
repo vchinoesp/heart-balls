@@ -30,7 +30,10 @@ const appConfig = {
     },
 
     videos: {
-        // TODO: poner los IDs reales de YouTube (lo que va tras ?v= en la URL)
+        // TODO: poner los IDs reales de YouTube (lo que va tras ?v= en la URL).
+        // Se reproducen en modo privacidad mejorada (youtube-nocookie.com).
+        // poster (opcional): imagen propia, p. ej. '/images/poster_anuncio.jpg';
+        // si no se indica se usa la miniatura de YouTube
         anuncio: {
             id: 'M7lc1UVf-VE',
             title: 'Anuncio El Sorteo que nos une'
@@ -43,9 +46,10 @@ const appConfig = {
 
     // Enlaces del popup de la bola elegida
     links: {
-        // "Compra tu décimo". {number} se sustituye por el número elegido con
-        // 5 cifras (p. ej. 02845). TODO: URL real
-        buy: '#comprar-{number}',
+        // "Compra tu décimo" del popup. {number} se sustituye por el número
+        // elegido con 5 cifras (p. ej. 02845). Vacío ('') = el botón (y el
+        // bodegón de décimos del popup) no se muestran
+        buy: '',
         // "Buscar punto de venta". Vacío ('') = el botón no se muestra
         pointsOfSale: '',
         // Bodegón de décimos de la home ("Compra tu décimo").

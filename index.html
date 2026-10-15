@@ -8,19 +8,31 @@
     <title>El Sorteo que nos une · Lotería Nacional</title>
     <meta
       name="description"
-      content="Esta Navidad tengo una corazonada. Navega por un corazón formado por miles de bolas numeradas del 00000 al 99999 y elige tu número del Sorteo de Lotería Nacional."
+      content="Acompaña a Edu y Judith en un viaje lleno de magia, emoción y sorpresas que nos enseñará que compartir nos da la vida. El Sorteo que nos une"
     />
 
+    <!-- Compartir en redes. En el build, vite.config.js convierte og:image / twitter:image en URL
+         absolutas y añade og:url (variable SITE_URL o el dominio de producción de Vercel) -->
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="es_ES" />
     <meta property="og:site_name" content="Lotería Nacional" />
     <meta property="og:title" content="El Sorteo que nos une" />
     <meta
       property="og:description"
-      content="Esta Navidad tengo una corazonada. Encuentra tu número entre miles de bolas y mucha suerte."
+      content="Acompaña a Edu y Judith en un viaje lleno de magia, emoción y sorpresas que nos enseñará que compartir nos da la vida. El Sorteo que nos une"
     />
-    <!-- TODO: og:image (1200x630, JPG/WebP) y og:url cuando haya dominio -->
+    <meta property="og:image" content="/images/img_compartir.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="629" />
+    <meta property="og:image:alt" content="El Sorteo que nos une · Lotería Nacional" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="El Sorteo que nos une" />
+    <meta
+      name="twitter:description"
+      content="Acompaña a Edu y Judith en un viaje lleno de magia, emoción y sorpresas que nos enseñará que compartir nos da la vida. El Sorteo que nos une"
+    />
+    <meta name="twitter:image" content="/images/img_compartir.jpg" />
 
     <link rel="icon" href="/favicon.ico" sizes="any" />
 
@@ -292,7 +304,7 @@
               <a href="https://www.loteriasyapuestas.es/es/centro-de-ayuda/informacion-pie/estipulaciones-proteccion-datos" target="_blank" rel="noopener noreferrer" data-track-category="footer" data-track-action="click" data-track-label="Política de privacidad">Política privacidad</a>
             </li>
             <li>
-              <a href="https://www.loteriasyapuestas.es/es/paginas-informativas/politica-de-uso-de-la-web-y-sitios-moviles-webs-juego-y-corporativa" target="_blank" rel="noopener noreferrer" data-track-category="footer" data-track-action="click" data-track-label="Uso web">Uso web</a>
+              <a href="https://www.loteriasyapuestas.es/es/centro-de-ayuda/informacion-pie/politica-de-uso-de-la-web-y-sitios-moviles-webs-juego-y-corporativa" target="_blank" rel="noopener noreferrer" data-track-category="footer" data-track-action="click" data-track-label="Uso web">Uso web</a>
             </li>
             <li>
               <a href="https://www.loteriasyapuestas.es" target="_blank" rel="noopener noreferrer" data-track-category="footer" data-track-action="click" data-track-label="Loterías y Apuestas del Estado">Loterías y Apuestas del Estado</a>
@@ -346,7 +358,7 @@
             </span>
           </span>
           <a class="ball-modal__button ball-modal__button--primary" href="#" target="_blank" rel="noopener noreferrer" data-action="buy">Compra tu décimo</a>
-          <button class="ball-modal__button ball-modal__button--secondary" type="button" data-action="another">Elige otra</button>
+          <button class="ball-modal__button ball-modal__button--secondary" type="button" data-action="another">Elige otra corazonada</button>
           <a class="ball-modal__link" href="#" target="_blank" rel="noopener noreferrer" data-action="points">
             <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
               <path d="M12 22s7-7.2 7-12.5A7 7 0 0 0 5 9.5C5 14.8 12 22 12 22z" fill="none" stroke="currentColor" stroke-width="1.5" />
