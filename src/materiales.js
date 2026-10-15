@@ -1,18 +1,21 @@
 import gsap from 'gsap';
 
 import './styles/materiales.scss';
-import materialesConfig from './config/materiales.config.js';
+import materiales from './config/materiales.config.js';
 import Backdrop from './ui/Backdrop.js';
 
 /**
  * Página de descarga de materiales (materiales.html).
  *
- * El listado sale de src/config/materiales.config.js. La cabecera, el fondo y
- * el footer son los mismos componentes (BEM) que la web principal.
+ * Listado simple (título + "Descargar") a partir de
+ * src/config/materiales.config.js. La cabecera, el fondo y el footer son los
+ * mismos componentes (BEM) que la web principal.
  */
 class MaterialsPage {
-    constructor(config) {
-        this.config = config;
+    static FOLDER = '/materiales/';
+
+    constructor(items) {
+        this.items = items;
         this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
         this.list = document.querySelector('[data-materials]');
@@ -28,65 +31,52 @@ class MaterialsPage {
         return String(value).replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
     }
 
-    /** Nombre del archivo para el atributo download (solo archivos propios). */
-    static fileName(file) {
-        if (/^https?:\/\//.test(file)) return null;
-
-        return file.split('/').pop();
+    static isExternal(url) {
+        return /^https?:\/\//.test(url);
     }
 
-    renderItem(item) {
+    /** Ruta pública del archivo (los nombres pueden llevar espacios o tildes). */
+    static href(url) {
+        return MaterialsPage.isExternal(url) ? url : MaterialsPage.FOLDER + encodeURIComponent(url);
+    }
+
+    static format(url) {
+        const extension = url.split('?')[0].split('.').pop();
+
+        return extension && extension !== url ? extension.toUpperCase() : '';
+    }
+
+    renderItem({ titulo, url }) {
         const esc = MaterialsPage.escape;
-        const fileName = MaterialsPage.fileName(item.file);
-        const external = !fileName;
-        const meta = [item.format, item.size].filter(Boolean).join(' · ');
-        const preview = item.preview
-            ? `<img class="materials__preview-image" src="${esc(item.preview)}" alt="" loading="lazy" decoding="async" />`
-            : `<span class="materials__preview-format">${esc(item.format)}</span>`;
+        const external = MaterialsPage.isExternal(url);
+        const format = MaterialsPage.format(url);
+        const linkAttributes = external
+            ? 'target="_blank" rel="noopener noreferrer"'
+            : `download="${esc(url)}"`;
 
         return `
             <li class="materials__item">
-                <a
-                    class="materials__card"
-                    href="${esc(item.file)}"
-                    ${external ? 'target="_blank" rel="noopener noreferrer"' : `download="${esc(fileName)}"`}
-                >
-                    <span class="materials__preview" aria-hidden="true">${preview}</span>
-                    <span class="materials__info">
-                        <span class="materials__name">${esc(item.title)}</span>
-                        ${meta ? `<span class="materials__meta">${esc(meta)}</span>` : ''}
-                    </span>
-                    <span class="materials__action">
-                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                            <path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        Descargar<span class="u-visually-hidden"> ${esc(item.title)} (${esc(meta)})</span>
-                    </span>
+                <span class="materials__name">${esc(titulo)}</span>
+                <a class="materials__download" href="${esc(MaterialsPage.href(url))}" ${linkAttributes}>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Descargar<span class="u-visually-hidden"> ${esc(titulo)}${format ? ` (${esc(format)})` : ''}</span>
                 </a>
             </li>`;
     }
 
     render() {
-        const esc = MaterialsPage.escape;
-        const { sections = [] } = this.config;
-
-        if (!sections.length) {
+        if (!this.items.length) {
             this.list.innerHTML = '<p class="materials__empty">Próximamente.</p>';
 
             return;
         }
 
-        this.list.innerHTML = sections
-            .map(
-                (section, index) => `
-                <section class="materials__section" aria-labelledby="materials-section-${index}">
-                    <h2 class="materials__section-title" id="materials-section-${index}">${esc(section.title)}</h2>
-                    <ul class="materials__grid" role="list">
-                        ${section.items.map((item) => this.renderItem(item)).join('')}
-                    </ul>
-                </section>`
-            )
-            .join('');
+        this.list.innerHTML = `
+            <ul class="materials__items" role="list">
+                ${this.items.map((item) => this.renderItem(item)).join('')}
+            </ul>`;
     }
 
     animate() {
@@ -94,27 +84,21 @@ class MaterialsPage {
 
         if (this.reducedMotion) return;
 
-        const timeline = gsap.timeline({ defaults: { ease: 'expo.out' } });
-
-        timeline
+        gsap.timeline({ defaults: { ease: 'expo.out' } })
             .from('.site-header__brand, .site-header__title', {
                 opacity: 0,
                 y: -18,
                 duration: 1.2,
                 stagger: 0.12
             })
+            .from('.materials__title', { opacity: 0, y: 24, duration: 1, clearProps: 'transform' }, 0.2)
             .from(
-                '.materials__head > *',
-                { opacity: 0, y: 24, duration: 1, stagger: 0.08, clearProps: 'transform' },
-                0.2
-            )
-            .from(
-                '.materials__section-title, .materials__item',
-                { opacity: 0, y: 28, duration: 1, stagger: 0.06, clearProps: 'transform' },
+                '.materials__item',
+                { opacity: 0, y: 20, duration: 0.9, stagger: 0.05, clearProps: 'transform' },
                 0.35
             )
             .from('.site-footer', { opacity: 0, duration: 1 }, 0.6);
     }
 }
 
-new MaterialsPage(materialesConfig);
+new MaterialsPage(materiales);
