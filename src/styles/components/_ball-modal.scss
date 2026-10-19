@@ -113,6 +113,18 @@
     gap: 0.9rem;
   }
 
+  // "Busca tu décimo en un punto de venta." (sobre "Elige otra corazonada")
+  &__hint {
+    max-width: 20rem;
+    text-wrap: balance;
+    margin: 0;
+    color: $color-text-soft;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.4;
+    text-align: center;
+  }
+
   &__button {
     position: relative;
     display: inline-flex;

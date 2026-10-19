@@ -34,16 +34,12 @@ export default class BallModal {
             this.pointsLink.hidden = true;
         }
 
-        // Bodegón de décimos sobre "Compra tu décimo" (solo desktop). Sin URL
-        // de compra (links.buy vacío) no se muestran ni el botón ni el bodegón
-        const ticketsRoot = root.querySelector('.tickets--popup');
+        // "Compra tu décimo" solo con URL (links.buy)
+        if (!links.buy) this.buyLink.hidden = true;
 
-        if (!links.buy) {
-            this.buyLink.hidden = true;
-            ticketsRoot.hidden = true;
-        }
-
-        this.tickets = new TicketsFan(ticketsRoot, { reducedMotion });
+        // Bodegón de décimos (solo desktop) sobre "Busca tu décimo en un punto
+        // de venta."
+        this.tickets = new TicketsFan(root.querySelector('.tickets--popup'), { reducedMotion });
 
         this.content = [
             root.querySelector('.ball-modal__title'),
