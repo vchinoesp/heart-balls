@@ -47,14 +47,10 @@ const appConfig = {
     // Enlaces del popup de la bola elegida
     links: {
         // "Compra tu décimo" del popup. {number} se sustituye por el número
-        // elegido con 5 cifras (p. ej. 02845). Vacío ('') = el botón (y el
-        // bodegón de décimos del popup) no se muestran
+        // elegido con 5 cifras (p. ej. 02845). Vacío ('') = el botón no se muestra
         buy: '',
         // "Buscar punto de venta". Vacío ('') = el botón no se muestra
-        pointsOfSale: '',
-        // Bodegón de décimos de la home ("Compra tu décimo").
-        // Vacío ('') = el bodegón no se muestra. TODO: URL real
-        buyTicket: 'https://www.loteriasyapuestas.es/es/loteria-nacional'
+        pointsOfSale: ''
     }
 };
 

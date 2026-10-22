@@ -13,7 +13,7 @@ import TicketsFan from '../ui/TicketsFan.js';
  * (ratón / táctil) desde el CSS.
  */
 export default class HomeScreen extends Screen {
-    constructor(root, { onStart, ticketsHref, ...options }) {
+    constructor(root, { onStart, ...options }) {
         super(root, options);
 
         this.intro = root.querySelector('.intro');
@@ -24,7 +24,6 @@ export default class HomeScreen extends Screen {
         });
 
         this.tickets = new TicketsFan(root.querySelector('.tickets'), {
-            href: ticketsHref,
             reducedMotion: this.reducedMotion
         });
 

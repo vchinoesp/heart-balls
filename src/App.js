@@ -77,7 +77,6 @@ export default class App {
             }),
             home: new HomeScreen(find('home'), {
                 ...options,
-                ticketsHref: this.config.links.buyTicket,
                 onStart: () => this.goTo('heart')
             }),
             heart: new HeartScreen(find('heart'), options),

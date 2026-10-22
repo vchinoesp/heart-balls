@@ -111,6 +111,11 @@
     --u: calc(var(--stage) / 175);
   }
 
+  // Home: bodegón decorativo (no es un enlace)
+  &--home {
+    pointer-events: none;
+  }
+
   // Variante del popup de la bola: decorativa, sobre "Compra tu décimo",
   // solo en desktop
   &--popup {
