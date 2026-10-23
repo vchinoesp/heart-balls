@@ -1,9 +1,3 @@
-/**
- * Time
- *
- * Bucle de render con requestAnimationFrame. Emite 'time:tick'.
- * delta/elapsed en milisegundos.
- */
 export default class Time {
     constructor() {
         this.start = performance.now();
@@ -16,7 +10,6 @@ export default class Time {
     }
 
     tick(now) {
-        // Limitamos delta para evitar saltos al volver de una pestaña inactiva
         this.delta = Math.min(now - this.current, 100);
         this.current = now;
         this.elapsed = this.current - this.start;

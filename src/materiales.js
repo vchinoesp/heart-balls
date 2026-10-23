@@ -4,13 +4,6 @@ import './styles/materiales.scss';
 import materiales from './config/materiales.config.js';
 import Backdrop from './ui/Backdrop.js';
 
-/**
- * Página de descarga de materiales (materiales.html).
- *
- * Listado simple (título + "Descargar") a partir de
- * src/config/materiales.config.js. La cabecera, el fondo y el footer son los
- * mismos componentes (BEM) que la web principal.
- */
 class MaterialsPage {
     static FOLDER = '/materiales/';
 
@@ -35,7 +28,6 @@ class MaterialsPage {
         return /^https?:\/\//.test(url);
     }
 
-    /** Ruta pública del archivo (los nombres pueden llevar espacios o tildes). */
     static href(url) {
         return MaterialsPage.isExternal(url) ? url : MaterialsPage.FOLDER + encodeURIComponent(url);
     }

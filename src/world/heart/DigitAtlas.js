@@ -1,17 +1,5 @@
 import * as THREE from 'three';
 
-/**
- * DigitAtlas
- *
- * Textura generada en canvas con los dígitos 0-9 y el punto en una fila
- * (11 celdas). El shader compone cualquier número en formato lotería
- * "00.000" leyendo 5 dígitos + el punto, así 1 sola textura sirve para
- * todas las bolas.
- *
- * Tipografía: la misma que la bola del popup (Source Sans 3 Light), fina y
- * alta. Si la fuente aún no ha cargado se pinta con la de reserva y se
- * repinta en cuanto llega (la textura se actualiza sola en la GPU).
- */
 export default class DigitAtlas {
     constructor({
         cellWidth = 80,
@@ -61,7 +49,6 @@ export default class DigitAtlas {
             const x = cellWidth * (digit + 0.5);
             const y = cellHeight * 0.53;
             const width = context.measureText(String(digit)).width;
-            // Algo estrecha: más alta que ancha, como en la bola del popup
             const squeeze = Math.min(1, (cellWidth * 0.86) / width) * 0.9;
 
             context.save();
@@ -71,8 +58,6 @@ export default class DigitAtlas {
             context.restore();
         }
 
-        // Punto: el shader lo muestra en media celda, así que se pinta al doble
-        // de ancho para que se vea redondo
         context.save();
         context.translate(cellWidth * 10.5, cellHeight * 0.53);
         context.scale(2, 1);

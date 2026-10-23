@@ -1,6 +1,5 @@
 @use '../tokens' as *;
 
-// Contador de FPS (#fps o #debug en la URL)
 .fps-meter {
   position: fixed;
   z-index: 20;

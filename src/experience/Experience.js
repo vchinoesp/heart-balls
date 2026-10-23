@@ -14,18 +14,6 @@ import BallSelection from '../interaction/BallSelection.js';
 import BallModal from '../ui/BallModal.js';
 import heartConfig from '../config/heart.config.js';
 
-/**
- * Experience
- *
- * Escena WebGL del corazón. La crea App durante la carga y la controla:
- *  - init({ onProgress })  carga datos, crea el mundo y precompila shaders
- *  - playIntro()           el corazón se "genera" al llegar a la home
- *  - pause() / resume()    fuera de la home no se renderiza (batería)
- *  - setSafeArea()         encuadra el corazón entre el copy y el footer
- *
- * Flujo interno: navegar (HeartControls) -> señalar/elegir bola
- * (BallSelection) -> popup con la bola (BallModal) -> "Elige otra".
- */
 export default class Experience {
     constructor(canvas, { modalRoot, links } = {}) {
         this.canvas = canvas;
@@ -35,9 +23,9 @@ export default class Experience {
         this.isMobile = window.matchMedia('(pointer: coarse)').matches;
         this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        this.hidden = true; // fuera de la home
+        this.hidden = true;
         this.modalOpen = false;
-        this.blocked = false; // aviso "gira tu móvil" visible
+        this.blocked = false;
 
         this.scene = new THREE.Scene();
         this.debug = new Debug();
@@ -83,7 +71,6 @@ export default class Experience {
 
         this.setInteraction();
 
-        // Precompilar shaders ahora (y no en el primer frame de la home)
         const renderer = this.renderer.instance;
 
         if (renderer.extensions.has('KHR_parallel_shader_compile')) {
@@ -157,10 +144,6 @@ export default class Experience {
         this.setInteractive(false);
     }
 
-    /* ------------------------------------------------------------------ */
-    /* API para App                                                        */
-    /* ------------------------------------------------------------------ */
-
     setInteractive(enabled) {
         this.controls.setEnabled(enabled);
         this.selection.locked = !enabled;
@@ -174,7 +157,6 @@ export default class Experience {
         this.hidden = false;
     }
 
-    /** Con el aviso de girar el móvil delante no se renderiza. */
     setBlocked(blocked) {
         this.blocked = blocked;
     }
@@ -183,14 +165,6 @@ export default class Experience {
         this.camera.setSafeArea({ top, bottom });
     }
 
-    /**
-     * El corazón se genera: las bolas llegan en espiral desde fuera, de abajo
-     * arriba, mientras el corazón termina de girar hacia el frente.
-     */
-    /**
-     * Vuelta al estado inicial antes de cada entrada al corazón: vista sin
-     * zoom ni giro, sin bola destacada y con las bolas "sin formar".
-     */
     resetView() {
         const heartBalls = this.world.heartBalls;
 
@@ -245,9 +219,6 @@ export default class Experience {
                 { y: 0, duration: 2.6, ease: 'expo.out' },
                 0
             )
-            // Se puede interactuar antes de que acabe: con el corazón ya casi
-            // formado. Si el usuario arrastra / hace zoom, el final se acelera
-            // (finishIntro) para que no se pelee con sus gestos.
             .call(() => this.setInteractive(true), null, 1.5);
 
         this.introTimeline = timeline;
@@ -255,7 +226,6 @@ export default class Experience {
         return timeline;
     }
 
-    /** El usuario empieza a navegar durante la intro: terminarla en ~0.3 s. */
     finishIntro() {
         const timeline = this.introTimeline;
 
@@ -266,16 +236,10 @@ export default class Experience {
         if (remaining > 0.3) timeline.timeScale(remaining / 0.3);
     }
 
-    /* ------------------------------------------------------------------ */
-    /* Popup                                                               */
-    /* ------------------------------------------------------------------ */
-
     onBallSelected(number) {
         this.controls.setEnabled(false);
         this.modal.open({ number });
 
-        // Con el popup abierto el corazón queda detrás, desenfocado: no hace
-        // falta renderizarlo a 60 fps (ahorro de batería en móvil).
         this.modalOpen = true;
         this.renderer.update();
     }
@@ -285,10 +249,6 @@ export default class Experience {
         this.controls.setEnabled(true);
         this.selection.release();
     }
-
-    /* ------------------------------------------------------------------ */
-    /* Bucle                                                               */
-    /* ------------------------------------------------------------------ */
 
     resize() {
         this.camera.resize();

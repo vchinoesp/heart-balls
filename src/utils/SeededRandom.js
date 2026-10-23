@@ -1,7 +1,3 @@
-/**
- * Generador pseudoaleatorio determinista (mulberry32).
- * Mismo seed => mismo corazón en todos los dispositivos y recargas.
- */
 export default class SeededRandom {
     constructor(seed = 1) {
         this.state = seed >>> 0;

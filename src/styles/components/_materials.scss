@@ -1,6 +1,5 @@
 @use '../tokens' as *;
 
-// Estructura de la página de materiales: cabecera / contenido / footer
 .page {
   position: relative;
   z-index: 1;
@@ -9,7 +8,6 @@
   min-height: 100vh;
   min-height: 100dvh;
 
-  // El logo del sorteo es un enlace a la web (en la home es el h1)
   .site-header__title--link {
     display: block;
     border-radius: 6px;
@@ -18,7 +16,6 @@
   }
 }
 
-// Bloque BEM: listado de materiales descargables (título + "Descargar")
 .materials {
   flex: 1;
   width: min(100% - 2rem, 50rem);
@@ -68,7 +65,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.45rem;
-    min-height: 2.75rem; // objetivo táctil
+    min-height: 2.75rem;
     padding: 0.55rem 1.4rem;
     border-radius: 999px;
     background: $color-gold;
@@ -101,7 +98,6 @@
     text-align: center;
   }
 
-  // Móvil: título arriba y botón debajo
   @media (max-width: 30rem) {
     &__item {
       flex-direction: column;

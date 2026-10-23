@@ -2,14 +2,6 @@ import gsap from 'gsap';
 
 import Screen from './Screen.js';
 
-/**
- * AgeGateScreen
- *
- * "¿Tienes más de 18 años?"
- *  - Sí: continúa (onAccept).
- *  - No: muestra "Lo sentimos, no cumples con la edad." y lo retira pasados
- *    unos segundos (gsap.delayedCall, nada de setTimeout).
- */
 export default class AgeGateScreen extends Screen {
     constructor(root, { reducedMotion, messageDuration = 4.5, onAccept }) {
         super(root, { reducedMotion });

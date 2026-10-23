@@ -11,19 +11,6 @@ import HeartScreen from './screens/HeartScreen.js';
 import VideoScreen from './screens/VideoScreen.js';
 import RotateNotice from './ui/RotateNotice.js';
 
-/**
- * App
- *
- * One-page con estos estados:
- *   age (selector de edad) -> loading (ECG) -> home (copy + CTA)
- *   home -> heart (corazón grande + ayuda) -> popup de la bola (BallModal)
- *   home / heart ⇄ video (anuncio / making of)
- *
- * La carga del corazón (datos + WebGL) empieza nada más abrir la web, en
- * segundo plano, así el loading suele ir tan rápido como su animación.
- *
- * appConfig.debugMode = true -> se salta el selector de edad.
- */
 export default class App {
     constructor() {
         this.config = appConfig;
@@ -53,7 +40,6 @@ export default class App {
 
         gsap.set([this.footer, this.canvas], { autoAlpha: 0 });
 
-        // Móvil en horizontal: pantalla "gira tu móvil" y render en pausa
         this.rotateNotice = new RotateNotice(document.querySelector('.rotate-notice'), {
             reducedMotion: this.reducedMotion,
             blocked: [document.querySelector('.layout'), this.canvas, document.querySelector('.ball-modal')],
@@ -86,13 +72,6 @@ export default class App {
         Object.values(this.screens).forEach((screen) => screen.hide());
     }
 
-    /**
-     * Arranque en dos tiempos para que la primera animación no dé tirones:
-     *  1. Se espera a las tipografías y a la carga de la página (máx. 2.5 s)
-     *     antes de animar nada.
-     *  2. La carga pesada (datos del corazón + WebGL + shaders) empieza cuando
-     *     la primera pantalla ya ha terminado de entrar.
-     */
     async start() {
         this.fontsLoading = this.loadFonts().finally(() => {
             this.progress.fonts = 1;
@@ -128,10 +107,6 @@ export default class App {
         return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     }
 
-    /* ------------------------------------------------------------------ */
-    /* Carga                                                               */
-    /* ------------------------------------------------------------------ */
-
     get loadProgress() {
         return this.progress.fonts * 0.15 + this.progress.experience * 0.85;
     }
@@ -140,7 +115,6 @@ export default class App {
         await Promise.all([this.fontsLoading, this.loadExperience()]);
     }
 
-    /** Source Sans 3 (Google Fonts). Si tarda demasiado, seguimos igual. */
     loadFonts() {
         if (!document.fonts?.load) return Promise.resolve();
 
@@ -183,11 +157,6 @@ export default class App {
         }
     }
 
-    /* ------------------------------------------------------------------ */
-    /* Navegación entre pantallas                                         */
-    /* ------------------------------------------------------------------ */
-
-    /** Volver: desde el corazón a la home; desde el vídeo, a donde se estaba. */
     back() {
         if (this.current?.name === 'video') {
             this.goTo(this.previous === 'heart' ? 'heart' : 'home');
@@ -198,13 +167,6 @@ export default class App {
         this.goTo('home');
     }
 
-    /**
-     * Cambio de pantalla en dos fases, sin solapes:
-     *  1. Salida: la pantalla actual, los botones de la cabecera que cambian,
-     *     el footer (si se va) y el corazón (si se va) desaparecen a la vez.
-     *  2. Entrada: con todo lo anterior ya fuera, se recoloca la cabecera
-     *     (logo grande/pequeño, botones), entra el footer y la nueva pantalla.
-     */
     async goTo(name) {
         if (this.current?.name === name || this.transitioning) return;
 
@@ -215,7 +177,6 @@ export default class App {
 
         this.previous = previous?.name ?? null;
 
-        // Fase 1: salida
         await Promise.all([
             previous?.leave(),
             this.header.hide(name),
@@ -223,15 +184,11 @@ export default class App {
             this.hideHeart(name)
         ]);
 
-        // Fase 2: entrada. El footer deja de ocupar sitio solo ahora, con la
-        // pantalla anterior ya oculta: su hueco no recoloca nada visible.
         if (!this.footerVisibleOn(name)) this.footer.hidden = true;
 
         this.current = next;
         this.body.dataset.screen = name;
 
-        // Visible (aún transparente) antes de medir: el encuadre del corazón
-        // depende de dónde quedan la cabecera y la ayuda
         next.show();
         gsap.set(next.root, { opacity: 0 });
 
@@ -259,10 +216,6 @@ export default class App {
         return name === 'age' || name === 'home' || name === 'video';
     }
 
-    /**
-     * El footer se funde durante la salida pero sigue ocupando su sitio; el
-     * `hidden` (que lo quita del layout) lo pone goTo al empezar la entrada.
-     */
     hideFooter(name) {
         if (this.footerVisibleOn(name) || this.footer.hidden) return null;
 
@@ -295,7 +248,6 @@ export default class App {
         );
     }
 
-    /** Salida del corazón: se funde y deja de renderizarse. */
     hideHeart(name) {
         const experience = this.experience;
 
@@ -315,14 +267,9 @@ export default class App {
             .then();
     }
 
-    /**
-     * Entrada al corazón: siempre igual que la primera vez (vista inicial,
-     * sin zoom ni giro) y con la animación de generación.
-     */
     showHeart(name) {
         const experience = this.experience;
 
-        // Aún cargando en segundo plano (p. ej. en el selector de edad)
         if (!experience?.ready || name !== 'heart') return;
 
         this.canvas.tabIndex = 0;
@@ -330,7 +277,6 @@ export default class App {
         experience.resetView();
         experience.resume();
 
-        // Encuadre: el corazón ocupa todo el espacio entre cabecera y ayuda
         this.updateSafeArea();
         this.onResize ??= () => gsap.delayedCall(0.05, () => this.updateSafeArea());
         window.addEventListener('resize', this.onResize);

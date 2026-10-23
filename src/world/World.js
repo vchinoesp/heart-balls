@@ -3,13 +3,6 @@ import HeartBalls from './heart/HeartBalls.js';
 import HeartLayout from './heart/HeartLayout.js';
 import BallFx from './heart/BallFx.js';
 
-/**
- * World
- *
- * Orquesta el contenido 3D: entorno + corazón de bolas.
- * - Producción: carga el layout precalculado (public/data/heart-layout.bin).
- * - #debug: genera el layout en vivo y permite ajustar forma/empaquetado.
- */
 export default class World {
     constructor({ scene, renderer, debug, config, isMobile, reducedMotion }) {
         this.scene = scene;
@@ -22,7 +15,6 @@ export default class World {
             detail: isMobile ? 3 : 4
         });
 
-        // Repulsión / hover / selección (uniforms del shader animados con GSAP)
         this.fx = new BallFx(this.heartBalls.material.uniforms, {
             reducedMotion,
             pointerSmoothing: config.interaction.pointerSmoothing
@@ -47,7 +39,6 @@ export default class World {
                     `${import.meta.env?.BASE_URL ?? '/'}data/heart-layout.bin`
                 );
             } catch {
-                // Sin layout precalculado: lo generamos en el momento
             }
         }
 
@@ -124,7 +115,6 @@ export default class World {
         lookFolder.addColor(uniforms.uBaseColor, 'value').name('color madera');
         lookFolder.addColor(uniforms.uNumberColor, 'value').name('color número');
 
-        // Color del interior: proxy en hex (lo que se ve en config.ball.coreColor)
         const core = { color: this.config.ball.coreColor };
 
         lookFolder

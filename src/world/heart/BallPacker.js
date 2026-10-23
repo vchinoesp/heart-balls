@@ -1,28 +1,8 @@
 import SeededRandom from '../../utils/SeededRandom.js';
 import SpatialHash from '../../utils/SpatialHash.js';
 
-/**
- * BallPacker
- *
- * Reparte bolas sobre la superficie de un HeartShape imitando el
- * empaquetado ordenado de la creatividad:
- *
- * 1. Pool: miles de puntos candidatos proyectados sobre la superficie.
- * 2. Pasada principal: Poisson-disk *comprimido* (separación < 1) con radios
- *    casi uniformes -> más bolas de las que caben.
- * 3. Relajación: las bolas se repelen deslizándose sobre la superficie hasta
- *    tocarse; al estar comprimidas se ordenan en filas hexagonales.
- * 4. Relleno: pasadas con radios menores ocupan los huecos (costuras,
- *    pliegue central, bordes), como las bolas pequeñas de la creatividad.
- * 5. Crecimiento: cada bola crece hasta tocar a su vecina (con límite).
- * 6. Núcleo: capa interior de bolas oscuras que tapa los huecos.
- *
- * Devuelve arrays tipados en unidades normalizadas (corazón ≈ 1 de alto).
- */
-/** Base ortonormal (u = "derecha" horizontal, v = "arriba") para un plano. */
 const FacetedBasis = {
     fromNormal(n, u, v) {
-        // u = up × n
         u[0] = n[2];
         u[1] = 0;
         u[2] = -n[0];
@@ -40,7 +20,6 @@ const FacetedBasis = {
         u[1] /= length;
         u[2] /= length;
 
-        // v = n × u
         v[0] = n[1] * u[2] - n[2] * u[1];
         v[1] = n[2] * u[0] - n[0] * u[2];
         v[2] = n[0] * u[1] - n[1] * u[0];
@@ -62,17 +41,14 @@ export default class BallPacker {
         const [primary] = passes;
 
         if (typeof this.shape.getFaces === 'function' && this.options.lattice) {
-            // Corazón tallado: rejilla hexagonal perfecta en cada cara plana
             this.placeLattice(state);
         } else {
-            // Corazón suave: Poisson comprimido + relajación
             this.placePass(state, pool, primary, relax.initialSeparation);
             this.relax(state);
         }
 
         this.rebuildHash(state);
 
-        // Huecos: cada hueco recibe la bola más grande que cabe (sin solaparse)
         for (const layer of gapFill) {
             this.fillGaps(state, pool, layer);
         }
@@ -99,7 +75,6 @@ export default class BallPacker {
 
         return {
             count: 0,
-            // Suficiente para buscar vecinos de las bolas y del núcleo
             cellSize: Math.max(
                 largest * maxGrow * 2,
                 this.options.core.radius + largest * maxGrow
@@ -153,11 +128,6 @@ export default class BallPacker {
         return { points, normals, order, count, used: new Uint8Array(count) };
     }
 
-    /**
-     * Rejilla hexagonal por cara: filas perfectas como en la creatividad.
-     * Solo se aceptan puntos donde esa cara es la superficie real del corazón
-     * (evaluate = 0), así cada cara queda recortada por sus vecinas.
-     */
     placeLattice(state) {
         const { radius, jitter, spacing, edgeScales = [1] } = this.options.lattice;
         const faces = this.shape.getFaces();
@@ -175,13 +145,11 @@ export default class BallPacker {
 
             FacetedBasis.fromNormal(n, u, v);
 
-            // Centro del corazón proyectado sobre el plano de la cara
             const offset = n[0] * center[0] + n[1] * center[1] + n[2] * center[2] - face.distance;
             const ox = center[0] - n[0] * offset;
             const oy = center[1] - n[1] * offset;
             const oz = center[2] - n[2] * offset;
 
-            // Desfase aleatorio: cada cara tiene su propia rejilla
             const shiftU = this.random.next() * step;
             const shiftV = this.random.next() * rowStep;
             const rows = Math.ceil(extent / rowStep);
@@ -202,8 +170,6 @@ export default class BallPacker {
                     const r = radius * (1 - this.random.next() * jitter);
                     const point = [x, y, z];
 
-                    // Cerca de las aristas no cabe la bola entera: probamos más pequeñas
-                    // (las bolas pequeñas de las costuras de la creatividad)
                     for (const scale of edgeScales) {
                         const sink = (1 - scale) * radius * 0.5;
 
@@ -247,13 +213,6 @@ export default class BallPacker {
         return true;
     }
 
-    /**
-     * Relleno de huecos "la mayor bola que quepa":
-     * para cada candidato (a una profundidad dada) se mide el espacio libre
-     * hasta la bola más cercana y, si cabe al menos `min`, se coloca una bola
-     * de radio min(espacio, max). Nunca hay solapes, así que ninguna bola
-     * queda "cortada" por otra, y los huecos se cierran con bolas pequeñas.
-     */
     fillGaps(state, pool, { depth, min, max, onlyUnderGaps = 0 }) {
         const inset = this.options.inset + depth;
         const surfaceInset = this.options.inset;
@@ -267,7 +226,6 @@ export default class BallPacker {
             const y = pool.points[i3 + 1] - ny * inset;
             const z = pool.points[i3 + 2] - nz * inset;
 
-            // Capas profundas: solo donde hay un hueco encima (si no, no se verían)
             if (onlyUnderGaps > 0) {
                 const above = this.freeRadius(
                     state,
@@ -282,7 +240,6 @@ export default class BallPacker {
 
             let free = this.freeRadius(state, x, y, z, max);
 
-            // Cerca de un hueco: centrar el candidato en el hueco antes de decidir
             if (free < min && free > min * this.options.holeSearch) {
                 const centered = this.centerInHole(
                     state,
@@ -300,7 +257,6 @@ export default class BallPacker {
 
             if (free < min) continue;
 
-            // También las que ya caben: centradas, llenan mejor el hueco
             const centered = this.centerInHole(
                 state,
                 [pool.points[i3], pool.points[i3 + 1], pool.points[i3 + 2]],
@@ -324,11 +280,6 @@ export default class BallPacker {
         }
     }
 
-    /**
-     * Busca el centro del hueco: desplaza el punto (sobre la superficie)
-     * alejándolo de la bola más cercana mientras el espacio libre crezca.
-     * Así la bolita de relleno queda encajada en medio y no "a un lado".
-     */
     centerInHole(state, surfacePoint, inset, max) {
         const surface = surfacePoint.slice();
         const normal = [0, 0, 0];
@@ -346,7 +297,6 @@ export default class BallPacker {
         for (let iteration = 0; iteration < 10 && step > max * 0.02; iteration++) {
             if (best.index < 0) break;
 
-            // Alejarse de la bola más cercana (en el plano tangente)
             const j3 = best.index * 3;
             let dx = center[0] - state.positions[j3];
             let dy = center[1] - state.positions[j3 + 1];
@@ -390,7 +340,6 @@ export default class BallPacker {
         return { surface, normal, center, free: best.free };
     }
 
-    /** Espacio libre y bola más cercana a un punto. */
     nearestBall(state, [x, y, z], cap) {
         const { positions, radii } = state;
         let free = cap;
@@ -413,7 +362,6 @@ export default class BallPacker {
         return { free, index };
     }
 
-    /** Radio libre alrededor de un punto (distancia a la superficie de la bola más cercana). */
     freeRadius(state, x, y, z, cap) {
         const { positions, radii } = state;
         let free = cap;
@@ -451,7 +399,6 @@ export default class BallPacker {
         state.count++;
     }
 
-    /** Poisson-disk sobre el pool con radios en [pass.min, pass.max]. */
     placePass(state, pool, pass, separation) {
         const { maxBalls } = this.options;
 
@@ -499,7 +446,6 @@ export default class BallPacker {
         }
     }
 
-    /** El centro de la bola se hunde ligeramente bajo la superficie. */
     centerFrom(x, y, z, nx, ny, nz, sink = 0) {
         const inset = this.options.inset + sink;
 
@@ -545,10 +491,6 @@ export default class BallPacker {
         }
     }
 
-    /**
-     * Repulsión entre bolas deslizando sobre la superficie.
-     * Jacobi: se acumulan desplazamientos y se aplican a la vez.
-     */
     relax(state) {
         const { iterations, strength, target } = this.options.relax;
         const { count, surface, positions, normals, radii } = state;
@@ -616,7 +558,6 @@ export default class BallPacker {
         }
     }
 
-    /** Cada bola crece hasta tocar a su vecina más cercana (con límite). */
     grow(state) {
         const { growIterations, maxGrow, separation } = this.options;
         const { count, positions, radii } = state;
@@ -651,7 +592,6 @@ export default class BallPacker {
         }
     }
 
-    /** La bola del núcleo no puede asomar por zonas finas (p. ej. la punta). */
     isInside(x, y, z, radius) {
         const shape = this.shape;
 
@@ -666,10 +606,6 @@ export default class BallPacker {
         );
     }
 
-    /**
-     * Núcleo de seguridad, muy profundo y sin tocar ninguna bola visible:
-     * solo existe para que nunca se vea el fondo a través del corazón.
-     */
     placeCore(pool, state) {
         const { radius, inset, spacing } = this.options.core;
         const hash = new SpatialHash(radius * spacing);
@@ -702,7 +638,6 @@ export default class BallPacker {
             });
 
             if (!free || !this.isInside(x, y, z, radius)) continue;
-            // Puede rozar bolas profundas (en sombra) pero nunca las de la superficie
             if (this.freeRadius(state, x, y, z, radius) < radius * this.options.core.clearance) continue;
 
             positions[count * 3] = x;

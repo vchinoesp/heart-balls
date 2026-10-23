@@ -1,16 +1,5 @@
 import gsap from 'gsap';
 
-/**
- * Header
- *
- * Cabecera común: logo Lotería Nacional, logo del sorteo (h1) y acciones:
- *  - home  -> "Ver el anuncio"
- *  - heart -> "Ver el anuncio" + "Volver" debajo; el logo del sorteo se
- *             hace pequeño para dejar sitio al corazón
- *  - video -> "Volver"; en desktop el logo del sorteo es más pequeño para
- *             dejar más alto al visor (cambio real de tamaño, animado con FLIP)
- *  - resto -> sin acciones
- */
 export default class Header {
     constructor(root, { reducedMotion = false, onWatch, onBack }) {
         this.root = root;
@@ -35,12 +24,10 @@ export default class Header {
         this.compact = false;
     }
 
-    /** Escala del logo del sorteo en la pantalla del corazón. */
     get compactScale() {
         return window.innerWidth < 768 ? 0.62 : 0.48;
     }
 
-    /** Entrada inicial de los logos (una sola vez). */
     reveal() {
         if (this.revealed) return;
 
@@ -65,11 +52,6 @@ export default class Header {
         return screen === 'video' ? 'back-only' : 'default';
     }
 
-    /**
-     * Fase de salida: se van los botones que no siguen o que cambian de
-     * sitio (p. ej. "Volver" sube a la fila de "Ver el anuncio" en el vídeo).
-     * Devuelve una promesa que se cumple cuando ya no se ven.
-     */
     hide(nextScreen) {
         const layoutChanges = this.actions.dataset.layout !== Header.layoutFor(nextScreen);
         const leaving = [];
@@ -96,7 +78,6 @@ export default class Header {
             .then();
     }
 
-    /** Fase de entrada: recoloca y muestra lo que corresponde a la pantalla. */
     show(screen) {
         this.reveal();
         this.actions.dataset.layout = Header.layoutFor(screen);
@@ -106,12 +87,6 @@ export default class Header {
         this.setAction(this.back, Header.backVisibleOn(screen));
     }
 
-    /**
-     * En el vídeo (desktop) el logo ocupa menos alto de verdad (CSS
-     * .site-header--video), así el visor crece. FLIP: el tamaño final se
-     * aplica al instante (las medidas del layout son ya las buenas) y la
-     * escala anima desde el tamaño que se veía hasta el nuevo.
-     */
     setVideoLayout(active) {
         if (active === this.root.classList.contains('site-header--video')) return;
 
@@ -149,11 +124,6 @@ export default class Header {
         });
     }
 
-    /**
-     * Parte inferior (px) de la cabecera en modo compacto: tope del corazón.
-     * En pantallas anchas los botones de la derecha quedan fuera del corazón,
-     * así que solo cuentan los logos; en móvil cuenta todo.
-     */
     getCompactBottom() {
         const titleTop = this.title.offsetTop;
         const titleBottom = titleTop + this.title.offsetHeight * this.compactScale;
@@ -167,7 +137,6 @@ export default class Header {
     setAction(element, visible, immediate = false) {
         element.inert = !visible;
 
-        // Ya en su estado: no repetir la animación
         const current = Number(gsap.getProperty(element, 'opacity'));
 
         if (!immediate && ((visible && current === 1) || (!visible && current === 0))) return;

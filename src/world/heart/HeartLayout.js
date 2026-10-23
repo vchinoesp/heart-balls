@@ -2,21 +2,6 @@ import HeartShape from './HeartShape.js';
 import FacetedHeartShape from './FacetedHeartShape.js';
 import BallPacker from './BallPacker.js';
 
-/**
- * HeartLayout
- *
- * Datos de colocación de las bolas (unidades normalizadas, punta en y = 0):
- * { count, positions: Float32Array(3n), normals: Float32Array(3n), radii: Float32Array(n), height,
- *   core: { count, radius, positions: Float32Array(3m) } }
- *
- * - generate(): cálculo completo (≈0.5-1 s). Se usa en el script de bake y en modo #debug.
- * - fromBuffer()/toBuffer(): formato binario precalculado (public/data/heart-layout.bin)
- *   para que en producción la carga sea instantánea y no bloquee el hilo principal.
- *
- * Formato binario (little endian):
- *   Uint32 version | Uint32 count | Float32 height | Uint32 coreCount | Float32 coreRadius | pad[3]
- *   Float32 positions[3n] | Float32 normals[3n] | Float32 radii[n] | Float32 corePositions[3m]
- */
 const VERSION = 2;
 const HEADER_BYTES = 32;
 
@@ -36,7 +21,6 @@ export default class HeartLayout {
         };
     }
 
-    /** 'faceted' = corazón tallado (caras planas); 'smooth' = redondeado. */
     static createShape(shapeConfig) {
         return shapeConfig.mode === 'faceted'
             ? new FacetedHeartShape(shapeConfig)

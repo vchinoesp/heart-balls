@@ -3,17 +3,9 @@ import gsap from 'gsap';
 import HeroBall from './HeroBall.js';
 import TicketsFan from './TicketsFan.js';
 
-/**
- * BallModal
- *
- * Popup "Esta es tu corazonada" (markup en index.html, bloque BEM .ball-modal).
- * Accesible: role="dialog", aria-modal, foco atrapado, Esc cierra y el foco
- * vuelve al elemento que lo abrió. Animaciones de entrada/salida con GSAP.
- */
 export default class BallModal {
     constructor({ root, links = {}, reducedMotion = false, ball, onClose }) {
         this.root = root;
-        // Material/atlas de las bolas del corazón: la del popup es idéntica
         this.ball = ball;
         this.links = links;
         this.reducedMotion = reducedMotion;
@@ -27,18 +19,14 @@ export default class BallModal {
         this.buyLink = root.querySelector('[data-action="buy"]');
         this.pointsLink = root.querySelector('[data-action="points"]');
 
-        // "Buscar punto de venta" solo se muestra si hay URL en app.config.js
         if (links.pointsOfSale) {
             this.pointsLink.href = links.pointsOfSale;
         } else {
             this.pointsLink.hidden = true;
         }
 
-        // "Compra tu décimo" solo con URL (links.buy)
         if (!links.buy) this.buyLink.hidden = true;
 
-        // Bodegón de décimos (solo desktop) sobre "Busca tu décimo en un punto
-        // de venta."
         this.tickets = new TicketsFan(root.querySelector('.tickets--popup'), { reducedMotion });
 
         this.content = [
@@ -94,7 +82,6 @@ export default class BallModal {
             gsap.fromTo(
                 this.content,
                 { opacity: 0, y: 18 },
-                // clearProps: sin transform inline al acabar (si no, anula los :hover)
                 { opacity: 1, y: 0, duration: 0.9, ease: 'expo.out', stagger: 0.07, delay: 0.15, clearProps: 'transform' }
             );
         }
@@ -102,8 +89,6 @@ export default class BallModal {
         this.hero.open(number);
         this.tickets.open({ delay: 0.35 });
 
-        // Foco inicial en la acción principal visible ("Compra tu décimo" o,
-        // si está oculto, "Elige otra corazonada")
         this.root.querySelector('.ball-modal__actions [data-action]:not([hidden])')?.focus({ preventScroll: true });
     }
 
@@ -111,7 +96,6 @@ export default class BallModal {
         this.hero ??= new HeroBall(this.canvas, { reducedMotion: this.reducedMotion, ball: this.ball });
     }
 
-    /** Se llama durante el loading: el primer popup se abre sin tirones. */
     prewarm() {
         this.createHero();
         this.hero.prewarm();
@@ -148,7 +132,6 @@ export default class BallModal {
         if (action === 'close') this.close();
         if (action === 'another') this.close({ another: true });
 
-        // Clic en el fondo oscuro (fuera del panel) = cerrar
         if (event.target === this.root) this.close();
     }
 

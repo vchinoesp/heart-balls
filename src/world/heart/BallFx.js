@@ -1,12 +1,5 @@
 import gsap from 'gsap';
 
-/**
- * BallFx
- *
- * Anima (con GSAP) los uniforms de interacción de BallMaterial:
- * posición suavizada del puntero, intensidad de repulsión, hover y selección.
- * Todo el movimiento de las bolas ocurre en el vertex shader.
- */
 export default class BallFx {
     constructor(uniforms, { reducedMotion = false, pointerSmoothing = 0.5 } = {}) {
         this.uniforms = uniforms;
@@ -14,7 +7,6 @@ export default class BallFx {
         this.hoverIndex = -1;
 
         const pointer = uniforms.uPointer.value;
-        // Seguimiento suave: el campo de repulsión "persigue" al puntero
         const follow = { duration: pointerSmoothing, ease: 'power3.out' };
 
         this.pointerX = gsap.quickTo(pointer, 'x', follow);
@@ -28,7 +20,6 @@ export default class BallFx {
         }
     }
 
-    /** Punto en espacio local del mesh. `snap` evita que viaje desde lejos. */
     setPointer(point, snap = false) {
         if (snap) {
             this.uniforms.uPointer.value.copy(point);
@@ -53,17 +44,11 @@ export default class BallFx {
         });
     }
 
-    /**
-     * Destaca una bola. `boost` multiplica subida y crecimiento: en táctil la
-     * preselección se exagera (y entra con un pequeño rebote) para que se note
-     * bajo el dedo.
-     */
     setHover(index, { boost = 1 } = {}) {
         if (index === this.hoverIndex) return;
 
         const u = this.uniforms;
 
-        // La bola anterior baja suavemente mientras sube la nueva
         u.uPrevHoverId.value = u.uHoverId.value;
         u.uPrevHover.value = u.uHover.value;
         gsap.to(u.uPrevHover, {
@@ -91,7 +76,6 @@ export default class BallFx {
         });
     }
 
-    /** La bola elegida se encoge y "sale" del corazón hacia el popup. */
     select(index) {
         const u = this.uniforms;
 
@@ -106,7 +90,6 @@ export default class BallFx {
         });
     }
 
-    /** Devuelve la bola a su hueco con un pequeño rebote. */
     restore() {
         const u = this.uniforms;
 

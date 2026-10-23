@@ -1,24 +1,5 @@
 import HeartShape from './HeartShape.js';
 
-/**
- * FacetedHeartShape
- *
- * Versión "tallada" del corazón, como en la creatividad: caras planas
- * (hexágonos y pentágonos) en lugar de superficies redondeadas.
- *
- * Construcción:
- * 1. Se toma la mitad izquierda del corazón suave (una "gota" inflada).
- * 2. Se elige un conjunto de direcciones tipo balón de fútbol
- *    (vértices + centros de cara de un icosaedro = 12 + 20 = 32 caras).
- * 3. Para cada dirección se calcula el plano tangente a la gota (función soporte).
- *    La intersección de esos planos es un poliedro convexo que envuelve la gota.
- * 4. Corazón = unión de ese poliedro y su reflejo (mitad derecha). La unión
- *    genera sola la hendidura superior y la arista central.
- *
- * Sobre cada cara plana las bolas se colocan en una rejilla hexagonal perfecta
- * (ver BallPacker.placeLattice) y en las aristas quedan los huecos que se
- * rellenan con bolas más pequeñas.
- */
 export default class FacetedHeartShape extends HeartShape {
     setParams(params) {
         super.setParams(params);
@@ -31,14 +12,6 @@ export default class FacetedHeartShape extends HeartShape {
         this.buildPlanes();
     }
 
-    /**
-     * Altura (z) de la mitad izquierda suave en (x, y); -1 = fuera.
-     *  - seam 'valley': gota izquierda sola -> al unir las dos mitades la
-     *    línea central queda hundida.
-     *  - seam 'ridge': mitad izquierda del corazón completo (hasta x = 0) con
-     *    la distancia real al borde de la silueta. El punto más alto queda en
-     *    el centro -> arista central hacia fuera, como en la creatividad.
-     */
     smoothHalf(x, y) {
         if (this.seam === 'ridge') return this.ridgeHeight(x, y);
 
@@ -62,11 +35,6 @@ export default class FacetedHeartShape extends HeartShape {
         return this.thicknessAt(x) * Math.sqrt(1 - edge * edge);
     }
 
-    /**
-     * Distancia real al contorno de la silueta. La SDF de una unión (min) se
-     * queda corta por dentro justo en la costura central: por eso el centro
-     * se hundía. Aquí se mide contra puntos del contorno (solo en el bake).
-     */
     boundaryDistance(x, y) {
         this.contour ??= this.sampleContour();
 
@@ -84,7 +52,6 @@ export default class FacetedHeartShape extends HeartShape {
         return Math.sqrt(best);
     }
 
-    /** Puntos del contorno de la silueta (cambios de signo en una rejilla fina). */
     sampleContour() {
         const step = 0.002;
         const { minX, maxX, maxY } = this.bounds;
@@ -131,8 +98,6 @@ export default class FacetedHeartShape extends HeartShape {
             this.facetRotation
         );
 
-        // Arista: solo direcciones que miran a la izquierda (o al centro); la
-        // derecha es su reflejo exacto -> las caras se encuentran en x = 0
         if (this.seam === 'ridge') {
             directions = directions.filter((d) => d[0] <= 1e-6);
         }
@@ -140,7 +105,6 @@ export default class FacetedHeartShape extends HeartShape {
         const step = 0.004;
         const { minX, maxX, maxY } = this.bounds;
 
-        // Función soporte: máximo de n·p sobre la superficie de la gota
         for (let x = minX; x <= maxX; x += step) {
             for (let y = 0; y <= maxY; y += step) {
                 const z = this.smoothHalf(x, y);
@@ -164,7 +128,6 @@ export default class FacetedHeartShape extends HeartShape {
 
         if (this.seam === 'ridge') this.buildRidgePlanes();
 
-        // El poliedro puede ser algo mayor que la forma suave: actualizamos límites
         const margin = 0.08;
 
         this.bounds = {
@@ -177,10 +140,6 @@ export default class FacetedHeartShape extends HeartShape {
         };
     }
 
-    /**
-     * Modo arista: un único poliedro convexo y simétrico (caras izquierdas +
-     * sus reflejos) al que se le talla la hendidura superior con una "V".
-     */
     buildRidgePlanes() {
         const mirrored = this.planes
             .filter(({ normal }) => normal[0] < -1e-6)
@@ -191,7 +150,6 @@ export default class FacetedHeartShape extends HeartShape {
 
         this.solidPlanes = [...this.planes, ...mirrored];
 
-        // Hendidura: y > notch.y + slope·|x| queda fuera
         const { y, slope } = this.notch;
         const length = Math.hypot(slope, 1);
 
@@ -214,7 +172,6 @@ export default class FacetedHeartShape extends HeartShape {
         return value;
     }
 
-    /** Distancia (con signo) al poliedro de la mitad izquierda. */
     half(x, y, z) {
         let value = -Infinity;
 
@@ -231,7 +188,6 @@ export default class FacetedHeartShape extends HeartShape {
     evaluate(x, y, z) {
         if (this.seam === 'ridge') {
             const solid = FacetedHeartShape.maxPlane(this.solidPlanes, x, y, z);
-            // Hendidura: min de los dos planos de la "V" (paredes interiores de los lóbulos)
             const notch = Math.min(
                 FacetedHeartShape.maxPlane([this.notchPlanes[0]], x, y, z),
                 FacetedHeartShape.maxPlane([this.notchPlanes[1]], x, y, z)
@@ -243,10 +199,6 @@ export default class FacetedHeartShape extends HeartShape {
         return Math.min(this.half(x, y, z), this.half(-x, y, z));
     }
 
-    /**
-     * Caras de ambas mitades: { normal, distance, origin } en el espacio del corazón.
-     * La mitad derecha es el reflejo en X de la izquierda.
-     */
     getFaces() {
         if (this.seam === 'ridge') {
             return [...this.solidPlanes, ...this.notchPlanes].map(({ normal, distance }) => ({
@@ -268,10 +220,6 @@ export default class FacetedHeartShape extends HeartShape {
         return faces;
     }
 
-    /**
-     * Direcciones de las caras: vértices del icosaedro (pentágonos) +
-     * centros de sus caras (hexágonos). detail 1 subdivide una vez (más caras).
-     */
     static createDirections(detail, rotation) {
         const t = (1 + Math.sqrt(5)) / 2;
         let vertices = [
@@ -339,15 +287,12 @@ export default class FacetedHeartShape extends HeartShape {
     }
 
     static rotate([x, y, z], { x: rx = 0, y: ry = 0, z: rz = 0 }) {
-        // X
         let cy = Math.cos(rx);
         let sy = Math.sin(rx);
         [y, z] = [y * cy - z * sy, y * sy + z * cy];
-        // Y
         cy = Math.cos(ry);
         sy = Math.sin(ry);
         [x, z] = [x * cy + z * sy, -x * sy + z * cy];
-        // Z
         cy = Math.cos(rz);
         sy = Math.sin(rz);
         [x, y] = [x * cy - y * sy, x * sy + y * cy];

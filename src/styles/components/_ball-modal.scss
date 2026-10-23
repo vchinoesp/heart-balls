@@ -1,6 +1,5 @@
 @use '../tokens' as *;
 
-// Bloque BEM: popup "Esta es tu corazonada"
 .ball-modal {
   position: fixed;
   z-index: 10;
@@ -85,7 +84,7 @@
     display: block;
     width: 100%;
     height: 100%;
-    touch-action: none; // se puede girar la bola con el dedo
+    touch-action: none;
     cursor: grab;
 
     &:active {
@@ -113,7 +112,6 @@
     gap: 0.9rem;
   }
 
-  // "Busca tu décimo en un punto de venta." (sobre "Elige otra corazonada")
   &__hint {
     max-width: 20rem;
     text-wrap: balance;
@@ -130,16 +128,14 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    // Ancho mínimo común; "Elige otra corazonada" crece lo que necesite
     min-width: min(100%, 13.5rem);
     max-width: 100%;
 
-    // Sin URL de compra en app.config.js "Compra tu décimo" no se muestra
     &[hidden] {
       display: none;
     }
 
-    min-height: 3rem; // objetivo táctil > 44px
+    min-height: 3rem;
     padding: 0.75rem 1.5rem;
     overflow: hidden;
     border: 0;
@@ -157,7 +153,6 @@
       background-color 0.4s $ease-out-power3,
       color 0.4s $ease-out-power3;
 
-    // Brillo que cruza el botón al pasar por encima
     &::after {
       content: '';
       position: absolute;
@@ -206,7 +201,6 @@
   &__link {
     display: inline-flex;
 
-    // Sin URL de puntos de venta en app.config.js el enlace no se muestra
     &[hidden] {
       display: none;
     }
@@ -236,7 +230,6 @@
     }
   }
 
-  // Subrayado: al pasar por encima se recoge y vuelve a dibujarse
   &__link-label {
     padding-bottom: 0.15em;
     background: linear-gradient(currentColor, currentColor) 100% 100% / 100% 1px no-repeat;
@@ -248,14 +241,12 @@
     animation: ball-modal-underline 0.9s $ease-out-expo;
   }
 
-  // Foco visible en todos los controles del popup
   a:focus-visible,
   button:focus-visible {
     outline: 3px solid $color-focus;
     outline-offset: 3px;
   }
 
-  // Desktop: bola a la izquierda, acciones a la derecha (como la creatividad)
   @media (min-width: 48rem) {
     &__panel {
       grid-template-columns: 1.1fr 1fr;

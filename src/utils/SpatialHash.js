@@ -1,7 +1,3 @@
-/**
- * Rejilla espacial 3D para búsquedas de vecinos en O(1) aproximado.
- * Guarda índices; las posiciones viven en un Float32Array externo.
- */
 export default class SpatialHash {
     constructor(cellSize) {
         this.cellSize = cellSize;
@@ -10,7 +6,6 @@ export default class SpatialHash {
     }
 
     key(ix, iy, iz) {
-        // Empaquetado en un entero (rango ±512 celdas por eje, de sobra)
         return ((ix + 512) * 1024 + (iy + 512)) * 1024 + (iz + 512);
     }
 
@@ -31,7 +26,6 @@ export default class SpatialHash {
         cell.push(index);
     }
 
-    /** Llama a callback(index) para cada índice en las 27 celdas vecinas. */
     forEachNear(x, y, z, callback) {
         const cx = Math.floor(x * this.inverse);
         const cy = Math.floor(y * this.inverse);

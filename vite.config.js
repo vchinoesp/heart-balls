@@ -3,13 +3,6 @@ import { defineConfig } from 'vite';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 
-/**
- * URL pública del site, para que las metaetiquetas de compartir (og:image,
- * twitter:image) sean absolutas, como piden Facebook, WhatsApp o LinkedIn.
- *  - SITE_URL (variable de entorno), p. ej. https://elsorteoquenosune.es
- *  - o, en Vercel, el dominio de producción del proyecto (variable de sistema)
- * Sin ninguna de las dos se dejan las rutas relativas.
- */
 function siteUrl() {
     const url = process.env.SITE_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL || '';
 
@@ -44,7 +37,6 @@ function absoluteShareMeta() {
 export default defineConfig({
     plugins: [absoluteShareMeta()],
     build: {
-        // Dos páginas: la experiencia (index.html) y la descarga de materiales
         rolldownOptions: {
             input: {
                 main: `${root}index.html`,

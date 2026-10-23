@@ -1,18 +1,6 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 
-/**
- * Environment
- *
- * Iluminación de estudio inspirada en la creatividad:
- * - Luz principal cálida desde arriba-izquierda (sombras hacia abajo-derecha).
- * - Relleno frío y suave desde la derecha.
- * - Contraluz para separar la silueta del fondo azul.
- * - RoomEnvironment (PMREM) como luz ambiental/reflejos suaves: sin HDR externo.
- *
- * `Environment.apply()` monta exactamente la misma luz en otra escena: la
- * bola del popup (HeroBall) se ilumina igual que las bolas del corazón.
- */
 export default class Environment {
     static settings = {
         environmentIntensity: 0.15,
@@ -21,7 +9,6 @@ export default class Environment {
         rim: { color: '#ffe7c4', intensity: 1.3, position: [3, 5, -7] }
     };
 
-    /** Mapa de entorno + luces en `scene`. Devuelve { environmentMap, keyLight, fillLight, rimLight }. */
     static apply(scene, renderer) {
         const { environmentIntensity, key, fill, rim } = Environment.settings;
         const pmrem = new THREE.PMREMGenerator(renderer);

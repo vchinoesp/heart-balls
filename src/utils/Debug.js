@@ -1,16 +1,5 @@
 import appConfig from '../config/app.config.js';
 
-/**
- * Debug
- *
- * Se controla con el hash de la URL (se pueden combinar con & o ,):
- *   #debug          -> panel lil-gui + controles + contador de FPS
- *   #fps o #stats   -> solo el contador de FPS (ideal para probar en móvil)
- *   #debug&fps      -> ambos
- *
- * En producción (appConfig.prod) todo esto está desactivado.
- * lil-gui se importa dinámicamente: nunca se descarga sin #debug.
- */
 export default class Debug {
     constructor() {
         const flags = appConfig.prod

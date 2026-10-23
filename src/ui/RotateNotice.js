@@ -1,18 +1,5 @@
 import gsap from 'gsap';
 
-/**
- * RotateNotice
- *
- * Móvil en horizontal (alto < 450 px): la experiencia no cabe, así que se
- * muestra una pantalla "Para una mejor experiencia gira tu móvil" con un
- * icono de móvil girando. Solo en pantallas táctiles (pointer: coarse), para
- * no bloquear una ventana de escritorio baja.
- *
- * Mientras está visible:
- *  - el resto de la web queda `inert` (ni foco ni lector de pantalla)
- *  - se avisa con onChange(true) para pausar el render WebGL (batería)
- * Al volver a vertical, todo sigue exactamente donde estaba.
- */
 export default class RotateNotice {
     static QUERY = '(orientation: landscape) and (max-height: 449.98px) and (pointer: coarse)';
 
@@ -83,7 +70,6 @@ export default class RotateNotice {
         if (this.returnFocus?.isConnected) this.returnFocus.focus({ preventScroll: true });
     }
 
-    /** El móvil del icono pasa de horizontal a vertical, en bucle. */
     playIcon() {
         this.loop?.kill();
 

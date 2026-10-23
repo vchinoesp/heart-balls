@@ -1,24 +1,5 @@
 import gsap from 'gsap';
 
-/**
- * HeartControls
- *
- * Navegación del corazón pensada para móvil y desktop:
- *  - Arrastrar (1 dedo / ratón): girar el corazón, con inercia.
- *  - Pellizcar (2 dedos) / rueda: zoom hacia el punto señalado.
- *  - 2 dedos arrastrando: desplazar la vista cuando hay zoom.
- *  - Toque corto / clic: onTap (seleccionar bola).
- *  - Teclado (WCAG): flechas giran, +/- zoom, Enter/Espacio elige la bola central.
- *
- * Zoom seguro: la cámara nunca se acerca a menos de `minSurfaceDistance` de
- * la bola más cercana de la zona que se está mirando (getFrontDepth). Los
- * laterales y la punta sobresalen más que el frente al girar el corazón, así
- * que el límite se recalcula cada frame (update) y, si al girar la superficie
- * se acerca, la cámara retrocede suavemente.
- *
- * Se gira el corazón (no la cámara): la luz queda fija y las caras cambian de
- * tono al girar, como en un objeto real. Todo el suavizado va con gsap.quickTo.
- */
 export default class HeartControls {
     constructor({
         element,
@@ -48,7 +29,6 @@ export default class HeartControls {
         this.enabled = true;
         this.minRatio = 0.2;
 
-        // Valores objetivo (los reales se interpolan hacia ellos)
         this.state = { rotX: 0, rotY: 0, ratio: 1, panX: 0, panY: 0 };
         this.pointers = new Map();
         this.gesture = null;
@@ -90,25 +70,15 @@ export default class HeartControls {
         el.addEventListener('keydown', this.handlers.key);
     }
 
-    /* ------------------------------------------------------------------ */
-    /* Utilidades                                                          */
-    /* ------------------------------------------------------------------ */
-
     get maxRotX() {
         return this.navigation.maxTilt ?? 0.75;
     }
 
-    /**
-     * Zoom máximo permitido ahora mismo (ratio mínimo) mirando a (panX, panY):
-     * la cámara (en z = fitDistance·ratio) queda al menos a minSurfaceDistance
-     * de la bola más cercana de esa zona.
-     */
     getMinRatio(panX = this.state.panX, panY = this.state.panY) {
         const fitDistance = this.camera.fitDistance;
 
         if (!this.getFrontDepth || !fitDistance) return this.minRatio;
 
-        // Zona que se ve con el zoom máximo (algo más amplia, por seguridad)
         const { halfWidth, halfHeight } = this.camera.halfExtents(this.minRatio);
         const front = this.getFrontDepth(panX, panY, halfWidth * 1.2, halfHeight * 1.2);
 
@@ -119,7 +89,6 @@ export default class HeartControls {
         return Math.min(Math.max(this.minRatio, (front + gap) / fitDistance), 1);
     }
 
-    /** Cada frame: si al girar la superficie se acerca a la cámara, retroceder. */
     update() {
         if (this.state.ratio >= 1 && this.camera.view.ratio >= 0.999) return;
 
@@ -133,8 +102,6 @@ export default class HeartControls {
             this.tweenPanY(this.state.panY);
         }
 
-        // Red de seguridad: aunque el tween aún no haya llegado, la cámara
-        // nunca queda dentro del corazón (retrocede con el giro)
         this.camera.minRatio = minRatio * 0.92;
     }
 
@@ -152,10 +119,6 @@ export default class HeartControls {
         this.pointers.clear();
         this.gesture = null;
     }
-
-    /* ------------------------------------------------------------------ */
-    /* Puntero                                                             */
-    /* ------------------------------------------------------------------ */
 
     onPointerDown(event) {
         if (!this.enabled) return;
@@ -194,7 +157,6 @@ export default class HeartControls {
         const ndc = this.toNdc(event.clientX, event.clientY);
 
         if (!this.pointers.has(event.pointerId)) {
-            // Ratón sin pulsar: solo hover
             if (event.pointerType === 'mouse') this.onHover?.(ndc, 'mouse');
 
             return;
@@ -232,7 +194,6 @@ export default class HeartControls {
         }
 
         if (this.pointers.size === 1 && gesture?.type === 'pinch') {
-            // Queda un dedo: continúa como arrastre sin salto
             const [pointer] = this.pointers.values();
 
             this.gesture = {
@@ -261,10 +222,6 @@ export default class HeartControls {
         }
     }
 
-    /* ------------------------------------------------------------------ */
-    /* Giro                                                                */
-    /* ------------------------------------------------------------------ */
-
     updateDrag(event) {
         const gesture = this.gesture;
         const now = performance.now();
@@ -283,7 +240,6 @@ export default class HeartControls {
             gesture.moved = true;
         }
 
-        // Velocidad suavizada (px/ms) para la inercia al soltar
         gesture.velocityX = gesture.velocityX * 0.6 + (dx / dt) * 0.4;
         gesture.velocityY = gesture.velocityY * 0.6 + (dy / dt) * 0.4;
         gesture.lastX = event.clientX;
@@ -295,7 +251,6 @@ export default class HeartControls {
 
     rotateBy(dx, dy) {
         const { width, height } = this.element.getBoundingClientRect();
-        // Con zoom se gira más despacio: más control para buscar una bola
         const precision = 0.35 + 0.65 * this.state.ratio;
 
         this.state.rotY += (dx / width) * Math.PI * 1.6 * precision;
@@ -312,15 +267,10 @@ export default class HeartControls {
     applyInertia(gesture) {
         if (this.reducedMotion || !gesture?.moved) return;
 
-        // Solo si se soltó en movimiento (flick)
         if (performance.now() - gesture.lastTime > 80) return;
 
         this.rotateBy(gesture.velocityX * 220, gesture.velocityY * 160);
     }
-
-    /* ------------------------------------------------------------------ */
-    /* Zoom y desplazamiento                                              */
-    /* ------------------------------------------------------------------ */
 
     startPinch() {
         const [a, b] = [...this.pointers.values()];
@@ -339,7 +289,6 @@ export default class HeartControls {
         const distance = Math.hypot(a.x - b.x, a.y - b.y) || 1;
         const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
 
-        // Desplazamiento con dos dedos
         this.panByPixels(mid.x - gesture.lastMid.x, mid.y - gesture.lastMid.y);
         gesture.lastMid = mid;
 
@@ -360,9 +309,7 @@ export default class HeartControls {
         this.zoomTo(this.state.ratio * factor, ndc);
     }
 
-    /** Zoom manteniendo fijo el punto bajo el puntero (zoom "hacia" ahí). */
     zoomTo(ratio, ndc = { x: 0, y: -(this.camera.ndcShiftY ?? 0) }) {
-        // Límite de zoom según lo cerca que esté la superficie en esa zona
         const current0 = this.camera.halfExtents(this.state.ratio);
         const viewY0 = ndc.y + (this.camera.ndcShiftY ?? 0);
         const targetX = this.state.panX + ndc.x * current0.halfWidth;
@@ -371,7 +318,6 @@ export default class HeartControls {
         const current = this.camera.halfExtents(this.state.ratio);
         const after = this.camera.halfExtents(next);
 
-        // ndc de pantalla -> ndc de la vista (la cámara puede estar desplazada)
         const viewY = ndc.y + (this.camera.ndcShiftY ?? 0);
         const pointX = this.state.panX + ndc.x * current.halfWidth;
         const pointY = this.state.panY + viewY * current.halfHeight;
@@ -398,7 +344,6 @@ export default class HeartControls {
         this.tweenPanY(this.state.panY);
     }
 
-    /** Sin zoom no hay desplazamiento; con zoom, como mucho hasta el borde del corazón. */
     clampPan() {
         const freedom = 1 - this.state.ratio;
         const maxX = this.heartSize.width * 0.5 * freedom * 1.15;
@@ -407,10 +352,6 @@ export default class HeartControls {
         this.state.panX = gsap.utils.clamp(-maxX, maxX, this.state.panX);
         this.state.panY = gsap.utils.clamp(-maxY, maxY, this.state.panY);
     }
-
-    /* ------------------------------------------------------------------ */
-    /* Teclado                                                             */
-    /* ------------------------------------------------------------------ */
 
     onKeyDown(event) {
         if (!this.enabled) return;
@@ -453,13 +394,11 @@ export default class HeartControls {
         event.preventDefault();
     }
 
-    /** Vuelve a la vista inicial (p. ej. botón "centrar"). */
     reset({ immediate = false } = {}) {
         Object.assign(this.state, { rotX: 0, rotY: 0, ratio: 1, panX: 0, panY: 0 });
         this.pointers.clear();
         this.gesture = null;
 
-        // quickTo(valor, inicio): con inicio = valor el cambio es instantáneo
         const start = (value) => (immediate ? value : undefined);
 
         this.tweenRotX(0, start(0));

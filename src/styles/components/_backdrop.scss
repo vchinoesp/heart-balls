@@ -1,6 +1,5 @@
 @use '../tokens' as *;
 
-// Bloque BEM: fondo (degradado + luz de suelo + bokeh)
 .backdrop {
   position: fixed;
   z-index: 0;

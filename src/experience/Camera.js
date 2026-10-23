@@ -1,15 +1,5 @@
 import * as THREE from 'three';
 
-/**
- * Camera
- *
- * Cámara en perspectiva que encuadra el corazón automáticamente
- * (responsive: en móvil vertical manda el ancho, en desktop el alto).
- *
- * `view` lo modifican los controles (HeartControls):
- *  - ratio: 1 = corazón completo encuadrado, <1 = más cerca (zoom)
- *  - panX / panY: desplazamiento del punto de mira (para acercarse a una zona)
- */
 export default class Camera {
     constructor(sizes, scene, debug, { subjectWidth, subjectHeight }) {
         this.sizes = sizes;
@@ -19,12 +9,9 @@ export default class Camera {
         this.subjectWidth = subjectWidth;
         this.subjectHeight = subjectHeight;
 
-        // Margen alrededor del corazón (1 = justo al borde)
         this.framing = { vertical: 1.02, horizontal: 1.1 };
         this.view = { ratio: 1, panX: 0, panY: 0 };
-        // Ratio mínimo absoluto (lo fija HeartControls según la superficie)
         this.minRatio = 0;
-        // Franja de pantalla (px) reservada arriba/abajo para el copy y el footer
         this.safeArea = { top: 0, bottom: 0 };
         this.ndcShiftY = 0;
 
@@ -44,11 +31,6 @@ export default class Camera {
         this.scene.add(this.instance);
     }
 
-    /**
-     * Distancia a la que el corazón entra completo en la franja libre
-     * (entre safeArea.top y safeArea.bottom) y desplazamiento de la imagen
-     * para centrarlo en esa franja (setViewOffset: el picking lo respeta).
-     */
     fit() {
         const { aspect } = this.instance;
         const halfTan = this.halfTan();
@@ -58,17 +40,14 @@ export default class Camera {
 
         const byHeight =
             (this.subjectHeight * this.framing.vertical) / (2 * halfTan * available);
-        // En vertical (móvil) el corazón aprovecha casi todo el ancho
         const horizontal = aspect < 1 ? Math.min(this.framing.horizontal, 1.02) : this.framing.horizontal;
         const byWidth = (this.subjectWidth * horizontal) / (2 * halfTan * aspect);
 
         this.fitDistance = Math.max(byHeight, byWidth);
 
-        // Centro de la franja libre respecto al centro de la pantalla (px)
         const shift = top + (height - top - bottom) / 2 - height / 2;
         const { width } = this.sizes;
 
-        // Para convertir ndc de pantalla a ndc de la vista desplazada (zoom al puntero)
         this.ndcShiftY = (2 * shift) / height;
 
         if (Math.abs(shift) > 0.5) {
@@ -90,7 +69,6 @@ export default class Camera {
         return Math.tan(THREE.MathUtils.degToRad(this.instance.fov) * 0.5);
     }
 
-    /** Medio alto/ancho visibles en el plano z = 0 para un ratio de zoom. */
     halfExtents(ratio = this.view.ratio) {
         const halfHeight = this.fitDistance * ratio * this.halfTan();
 

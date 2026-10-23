@@ -2,24 +2,8 @@ import gsap from 'gsap';
 
 import Screen from './Screen.js';
 
-/**
- * LoaderScreen
- *
- * Electrocardiograma que se dibuja de izquierda a derecha mientras carga el
- * corazón, con un punto luminoso en la cabeza de la línea y el porcentaje.
- *
- * El porcentaje refleja la carga real (fuentes + datos + WebGL) pero nunca
- * va más rápido que `minDuration`: la animación siempre se ve completa.
- *
- * Sincronía línea / punto: la línea NO se dibuja con stroke-dasharray (cada
- * navegador mide el trazo a su manera: pathLength, subtrazos, Safari...).
- * El ECG es una polilínea conocida, así que en cada frame se calcula a mano
- * el punto de la cabeza y la línea visible se construye hasta ese mismo
- * punto. Línea y punto salen del mismo número: imposible que se desfasen.
- */
 const BASELINE = 80;
 
-// Latido grande y latido pequeño (puntos relativos: x, desplazamiento en y)
 const BIG_BEAT = [
     [0, 0], [5, -14], [8, 0], [11, 12], [15, -72], [20, 74], [24, -6], [28, 8], [32, 0]
 ];
@@ -34,7 +18,7 @@ const SEQUENCE = [
 ];
 const START_X = 4;
 const END_X = 578;
-const TICK = 24; // marca vertical inicial
+const TICK = 24;
 
 export default class LoaderScreen extends Screen {
     constructor(root, { reducedMotion, minDuration = 2.8 }) {
@@ -54,10 +38,6 @@ export default class LoaderScreen extends Screen {
         this.render(0);
     }
 
-    /**
-     * Tramos rectos del ECG con su longitud acumulada. `move` indica que el
-     * tramo empieza un subtrazo nuevo (la marca vertical va aparte).
-     */
     static buildSegments() {
         const points = [
             { x: START_X, y: BASELINE - TICK, move: true },
@@ -80,7 +60,6 @@ export default class LoaderScreen extends Screen {
             const from = points[i - 1];
             const to = points[i];
 
-            // Salto de subtrazo: no suma longitud (no se dibuja)
             if (to.move) continue;
 
             const length = Math.hypot(to.x - from.x, to.y - from.y);
@@ -106,10 +85,6 @@ export default class LoaderScreen extends Screen {
         return [this.progressbar];
     }
 
-    /**
-     * Arranca la animación. `getProgress` devuelve la carga real (0..1).
-     * Resuelve cuando el ECG llega al 100 % y la carga ha terminado.
-     */
     run(getProgress) {
         const start = performance.now();
 
@@ -128,7 +103,6 @@ export default class LoaderScreen extends Screen {
                 const timeLimit = this.reducedMotion ? 1 : Math.min(elapsed / this.minDuration, 1);
                 const target = Math.min(getProgress(), timeLimit);
 
-                // Suavizado: la línea nunca da saltos aunque la carga sí los dé
                 this.displayed += (target - this.displayed) * 0.12;
 
                 if (target >= 1 && this.displayed > 0.995) this.displayed = 1;
@@ -145,7 +119,6 @@ export default class LoaderScreen extends Screen {
         });
     }
 
-    /** Línea visible hasta `progress` y el punto exactamente en su extremo. */
     render(progress) {
         const head = this.length * progress;
         let d = '';
@@ -183,7 +156,6 @@ export default class LoaderScreen extends Screen {
         }
     }
 
-    /** Último "latido" del punto antes de pasar a la home. */
     finish() {
         this.glowTween?.kill();
 

@@ -1,19 +1,3 @@
-/**
- * HeartShape
- *
- * Corazón 3D definido de forma implícita (sin mallas ni GLB).
- *
- * 1. Silueta 2D: unión suave de dos "gotas" (uneven capsules de Inigo Quilez)
- *    que van de cada lóbulo a la punta. Esto da lóbulos redondos, laterales
- *    rectos y una hendidura central natural.
- * 2. Volumen: la silueta se "infla" con un perfil elíptico en función de la
- *    distancia al borde. El eje medial genera la arista central suave que se
- *    aprecia en la creatividad.
- *
- * La superficie es g(p) = 0. g < 0 dentro, g > 0 fuera.
- * Clase de matemática pura: sin dependencias de Three.js para poder
- * ejecutarse también en un Web Worker o en un script de build.
- */
 export default class HeartShape {
     constructor(params) {
         this.setParams(params);
@@ -38,7 +22,6 @@ export default class HeartShape {
         this.roundness = roundness;
         this.fold = fold;
 
-        // Eje lóbulo izquierdo -> punta (precalculado)
         const dx = 0 - -lobeX;
         const dy = tipRadius - lobeY;
 
@@ -64,12 +47,10 @@ export default class HeartShape {
         this.halfWidth = this.bounds.maxX;
     }
 
-    /** SDF de la gota izquierda (lóbulo en (-lobeX, lobeY)). */
     capsule(x, y) {
         const qx = x + this.lobeX;
         const qy = y - this.lobeY;
 
-        // A coordenadas locales de la cápsula (eje Y local = hacia la punta)
         const ly = qx * this.axisX + qy * this.axisY;
         const lx = Math.abs(qx * -this.axisY + qy * this.axisX);
 
@@ -84,7 +65,6 @@ export default class HeartShape {
         return lx * a + ly * b - this.lobeRadius;
     }
 
-    /** SDF 2D de la silueta completa. */
     silhouette(x, y) {
         const left = this.capsule(x, y);
         const right = this.capsule(-x, y);
@@ -92,12 +72,6 @@ export default class HeartShape {
         return HeartShape.smoothMin(left, right, this.cleftSmooth);
     }
 
-    /**
-     * Función implícita 3D: < 0 dentro, 0 superficie, > 0 fuera.
-     * `fold` adelgaza el volumen hacia los laterales: la cara frontal queda
-     * como dos planos que se juntan en una arista vertical central
-     * (el "pliegue" que se ve en la creatividad de la hendidura a la punta).
-     */
     evaluate(x, y, z) {
         const sd = this.silhouette(x, y);
         const edge = Math.max(1 + sd / this.roundness, 0);
@@ -107,7 +81,6 @@ export default class HeartShape {
         return Math.hypot(z / thickness, edge) - 1;
     }
 
-    /** Gradiente numérico (diferencias centrales). */
     gradient(x, y, z, out) {
         const e = 1e-4;
 
@@ -124,10 +97,6 @@ export default class HeartShape {
         return out;
     }
 
-    /**
-     * Proyecta p (array [x,y,z]) sobre la superficie mediante Newton.
-     * Escribe la normal exterior en `normal`. Devuelve false si no converge.
-     */
     project(p, normal, iterations = 8) {
         for (let i = 0; i < iterations; i++) {
             const value = this.evaluate(p[0], p[1], p[2]);

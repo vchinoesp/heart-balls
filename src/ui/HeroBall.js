@@ -5,22 +5,6 @@ import Environment from '../world/Environment.js';
 import Renderer from '../experience/Renderer.js';
 import BallMaterial from '../world/heart/BallMaterial.js';
 
-/**
- * HeroBall
- *
- * La bola elegida, grande, dentro del popup. Usa su propio canvas/renderer
- * pequeño (solo se renderiza mientras el popup está abierto) para poder vivir
- * encima del panel del popup.
- *
- * Es la MISMA bola que en el corazón: mismo material (BallMaterial, con el
- * atlas de dígitos compartido), misma luz (Environment.apply) y mismo color
- * de salida (Renderer.applyColorSettings). Solo se desactivan los efectos
- * que dependen del corazón (sombra entre vecinas, sombra cenital).
- *
- * Entrada: llega rodando desde la izquierda (gira de izq. a dcha.).
- * Después se balancea sola y se puede girar arrastrando (ratón o dedo), con
- * inercia; al soltarla vuelve a balancearse sola.
- */
 export default class HeroBall {
     constructor(canvas, { reducedMotion = false, ball } = {}) {
         this.canvas = canvas;
@@ -28,7 +12,6 @@ export default class HeroBall {
         this.ballOptions = ball;
         this.render = this.render.bind(this);
 
-        // Amplitud del balanceo automático (rad) y sensibilidad del arrastre
         this.swayAmplitude = 0.6;
         this.dragSpeed = 0.012;
 
@@ -65,8 +48,6 @@ export default class HeroBall {
 
         const uniforms = this.material.uniforms;
 
-        // Sin vecinas ni corazón alrededor: fuera la sombra de contacto fuerte,
-        // el sombreado por cara y la sombra cenital
         uniforms.uCavity.value.set(0.82, 1.0);
         uniforms.uSurfaceShade.value = 1;
         uniforms.uHeightShade.value.set(-100, -99, 1);
@@ -79,15 +60,10 @@ export default class HeroBall {
             new THREE.InstancedBufferAttribute(new Float32Array(2), 2)
         );
 
-        // Una sola instancia (matriz identidad: el número mira a cámara, +Z)
         this.ball = new THREE.InstancedMesh(this.geometry, this.material, 1);
         this.ball.setMatrixAt(0, new THREE.Matrix4());
         this.ball.frustumCulled = false;
 
-        // Tres niveles de giro independientes (así no se pisan las animaciones):
-        //  pivot      -> arrastre del usuario (gsap.quickTo)
-        //  swayGroup  -> balanceo automático (timeline GSAP)
-        //  ball       -> animación de entrada
         this.pivot = new THREE.Group();
         this.swayGroup = new THREE.Group();
         this.swayGroup.add(this.ball);
@@ -131,7 +107,6 @@ export default class HeroBall {
         const release = () => {
             if (!this.drag) return;
 
-            // Inercia al soltar (solo si se soltó en movimiento)
             if (!this.reducedMotion && performance.now() - this.drag.time < 80) {
                 this.target.y += this.drag.vx * 16 * this.dragSpeed * 10;
                 this.rotateY(this.target.y);
@@ -149,13 +124,11 @@ export default class HeroBall {
         this.canvas.addEventListener('lostpointercapture', release);
     }
 
-    /** Vuelve a dejar el número de frente y se balancea de lado a lado. */
     startSway() {
         if (this.reducedMotion) return;
 
         this.stopSway();
 
-        // Número de frente: la vuelta completa más cercana al giro del usuario
         this.target.y = Math.round(this.target.y / (Math.PI * 2)) * Math.PI * 2;
         this.rotateY(this.target.y);
 
@@ -169,7 +142,6 @@ export default class HeroBall {
             .to(rotation, { y: 0, duration: 2.6, ease: 'sine.inOut' });
     }
 
-    /** Detiene el balanceo donde esté (sin saltos) y cancela reanudaciones. */
     stopSway() {
         this.sway?.kill();
         this.sway = null;
@@ -177,7 +149,6 @@ export default class HeroBall {
         this.swayCall = null;
     }
 
-    /** Número de la bola (el shader lo pinta con formato "00.000"). */
     setNumber(number) {
         this.numberAttribute.array[0] = number;
         this.numberAttribute.needsUpdate = true;
@@ -201,7 +172,6 @@ export default class HeroBall {
         this.stopSway();
         this.drag = null;
 
-        // Reinicio completo del estado de giro (cada apertura empieza igual)
         this.target.x = 0;
         this.target.y = 0;
         this.rotateX(0, 0);
@@ -218,7 +188,6 @@ export default class HeroBall {
             return gsap.timeline();
         }
 
-        // Rueda desde la izquierda girando de izq. a dcha. hasta mostrar el número
         const timeline = gsap.timeline();
 
         timeline
@@ -254,7 +223,6 @@ export default class HeroBall {
         gsap.ticker.remove(this.render);
     }
 
-    /** Compila shaders y sube texturas antes del primer uso (sin tirón al abrir). */
     prewarm() {
         this.setNumber(0);
         this.render();
@@ -264,7 +232,6 @@ export default class HeroBall {
         this.renderer.render(this.scene, this.camera);
     }
 
-    /** 2845 -> "02.845" (formato lotería) */
     static format(number) {
         const digits = String(number).padStart(5, '0');
 

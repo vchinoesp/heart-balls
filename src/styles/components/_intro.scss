@@ -1,6 +1,5 @@
 @use '../tokens' as *;
 
-// Bloque BEM: portada (copy + CTA), centrada en vertical
 .screen--home {
   justify-content: center;
   padding-bottom: 2vh;
@@ -14,7 +13,6 @@
   text-align: center;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
 
-  // Rótulo SVG "Esta Navidad tengo una corazonada" (se pinta con SvgDraw)
   &__title {
     margin: 0 0 clamp(0.5rem, 2vh, 1rem);
     color: $color-gold;
@@ -45,7 +43,6 @@
     line-height: 1.55;
   }
 
-  // Variante según dispositivo: ratón por defecto, táctil en móvil/tablet
   &__text--touch {
     display: none;
   }
@@ -108,8 +105,6 @@
     }
   }
 
-  // Móvil: todo algo más compacto para dejar sitio al bodegón de décimos
-  // (.tickets) debajo del CTA
   @media (max-width: 47.99rem) {
     &__title {
       margin-bottom: 0.5rem;
@@ -133,7 +128,6 @@
   }
 }
 
-// Bloque BEM: ayuda de navegación del corazón
 .screen--heart {
   justify-content: flex-end;
   padding-bottom: calc(1rem + env(safe-area-inset-bottom));
@@ -160,7 +154,6 @@
   }
 
   &__item {
-    // Separador "·" entre indicaciones
     & + &::before {
       content: '·';
       margin: 0 0.6rem;
@@ -172,7 +165,6 @@
     display: none;
   }
 
-  // Táctil: una indicación por línea (sin separadores), más compacto
   @media (hover: none) and (pointer: coarse) {
     padding: 0.55rem 1.1rem;
     border-radius: 1.1rem;

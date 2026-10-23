@@ -1,17 +1,3 @@
-/**
- * Números NO disponibles a la venta.
- *
- * Los números de esta lista no aparecen en ninguna bola del corazón (ni se
- * pueden elegir). Lista vacía = se usan todos los números 00000-99999.
- *
- * Formatos admitidos (se pueden mezclar):
- *   2845        -> número
- *   '02845'     -> texto con 5 cifras
- *   '02.845'    -> formato lotería con punto
- *
- * Origen: docs/Sorteo 102_26 Números vendidos.xlsx (columna NÚMERO),
- * 93 números agotados del Sorteo 102 de 2026.
- */
 const numbersConfig = {
     unavailable: [
         '01353', '02373', '07740', '08571', '12800', '15883', '23033', '23083', '23333', '23373',

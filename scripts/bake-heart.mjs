@@ -1,12 +1,3 @@
-/**
- * Precalcula la colocación de las bolas y la guarda en binario.
- *
- *   npm run bake
- *
- * Genera public/data/heart-layout.bin a partir de src/config/heart.config.js.
- * En producción el navegador solo descarga este archivo (~50 KB) en lugar de
- * calcular el empaquetado (≈1-3 s en móvil).
- */
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';

@@ -1,9 +1,3 @@
-/**
- * FpsMeter
- *
- * Contador de FPS ligero para probar en móvil: añade #fps a la URL
- * (también aparece con #debug). Media cada 500 ms + peor frame del periodo.
- */
 export default class FpsMeter {
     constructor({ renderer } = {}) {
         this.renderer = renderer;

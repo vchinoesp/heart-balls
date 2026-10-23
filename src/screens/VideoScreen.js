@@ -3,15 +3,6 @@ import gsap from 'gsap';
 import Screen from './Screen.js';
 import YouTubePlayer from '../ui/YouTubePlayer.js';
 
-/**
- * VideoScreen
- *
- * Visor del anuncio / making of (YouTube en modo privacidad mejorada:
- * youtube-nocookie.com, sin la IFrame API).
- *  - Póster propio con botón play (no se conecta con YouTube hasta pulsar).
- *  - "Ver making of" ⇄ "Ver anuncio": cambia de vídeo y de texto.
- *  - Al salir de la pantalla el vídeo se pausa.
- */
 export default class VideoScreen extends Screen {
     constructor(root, { reducedMotion, videos }) {
         super(root, { reducedMotion });
@@ -55,8 +46,6 @@ export default class VideoScreen extends Screen {
     }
 
     setPoster() {
-        // Póster propio (app.config.js → videos.*.poster) o, si no hay, la
-        // miniatura de YouTube (i.ytimg.com, imagen estática sin cookies)
         this.posterImage.src = this.video.poster || `https://i.ytimg.com/vi/${this.video.id}/maxresdefault.jpg`;
         this.poster.hidden = false;
         gsap.set(this.poster, { opacity: 1 });
@@ -87,7 +76,6 @@ export default class VideoScreen extends Screen {
         this.current = this.current === 'anuncio' ? 'making' : 'anuncio';
         this.updateTexts();
 
-        // Transición: el marco se oscurece, cambia el vídeo y vuelve
         const playing = this.player.active && this.poster.hidden;
 
         gsap.timeline()

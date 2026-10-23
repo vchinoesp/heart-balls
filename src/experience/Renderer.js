@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 
 export default class Renderer {
-    /** Color de salida común (corazón y bola del popup deben verse iguales). */
     static applyColorSettings(renderer) {
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.NeutralToneMapping;

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#050d1d" />
+  <meta name="theme-color" content="#020816" />
 
   <title>El Sorteo que nos une · Lotería Nacional</title>
   <meta
@@ -42,6 +42,25 @@
   />
 
   <link rel="preload" href="/data/heart-layout.bin" as="fetch" type="application/octet-stream" crossorigin />
+
+  <style>
+    html,
+    body {
+      background-color: #020816;
+    }
+
+    [data-screen='boot'] .layout,
+    [data-screen='boot'] .webgl {
+      visibility: hidden;
+    }
+  </style>
+  <noscript>
+    <style>
+      [data-screen='boot'] .layout {
+        visibility: visible;
+      }
+    </style>
+  </noscript>
 </head>
 <body class="app" data-screen="boot">
 
@@ -90,7 +109,7 @@
       <button class="play-button site-header__watch" type="button" data-action="watch">
         <span class="play-button__label">Ver el anuncio</span>
         <span class="play-button__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#0b1730"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M21.4086 9.35258C23.5305 10.5065 23.5305 13.4935 21.4086 14.6474L8.59662 21.6145C6.53435 22.736 4 21.2763 4 18.9671L4 5.0329C4 2.72368 6.53435 1.26402 8.59661 2.38548L21.4086 9.35258Z" fill="#0b1730"></path> </g></svg>
+              <svg viewBox="0 0 24 24" focusable="false"><path d="M21.4086 9.35258C23.5305 10.5065 23.5305 13.4935 21.4086 14.6474L8.59662 21.6145C6.53435 22.736 4 21.2763 4 18.9671L4 5.0329C4 2.72368 6.53435 1.26402 8.59661 2.38548L21.4086 9.35258Z" fill="#0b1730" stroke="#0b1730" /></svg>
             </span>
       </button>
 
@@ -104,7 +123,6 @@
   </header>
 
   <main class="screens">
-    <!-- 1. Selector de edad -->
     <section class="screen screen--age" data-screen="age" aria-labelledby="age-title" hidden>
       <div class="age-gate">
         <h2 class="age-gate__question" id="age-title" tabindex="-1" data-animate>¿Tienes más de 18 años?</h2>
@@ -116,7 +134,6 @@
       </div>
     </section>
 
-    <!-- 2. Loading -->
     <section class="screen screen--loading" data-screen="loading" aria-label="Cargando" hidden>
       <div
               class="loader"
@@ -135,7 +152,6 @@
       </div>
     </section>
 
-    <!-- 3. Home (copy + CTA) -->
     <section class="screen screen--home" data-screen="home" aria-labelledby="home-title" hidden>
       <div class="intro">
 
@@ -174,7 +190,6 @@
             <path d="M362.6,16.6l0.5,3.8c0.1,0.9,0.5,1.3,1,1.3c0.3,0,0.4,0.1,0.3,0.4l-0.1,0.5c-0.1,0.3-0.2,0.4-0.5,0.4 c-1.2-0.1-2.8-0.1-4,0c-0.1,0-0.4,0-0.3-0.4l0.1-0.5c0.1-0.3,0.2-0.4,0.5-0.4c0.7,0,0.6-0.6,0.5-1.5l-0.1-0.7 c0-0.3-0.1-0.4-0.4-0.4h-2.6c-0.3,0-0.4,0.1-0.5,0.3l-0.5,1.1c-0.3,0.8-0.2,1.2,0.6,1.2c0.3,0,0.4,0.1,0.3,0.4l-0.1,0.5 c-0.1,0.3-0.2,0.4-0.5,0.4c-1.4-0.1-2.4-0.1-3.8,0c-0.1,0-0.4,0-0.3-0.4l0.1-0.5c0.1-0.3,0.2-0.4,0.5-0.4c0.8,0,1.4-0.7,1.8-1.6 l3.6-7.3c0.1-0.3,0.1-0.6-0.3-0.6c-0.1,0-0.4,0-0.3-0.4l0.1-0.5c0.1-0.3,0.2-0.4,0.4-0.4c0.9,0.1,2.6,0.1,3,0 c0.3,0,0.4,0.1,0.4,0.4C362.3,13,362.4,14.8,362.6,16.6z M360.4,17.3l-0.2-3L360,13l-2,4.3c-0.1,0.2-0.1,0.3,0.2,0.3h1.8 C360.3,17.7,360.4,17.5,360.4,17.3z" />
           </svg>
         </h2>
-        <!-- El texto cambia según el dispositivo (ratón / táctil) -->
         <p class="intro__text intro__text--mouse">
           Navega con el ratón desde tu ordenador a través de nuestro corazón.
           <br class="intro__break" />
@@ -197,7 +212,6 @@
       </div>
     </section>
 
-    <!-- 4. Corazón (navegación + selector de bola / popup) -->
     <section class="screen screen--heart" data-screen="heart" aria-labelledby="heart-title" hidden>
       <h2 class="u-visually-hidden" id="heart-title">Elige tu número en el corazón</h2>
       <p class="heart-help" id="heart-instructions">
@@ -218,7 +232,6 @@
       </p>
     </section>
 
-    <!-- 5. Visor de YouTube -->
     <section class="screen screen--video" data-screen="video" aria-labelledby="video-title" hidden>
       <h2 class="u-visually-hidden" id="video-title" tabindex="-1">Anuncio El Sorteo que nos une</h2>
       <div class="video">
@@ -227,7 +240,7 @@
           <button class="video__poster" type="button" data-action="play-video" aria-label="Reproducir el vídeo">
             <img class="video__poster-image" alt="" width="1280" height="720" />
             <span class="video__poster-play" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#0b1730"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M21.4086 9.35258C23.5305 10.5065 23.5305 13.4935 21.4086 14.6474L8.59662 21.6145C6.53435 22.736 4 21.2763 4 18.9671L4 5.0329C4 2.72368 6.53435 1.26402 8.59661 2.38548L21.4086 9.35258Z" fill="#0b1730"></path> </g></svg>
+                  <svg viewBox="0 0 24 24" focusable="false"><path d="M21.4086 9.35258C23.5305 10.5065 23.5305 13.4935 21.4086 14.6474L8.59662 21.6145C6.53435 22.736 4 21.2763 4 18.9671L4 5.0329C4 2.72368 6.53435 1.26402 8.59661 2.38548L21.4086 9.35258Z" fill="#0b1730" stroke="#0b1730" /></svg>
                 </span>
           </button>
         </div>
@@ -235,7 +248,7 @@
         <button class="play-button play-button--gold video__switch" type="button" data-action="switch-video">
           <span class="play-button__label">Ver making of</span>
           <span class="play-button__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#0b1730"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M21.4086 9.35258C23.5305 10.5065 23.5305 13.4935 21.4086 14.6474L8.59662 21.6145C6.53435 22.736 4 21.2763 4 18.9671L4 5.0329C4 2.72368 6.53435 1.26402 8.59661 2.38548L21.4086 9.35258Z" fill="#0b1730"></path> </g></svg>
+                <svg viewBox="0 0 24 24" focusable="false"><path d="M21.4086 9.35258C23.5305 10.5065 23.5305 13.4935 21.4086 14.6474L8.59662 21.6145C6.53435 22.736 4 21.2763 4 18.9671L4 5.0329C4 2.72368 6.53435 1.26402 8.59661 2.38548L21.4086 9.35258Z" fill="#0b1730" stroke="#0b1730" /></svg>
               </span>
         </button>
       </div>
@@ -315,7 +328,6 @@
   </footer>
 </div>
 
-<!-- 4. Popup de la bola elegida -->
 <div
         class="ball-modal"
         role="dialog"
@@ -343,7 +355,6 @@
     </div>
 
     <div class="ball-modal__actions">
-      <!-- Bodegón de décimos (solo desktop, decorativo) sobre "Busca tu décimo…"; se abre en abanico al abrir el popup -->
       <span class="tickets tickets--popup" aria-hidden="true">
             <span class="tickets__stage">
               <img class="tickets__card tickets__card--back" src="/images/decimo3.webp" width="236" height="244" alt="" data-dx="40" data-dy="-18" data-tilt="38" decoding="async" loading="lazy" />

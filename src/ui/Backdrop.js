@@ -1,13 +1,6 @@
 import gsap from 'gsap';
 import SeededRandom from '../utils/SeededRandom.js';
 
-/**
- * Backdrop
- *
- * Fondo en CSS: degradado azul noche + luz de suelo + bokeh (círculos
- * desenfocados como en la creatividad de la home). Sin imágenes ni WebGL.
- * El bokeh deriva muy despacio (GSAP) salvo con prefers-reduced-motion.
- */
 export default class Backdrop {
     constructor(root, { reducedMotion = false, count = 34 } = {}) {
         this.root = root;
@@ -50,7 +43,6 @@ export default class Backdrop {
         this.bokeh.append(fragment);
     }
 
-    /** El bokeh acompaña a la home y al corazón. */
     update(screen) {
         gsap.to(this.bokeh, {
             opacity: screen === 'home' || screen === 'heart' ? 1 : 0,

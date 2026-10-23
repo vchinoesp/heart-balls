@@ -1,21 +1,5 @@
 import * as THREE from 'three';
 
-/**
- * BallPicker
- *
- * Detecta qué bola hay bajo el puntero con un test rayo-esfera en CPU.
- * Mucho más barato que Raycaster sobre el InstancedMesh (que prueba triángulo
- * a triángulo): ~3.000 esferas = microsegundos, apto para cada frame en móvil.
- *
- * Dos modos:
- *  - reposo (por defecto): posiciones fijas del layout, opcionalmente
- *    "infladas". Es lo que usa BallSelection para todo: la repulsión aparta
- *    las bolas del puntero, así que con las posiciones desplazadas bajo el
- *    puntero solo habría hueco (la bola destacada sí vuelve a su sitio).
- *  - displayed: las esferas donde se DIBUJAN (repulsión, hover y selección
- *    del shader, ver HeartBalls.getDisplayedSphere). Útil para depurar o
- *    para efectos que necesiten la posición real en pantalla.
- */
 export default class BallPicker {
     constructor(camera) {
         this.camera = camera;
@@ -27,11 +11,6 @@ export default class BallPicker {
         this.sphere = { x: 0, y: 0, z: 0, radius: 0 };
     }
 
-    /**
-     * @param {number} x, y  Coordenadas normalizadas (-1..1)
-     * @param {HeartBalls} heartBalls
-     * @returns {{ index: number, point: THREE.Vector3 } | null} punto en espacio local del mesh
-     */
     pick(x, y, heartBalls, { displayed = false, inflate = 1 } = {}) {
         const mesh = heartBalls.mesh;
 
@@ -90,10 +69,6 @@ export default class BallPicker {
         return { index: best, point: this.hitPoint };
     }
 
-    /**
-     * Distancia (relativa a su radio) del último rayo al centro de una bola.
-     * < 1 = el rayo atraviesa la bola. Se usa para la histéresis del hover.
-     */
     relativeDistance(index, heartBalls) {
         const sphere = heartBalls.getDisplayedSphere(index, this.sphere);
         const { origin, direction } = this.localRay;

@@ -1,6 +1,5 @@
 @use '../tokens' as *;
 
-// Bloque BEM: cabecera
 .site-header {
   position: relative;
   display: grid;
@@ -12,17 +11,17 @@
     justify-self: start;
     margin-top: 0.25rem;
     border-radius: 4px;
-    transition: opacity 0.4s $ease-out-power3;
-
-    &:hover {
-      opacity: 0.8;
-    }
 
     @include focus-ring(6px);
   }
 
   &__brand-logo {
     width: clamp(5.5rem, 13vw, 11.6rem);
+    transition: opacity 0.4s $ease-out-power3;
+  }
+
+  &__brand:hover &__brand-logo {
+    opacity: 0.8;
   }
 
   &__title {
@@ -30,21 +29,15 @@
   }
 
   &__title-logo {
-    // En pantallas bajas (portátiles pequeños) el logo también limita por alto
     width: min(clamp(8.5rem, 25vw, 22.5rem), 38vh);
   }
 
-  // Vídeo en desktop: logo más pequeño para que el visor sea más grande
-  // (Header.setVideoLayout anima el cambio)
   @media (min-width: $bp-tablet) {
     &--video &__title-logo {
       width: min(clamp(6.5rem, 14vw, 13rem), 22vh);
     }
   }
 
-  // Pantalla del corazón: las bolas tienen un tono muy parecido al dorado del
-  // logo y de los botones; una sombra azul del fondo los separa del corazón
-  // cuando se hace zoom
   &__title-logo,
   &__watch,
   &__back {
@@ -72,7 +65,6 @@
     }
   }
 
-  // "Volver" va debajo de "Ver el anuncio"; en el vídeo ocupa su sitio
   &__watch {
     grid-row: 1;
     grid-column: 1;
@@ -96,7 +88,6 @@
   }
 }
 
-// Bloque BEM: botón "Ver el anuncio" / "Ver making of"
 .play-button {
   display: inline-flex;
   align-items: center;
@@ -129,7 +120,6 @@
     svg {
       width: 45%;
       height: 45%;
-      margin-left: 0%;
       fill: $color-ink;
     }
   }
@@ -147,7 +137,6 @@
     color: $color-gold-light;
   }
 
-  // Variante dorada (making of)
   &--gold &__icon {
     background: $color-gold;
     width: 2.25rem;
@@ -165,7 +154,6 @@
     }
   }
 
-  // En móvil el texto de "Ver el anuncio" va debajo del círculo
   @media (max-width: 47.99rem) {
     &.site-header__watch {
       flex-direction: column-reverse;
@@ -179,7 +167,6 @@
   }
 }
 
-// Bloque BEM: botón volver
 .back-button {
   display: inline-flex;
   align-items: center;

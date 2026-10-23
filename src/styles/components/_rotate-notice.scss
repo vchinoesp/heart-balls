@@ -1,6 +1,5 @@
 @use '../tokens' as *;
 
-// Bloque BEM: aviso "gira tu móvil" (móvil en horizontal, alto < 450px)
 .rotate-notice {
   position: fixed;
   z-index: 30;

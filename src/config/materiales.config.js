@@ -1,13 +1,3 @@
-/**
- * Materiales descargables (página materiales.html).
- *
- *   titulo -> texto que se ve en el listado
- *   url    -> nombre del archivo dentro de public/materiales/
- *             (o una URL completa https://… si está alojado fuera)
- *
- * Los archivos se dejan en public/materiales/ con el mismo nombre que aquí
- * (se admiten espacios y tildes).
- */
 const materiales = [
     { titulo: 'NOTA DE PRENSA', url: 'NdP Verano Loteria Navidad 2026.pdf' },
     { titulo: 'PROGRAMA DE PREMIOS', url: 'Programa de premios Loteria Navidad 2026.pdf' },

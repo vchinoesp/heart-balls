@@ -4,16 +4,6 @@ import SeededRandom from '../../utils/SeededRandom.js';
 import BallMaterial from './BallMaterial.js';
 import DigitAtlas from './DigitAtlas.js';
 
-/**
- * HeartBalls
- *
- * Pinta un HeartLayout con un único InstancedMesh (1 draw call).
- * Cada instancia:
- *  - se escala a su radio,
- *  - se orienta con +Z local = normal de la superficie (para número y cavity AO),
- *  - lleva un número único 00000-99999 (atributo aNumber) y una ligera
- *    variación de tono (instanceColor) para que la madera no sea plana.
- */
 export default class HeartBalls {
     constructor(scene, config, { detail = 4 } = {}) {
         this.scene = scene;
@@ -24,8 +14,6 @@ export default class HeartBalls {
         this.group.name = 'HeartBalls';
         this.scene.add(this.group);
 
-        // Pivot interior con la inclinación base; `group` lo giran los controles
-        // (arrastrar/teclado) sin pisar la pose base.
         this.pivot = new THREE.Group();
         this.pivot.rotation.x = config.view.pitch;
         this.group.add(this.pivot);
@@ -39,10 +27,8 @@ export default class HeartBalls {
             interaction: config.interaction
         });
 
-        // Núcleo: bolas oscuras y de baja resolución, solo tapan huecos
         this.coreGeometry = new THREE.IcosahedronGeometry(1, 1);
         this.coreMaterial = new THREE.MeshStandardMaterial({
-            // El interior se lee como sombra: su color, pero muy apagado
             color: new THREE.Color(config.ball.coreColor).multiplyScalar(config.ball.coreShade ?? 1),
             roughness: 1,
             metalness: 0
@@ -57,13 +43,10 @@ export default class HeartBalls {
 
         const scale = this.config.worldHeight / layout.height;
 
-        // Radio de referencia (bola "normal"): las muy pequeñas de relleno
-        // no se destacan al pasar el ratón (serían saltos raros)
         this.referenceRadius = (this.config.packing.lattice?.radius ?? 0.02) * scale;
         const offsetY = -layout.height * 0.5 * scale;
         const random = new SeededRandom(this.config.seed + 7);
 
-        // Geometría propia por layout: el atributo aNumber depende del nº de bolas
         this.geometry = new THREE.IcosahedronGeometry(1, this.detail);
 
         const mesh = new THREE.InstancedMesh(
@@ -138,7 +121,6 @@ export default class HeartBalls {
         const fallback = new THREE.Vector3(1, 0, 0);
         const roll = new THREE.Quaternion();
 
-        // Copia en CPU (espacio local del mesh) para el picking por rayo
         this.centers = new Float32Array(this.count * 3);
         this.radii = new Float32Array(this.count);
         this.surfaceNormals = new Float32Array(this.count * 3);
@@ -148,7 +130,6 @@ export default class HeartBalls {
 
             normal.fromArray(normals, i3);
 
-            // Base ortonormal: +Z = normal, +X = "derecha" horizontal, +Y ≈ arriba
             right.crossVectors(worldUp, normal);
 
             if (right.lengthSq() < 1e-4) right.copy(fallback);
@@ -156,7 +137,6 @@ export default class HeartBalls {
             right.normalize();
             up.crossVectors(normal, right).normalize();
 
-            // Pequeño giro aleatorio del número sobre la normal (más natural)
             roll.setFromAxisAngle(normal, random.range(-maxRoll, maxRoll));
             right.applyQuaternion(roll);
             up.applyQuaternion(roll);
@@ -185,7 +165,6 @@ export default class HeartBalls {
         mesh.instanceMatrix.needsUpdate = true;
     }
 
-    /** Retardo de llegada (de abajo arriba + azar) y giro de la espiral. */
     createIntroData(layout, random) {
         const data = new Float32Array(this.count * 2);
 
@@ -199,19 +178,12 @@ export default class HeartBalls {
         return data;
     }
 
-    /** 0 = dispersas / 1 = corazón formado. El núcleo aparece al final. */
     setIntro(progress) {
         this.material.uniforms.uIntro.value = progress;
 
         if (this.coreMesh) this.coreMesh.visible = progress > 0.75;
     }
 
-    /**
-     * Esfera de la bola `i` tal y como la dibuja ahora el vertex shader
-     * (repulsión + hover + selección), en espacio local del mesh.
-     * El picking la usa para elegir exactamente la bola que se ve.
-     * Misma fórmula que BallMaterial (project_vertex).
-     */
     getDisplayedSphere(i, out) {
         const u = this.material.uniforms;
         const i3 = i * 3;
@@ -262,11 +234,6 @@ export default class HeartBalls {
         return out;
     }
 
-    /**
-     * z (mundo) de la bola más cercana a la cámara entre las que caen dentro
-     * del rectángulo (x ± halfWidth, y ± halfHeight) de la vista.
-     * La usa HeartControls para no dejar que el zoom atraviese el corazón.
-     */
     getFrontDepth(x, y, halfWidth, halfHeight) {
         if (!this.mesh) return -Infinity;
 
@@ -316,10 +283,6 @@ export default class HeartBalls {
         mesh.instanceColor.needsUpdate = true;
     }
 
-    /**
-     * Números únicos 00000-99999 repartidos al azar (Fisher-Yates parcial),
-     * sin los no disponibles a la venta (numbers.config.js).
-     */
     createNumbers(count, random, unavailable = []) {
         const excluded = HeartBalls.parseNumbers(unavailable);
         const pool = new Uint32Array(100000 - excluded.size);
@@ -344,7 +307,6 @@ export default class HeartBalls {
         return numbers;
     }
 
-    /** [2845, '02845', '02.845'] -> Set de enteros válidos (0-99999). */
     static parseNumbers(list = []) {
         const set = new Set();
 

@@ -1,20 +1,5 @@
 import * as THREE from 'three';
 
-/**
- * BallMaterial
- *
- * MeshStandardMaterial extendido (onBeforeCompile) con:
- * - Número de 5 dígitos por instancia (atributo `aNumber` + DigitAtlas).
- * - Veta de madera procedural muy sutil.
- * - "Cavity AO": oscurece la cara de cada bola que mira hacia sus vecinas.
- *   Como cada instancia está orientada con +Z = normal de la superficie del
- *   corazón, basta con la Z local del fragmento. Da la sensación de bolas
- *   apretadas con sombras de contacto sin shadow maps (clave en móvil).
- * - Interacción en el vertex shader (0 coste CPU por bola):
- *   · Repulsión: las bolas cercanas al puntero se apartan y se elevan.
- *   · Hover: la bola señalada sube y crece (con salida suave de la anterior).
- *   · Selección: la bola elegida se encoge hasta desaparecer (va al popup).
- */
 export default class BallMaterial extends THREE.MeshStandardMaterial {
     constructor({ digits, color, roughness, numberColor, interaction }) {
         super({
@@ -29,16 +14,12 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
             uDigits: { value: digits },
             uNumberColor: { value: new THREE.Color(numberColor) },
             uBaseColor: { value: new THREE.Color(color) },
-            // Ancho y alto del número en coordenadas de la esfera unidad
             uLabelSize: { value: new THREE.Vector2(1.52, 0.6) },
             uCavity: { value: new THREE.Vector2(0.12, 1.05) },
-            // Sombreado global del corazón: la cara que no mira a la luz se oscurece
             uLightDirection: { value: new THREE.Vector3(-0.6, 0.62, 0.5).normalize() },
             uSurfaceShade: { value: 0.22 },
-            // Luz cenital: abajo el corazón queda en sombra (y mundo: desde, hasta, luz mínima)
             uHeightShade: { value: new THREE.Vector3(-2.4, 1.8, 0.38) },
 
-            // Interacción (espacio local del InstancedMesh)
             uPointer: { value: new THREE.Vector3(0, 0, 999) },
             uRepel: { value: 0 },
             uRepelRadius: { value: interaction.repelRadius },
@@ -50,12 +31,10 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
             uPrevHover: { value: 0 },
             uHoverLift: { value: interaction.hoverLift },
             uHoverScale: { value: interaction.hoverScale },
-            // Multiplicador de subida/crecimiento (móvil: preselección más exagerada)
             uHoverBoost: { value: 1 },
             uSelectedId: { value: -1 },
             uSelectedScale: { value: 1 },
 
-            // Intro: 0 = bolas dispersas, 1 = corazón formado
             uIntro: { value: 1 }
         };
     }
@@ -66,10 +45,10 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
         shader.vertexShader = shader.vertexShader
             .replace(
                 '#include <common>',
-                /* glsl */ `
+                `
                 #include <common>
                 attribute float aNumber;
-                attribute vec2 aIntro; // x: retardo (0..1), y: giro de llegada (rad)
+                attribute vec2 aIntro;
                 uniform float uIntro;
                 uniform vec3 uPointer;
                 uniform float uRepel;
@@ -95,23 +74,21 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
             )
             .replace(
                 '#include <begin_vertex>',
-                /* glsl */ `
+                `
                 #include <begin_vertex>
                 vLocal = position;
                 vNumber = aNumber;
-                // +Z de la instancia = normal de la superficie del corazón (en mundo)
                 vSurfaceNormal = normalize(mat3(modelMatrix) * mat3(instanceMatrix) * vec3(0.0, 0.0, 1.0));
                 `
             )
             .replace(
                 '#include <project_vertex>',
-                /* glsl */ `
+                `
                 float instanceId = float(gl_InstanceID);
                 vec3 ballCenter = instanceMatrix[3].xyz;
                 vec3 ballNormal = normalize(instanceMatrix[2].xyz);
                 vec3 ballLocal = (instanceMatrix * vec4(transformed, 1.0)).xyz - ballCenter;
 
-                // Intro: cada bola llega en espiral desde fuera y "salta" a su sitio
                 if (uIntro < 1.0) {
                     float introT = clamp((uIntro - aIntro.x * 0.6) / 0.4, 0.0, 1.0);
                     float introE = 1.0 - pow(1.0 - introT, 3.0);
@@ -128,14 +105,12 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
                     ballLocal *= introScale;
                 }
 
-                // Hover (actual + anterior saliendo)
                 float hover = 0.0;
                 if (abs(instanceId - uHoverId) < 0.5) hover = uHover;
                 if (abs(instanceId - uPrevHoverId) < 0.5) hover = max(hover, uPrevHover);
                 vHover = hover;
                 vHoverGlow = hover * (uHoverBoost - 1.0);
 
-                // Repulsión: se apartan en el plano tangente y se elevan un poco
                 vec3 fromPointer = ballCenter - uPointer;
                 float field = (1.0 - smoothstep(0.0, uRepelRadius, length(fromPointer))) * uRepel;
                 vec3 tangent = fromPointer - ballNormal * dot(fromPointer, ballNormal);
@@ -158,7 +133,7 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
         shader.fragmentShader = shader.fragmentShader
             .replace(
                 '#include <common>',
-                /* glsl */ `
+                `
                 #include <common>
                 uniform sampler2D uDigits;
                 uniform vec3 uNumberColor;
@@ -186,7 +161,6 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
                 float numberMask(vec3 local, float number) {
                     vec2 label = local.xy / uLabelSize + 0.5;
 
-                    // Coordenada continua para derivadas (evita costuras de mipmap)
                     vec2 continuous = vec2(label.x * 0.5, label.y);
                     vec2 gradX = dFdx(continuous);
                     vec2 gradY = dFdy(continuous);
@@ -195,7 +169,6 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
                         return 0.0;
                     }
 
-                    // Formato lotería "00.000": 2 dígitos, punto (media celda), 3 dígitos
                     float cell = label.x * 5.5;
                     float atlasCell;
                     float cellFract;
@@ -204,7 +177,7 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
                         atlasCell = mod(floor((number + 0.5) / digitPower(floor(cell))), 10.0);
                         cellFract = fract(cell);
                     } else if (cell < 2.5) {
-                        atlasCell = 10.0; // punto
+                        atlasCell = 10.0;
                         cellFract = (cell - 2.0) * 2.0;
                     } else {
                         float index = 2.0 + floor(cell - 2.5);
@@ -214,7 +187,6 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
 
                     vec2 atlasUv = vec2((atlasCell + cellFract) / 11.0, label.y);
 
-                    // Trazo fino: se refuerza algo al alejarse (el mipmap lo aclara)
                     return smoothstep(0.06, 0.6, textureGrad(uDigits, atlasUv, gradX, gradY).a);
                 }
 
@@ -227,7 +199,7 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
             )
             .replace(
                 '#include <color_fragment>',
-                /* glsl */ `
+                `
                 #include <color_fragment>
 
                 vec3 local = normalize(vLocal);
@@ -242,12 +214,11 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
             )
             .replace(
                 '#include <lights_fragment_end>',
-                /* glsl */ `
+                `
                 #include <lights_fragment_end>
 
                 float cavity = smoothstep(-0.55, 0.85, local.z);
                 cavity = mix(uCavity.x, uCavity.y, cavity);
-                // La bola señalada sale de la sombra y brilla un poco más
                 cavity = mix(cavity, 1.15, vHover * 0.8);
 
                 float facing = dot(normalize(vSurfaceNormal), uLightDirection);
@@ -256,7 +227,6 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
                 surfaceShade *= mix(uHeightShade.z, 1.0, heightShade);
                 surfaceShade = mix(surfaceShade, 1.0, vHover * 0.6);
 
-                // Preselección táctil: la bola se ilumina un poco para que se note
                 surfaceShade *= 1.0 + 0.18 * vHoverGlow;
 
                 reflectedLight.directDiffuse *= cavity * surfaceShade;
@@ -268,6 +238,6 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
     }
 
     customProgramCacheKey() {
-        return 'BallMaterial_v7';
+        return 'BallMaterial';
     }
 }

@@ -1,15 +1,5 @@
 import gsap from 'gsap';
 
-/**
- * SvgDraw
- *
- * Animación de "rótulo que se pinta": cada trazo del SVG se dibuja como una
- * línea (stroke-dashoffset) y después se rellena. Sin plugins: la longitud
- * de cada path se mide con getTotalLength() la primera vez que se anima
- * (con el SVG ya visible, que es cuando la medida es fiable).
- *
- * Con prefers-reduced-motion el rótulo aparece directamente, sin dibujo.
- */
 export default class SvgDraw {
     constructor(svg, { reducedMotion = false, strokeWidth = 0.7, finalStrokeWidth = 0.25 } = {}) {
         this.svg = svg;
@@ -24,7 +14,6 @@ export default class SvgDraw {
         this.lengths ??= this.paths.map((path) => Math.ceil(path.getTotalLength()) + 1);
     }
 
-    /** Todo sin pintar (antes de la animación). */
     reset() {
         this.timeline?.kill();
 
@@ -48,7 +37,6 @@ export default class SvgDraw {
         });
     }
 
-    /** Estado final (rótulo completo). */
     showFinal() {
         this.timeline?.kill();
         gsap.set(this.paths, {
@@ -59,10 +47,6 @@ export default class SvgDraw {
         });
     }
 
-    /**
-     * Dibuja el rótulo: los trazos se pintan en orden (con solape) y el
-     * relleno entra detrás de cada trazo. Devuelve la timeline.
-     */
     play({ delay = 0, duration = 2.6 } = {}) {
         this.reset();
 

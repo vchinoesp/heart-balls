@@ -13,7 +13,6 @@ export default class Sizes {
     update() {
         this.width = window.innerWidth;
         this.height = window.innerHeight;
-        // Máx. 2: en iPhone (DPR 3) renderizar a 3x no compensa el coste
         this.pixelRatio = Math.min(window.devicePixelRatio, 2);
     }
 
