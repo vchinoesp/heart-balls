@@ -147,6 +147,18 @@
       max-width: none;
     }
 
+    &__input {
+      padding: 0 0.8rem;
+
+      &::placeholder {
+        letter-spacing: 0;
+      }
+    }
+
+    &__submit {
+      padding-inline: 1.25rem;
+    }
+
     &__back {
       order: -1;
       margin-left: 0;

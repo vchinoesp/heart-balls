@@ -1,14 +1,13 @@
 const materiales = [
-    { titulo: 'NOTA DE PRENSA', url: 'NdP Verano Loteria Navidad 2026.pdf' },
-    { titulo: 'PROGRAMA DE PREMIOS', url: 'Programa de premios Loteria Navidad 2026.pdf' },
-    { titulo: 'ANEXO', url: 'ANEXO RESUMEN PRECAMPAÑA VERANO 2026.pdf' },
+    { titulo: 'NOTA DE PRENSA', url: 'nota-de-prensa.pdf' },
+    { titulo: 'DOSSIER DE PRENSA', url: 'dossier-de-prensa.pdf' },
+    { titulo: 'ANEXO RESUMEN', url: 'anexo-resumen.pdf' },
+    { titulo: 'SPOT TV', url: 'spot-tv.zip' },
     { titulo: 'RADIO', url: 'radio.zip' },
     { titulo: 'GRÁFICAS', url: 'graficas.zip' },
-    { titulo: 'FOTOGRAMAS SPOTS', url: 'fotogramas.zip' },
-    { titulo: 'SPOT MERCADO', url: 'MERCADO_30_Precamp_2026.mov' },
-    { titulo: 'SPOT TERRENO', url: 'TERRENO_30_Precamp_2026.mov' },
-    { titulo: 'FOTOS', url: 'fotos.zip' },
-    { titulo: 'DÉCIMOS Y RESGUARDOS DE LOTERÍA DE NAVIDAD', url: 'Bodegon-Navidad-26.png' }
+    { titulo: 'FOTOGRAMAS SPOT', url: 'fotogramas-spot.zip' },
+    { titulo: 'FOTOS DE PRESENTACION', url: 'fotos-de-presentacion.zip' },
+    { titulo: 'DÉCIMOS Y RESGUARDOS', url: 'decimos-y-resguardos.zip' }
 ];
 
 export default materiales;

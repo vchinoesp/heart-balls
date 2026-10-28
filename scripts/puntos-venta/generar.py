@@ -19,6 +19,12 @@ NOMBRE_HOJA = None
 
 DECIMALES = 5
 
+
+def es_venta_online(domicilio):
+    valor = domicilio.strip().upper()
+
+    return valor.startswith(("WWW.", "HTTP://", "HTTPS://"))
+
 def texto(valor):
     if valor is None:
         return ""
@@ -115,6 +121,7 @@ def convertir_excel():
         }
 
         puntos = []
+        excluidos = 0
 
         for numero_fila, fila in enumerate(filas, start=2):
             if all(texto(valor) == "" for valor in fila):
@@ -122,6 +129,10 @@ def convertir_excel():
 
             def obtener(nombre):
                 return fila[indices[nombre]]
+
+            if es_venta_online(texto(obtener("DOMICILIO"))):
+                excluidos += 1
+                continue
 
             try:
                 puntos.append([
@@ -143,6 +154,9 @@ def convertir_excel():
                 ) from error
 
         guardar_json(PUNTOS_SALIDA, puntos)
+
+        if excluidos:
+            print(f"Excluidos por ser venta online: {excluidos}")
 
         return len(puntos)
 
