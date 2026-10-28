@@ -40,7 +40,7 @@ export default defineConfig({
         rolldownOptions: {
             input: {
                 main: `${root}index.html`,
-                materiales: `${root}materiales.html`
+                materiales: `${root}materiales-descarga-prensa-2026.html`
             }
         }
     }

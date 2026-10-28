@@ -23,7 +23,7 @@ Experiencia one-page en WebGL: un corazón formado por miles de bolas de madera 
 - **Enlaces**: `src/config/app.config.js` → `links`. Vacío (`''`) = no se muestra.
   - `buy`: botón "Compra tu décimo" del popup de la bola (ahora vacío: no se muestra). `{number}` se sustituye por el número elegido con 5 cifras (p. ej. `02845`).
   - `pointsOfSale`: botón "Buscar punto de venta" del popup.
-- **Materiales descargables** (`materiales.html`): listado en `src/config/materiales.config.js` (`titulo` + `url`). Los archivos van en `public/materiales/` con el mismo nombre que en `url`; se admiten espacios y tildes.
+- **Materiales descargables** (`materiales-descarga-prensa-2026.html`): listado en `src/config/materiales.config.js` (`titulo` + `url`). Los archivos van en `public/materiales/` con el mismo nombre que en `url`; se admiten espacios y tildes.
 - **Compartir en redes**: `public/images/img_compartir.jpg` (1200×629), con el texto de `description` y `og:description` en `index.html`. Para que las URL de la imagen sean absolutas en el build hay que definir `SITE_URL` (p. ej. `https://dominio.es`); en Vercel se usa sola la variable de sistema del dominio de producción.
 - **Números no disponibles a la venta**: `src/config/numbers.config.js` → `unavailable`. Admite `2845`, `'02845'` o `'02.845'`. Vacío = se usan todos los números. Afecta al reparto de números en el navegador, así que no hace falta volver a ejecutar `bake`.
 - **Forma, bolas, luz e interacción del corazón**: `src/config/heart.config.js`.
