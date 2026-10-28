@@ -362,16 +362,68 @@
               <img class="tickets__card tickets__card--front" src="/images/decimo1.webp" width="243" height="276" alt="" data-dx="-33" data-dy="-23" data-tilt="-24.5" decoding="async" loading="lazy" />
             </span>
           </span>
-      <p class="ball-modal__hint">Busca tu punto de venta y pregunta por tu décimo.</p>
-      <a class="ball-modal__button ball-modal__button--primary" href="#" target="_blank" rel="noopener noreferrer" data-action="buy">Compra tu décimo</a>
-      <button class="ball-modal__button ball-modal__button--secondary" type="button" data-action="another">Elige otra corazonada</button>
-      <a class="ball-modal__link" href="#" target="_blank" rel="noopener noreferrer" data-action="points">
+      <button class="ball-modal__link" type="button" data-action="search">
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
           <path d="M12 22s7-7.2 7-12.5A7 7 0 0 0 5 9.5C5 14.8 12 22 12 22z" fill="none" stroke="currentColor" stroke-width="1.5" />
           <circle cx="12" cy="9.5" r="2.5" fill="currentColor" />
         </svg>
-        <span class="ball-modal__link-label">Buscar punto de venta</span>
-      </a>
+        <span class="ball-modal__link-label"><span class="ball-modal__link-text">Busca tu punto de venta <br />y pregunta por tu número</span></span>
+      </button>
+      <a class="ball-modal__button ball-modal__button--primary" href="#" target="_blank" rel="noopener noreferrer" data-action="buy">Compra tu décimo</a>
+      <button class="ball-modal__button ball-modal__button--secondary" type="button" data-action="another">Elige otra corazonada</button>
+    </div>
+
+    <h2 class="ball-modal__title ball-modal__title--search" id="ball-modal-search-title" tabindex="-1" hidden>
+      <span class="ball-modal__title-main">Busca tu punto de venta</span>
+      <span class="ball-modal__title-accent">y pregunta por tu número.</span>
+    </h2>
+
+    <div class="ball-modal__finder store-finder" hidden>
+      <div class="store-finder__bar">
+        <form class="store-finder__form" role="search" novalidate>
+          <label class="u-visually-hidden" for="store-finder-postal-code">Tu código postal</label>
+          <input
+                  class="store-finder__input"
+                  id="store-finder-postal-code"
+                  name="postal-code"
+                  type="text"
+                  inputmode="numeric"
+                  autocomplete="postal-code"
+                  maxlength="5"
+                  pattern="[0-9]{5}"
+                  placeholder="Tu código postal"
+                  aria-describedby="store-finder-status"
+          />
+          <button class="ball-modal__button ball-modal__button--primary store-finder__submit" type="submit">Buscar</button>
+        </form>
+
+        <button class="back-button store-finder__back" type="button" data-action="search-back">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M14.5 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" />
+          </svg>
+          Volver
+        </button>
+      </div>
+
+      <p class="store-finder__status" id="store-finder-status" role="status" aria-live="polite"></p>
+
+      <div class="store-finder__results" tabindex="0" role="region" aria-label="Puntos de venta" hidden>
+        <table class="store-finder__table" role="table">
+          <colgroup>
+            <col class="store-finder__col store-finder__col--address" />
+            <col class="store-finder__col store-finder__col--postal-code" />
+            <col class="store-finder__col store-finder__col--town" />
+          </colgroup>
+          <thead class="u-visually-hidden">
+            <tr role="row">
+              <th scope="col" role="columnheader">Dirección</th>
+              <th scope="col" role="columnheader">Código postal</th>
+              <th scope="col" role="columnheader">Localidad</th>
+            </tr>
+          </thead>
+          <tbody class="store-finder__rows"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>

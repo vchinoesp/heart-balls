@@ -1,6 +1,7 @@
 import gsap from 'gsap';
 
 import HeroBall from './HeroBall.js';
+import StoreFinder from './StoreFinder.js';
 import TicketsFan from './TicketsFan.js';
 
 export default class BallModal {
@@ -13,26 +14,38 @@ export default class BallModal {
         this.isOpen = false;
 
         this.panel = root.querySelector('.ball-modal__panel');
+        this.stage = root.querySelector('.ball-modal__stage');
         this.canvas = root.querySelector('.ball-modal__canvas');
         this.shadow = root.querySelector('.ball-modal__shadow');
         this.numberText = root.querySelector('[data-ball-number]');
         this.buyLink = root.querySelector('[data-action="buy"]');
-        this.pointsLink = root.querySelector('[data-action="points"]');
-
-        if (links.pointsOfSale) {
-            this.pointsLink.href = links.pointsOfSale;
-        } else {
-            this.pointsLink.hidden = true;
-        }
+        this.searchButton = root.querySelector('[data-action="search"]');
 
         if (!links.buy) this.buyLink.hidden = true;
 
         this.tickets = new TicketsFan(root.querySelector('.tickets--popup'), { reducedMotion });
+        this.finder = new StoreFinder(root.querySelector('.store-finder'), { reducedMotion, container: this.panel });
+
+        this.views = {
+            ball: {
+                title: root.querySelector('.ball-modal__title:not(.ball-modal__title--search)'),
+                body: root.querySelector('.ball-modal__actions')
+            },
+            search: {
+                title: root.querySelector('.ball-modal__title--search'),
+                body: root.querySelector('.store-finder')
+            }
+        };
+        this.view = 'ball';
 
         this.content = [
-            root.querySelector('.ball-modal__title'),
+            this.views.ball.title,
             ...root.querySelectorAll('.ball-modal__actions > :not([hidden])')
         ];
+
+        this.prefetchStores = () => this.finder.prepare().catch(() => {});
+        this.searchButton.addEventListener('pointerenter', this.prefetchStores, { once: true });
+        this.searchButton.addEventListener('focus', this.prefetchStores, { once: true });
 
         this.handleKeyDown = this.handleKeyDown.bind(this);
         this.handleClick = this.handleClick.bind(this);
@@ -56,6 +69,9 @@ export default class BallModal {
         if (this.links.buy) {
             this.buyLink.href = this.links.buy.replace('{number}', String(number).padStart(5, '0'));
         }
+
+        this.setView('ball');
+        this.finder.reset();
 
         this.root.hidden = false;
         document.documentElement.classList.add('has-modal');
@@ -110,6 +126,7 @@ export default class BallModal {
 
         const duration = this.reducedMotion ? 0.01 : 0.4;
 
+        this.viewTimeline?.kill();
         gsap.to(this.panel, { y: 24, scale: 0.97, duration, ease: 'power2.in' });
         gsap.to(this.root, {
             opacity: 0,
@@ -131,8 +148,90 @@ export default class BallModal {
 
         if (action === 'close') this.close();
         if (action === 'another') this.close({ another: true });
+        if (action === 'search') this.showView('search');
+        if (action === 'search-back') this.showView('ball');
 
         if (event.target === this.root) this.close();
+    }
+
+    setView(name) {
+        const leaving = name === 'search' ? this.views.ball : this.views.search;
+        const entering = this.views[name];
+
+        this.viewTimeline?.kill();
+        gsap.set([this.panel, this.stage, leaving.title, leaving.body, entering.title, entering.body], {
+            clearProps: 'height,overflow,opacity,transform'
+        });
+
+        leaving.title.hidden = true;
+        leaving.body.hidden = true;
+        entering.title.hidden = false;
+        entering.body.hidden = false;
+
+        this.view = name;
+        this.panel.dataset.view = name;
+        this.root.setAttribute('aria-labelledby', entering.title.id);
+    }
+
+    showView(name) {
+        if (!this.isOpen || this.view === name) return;
+
+        if (name === 'search') this.prefetchStores();
+
+        const leaving = name === 'search' ? this.views.ball : this.views.search;
+        const entering = this.views[name];
+        const focusTarget = name === 'search' ? this.finder.input : this.searchButton;
+        const quick = this.reducedMotion;
+
+        this.viewTimeline?.kill();
+
+        this.viewTimeline = gsap
+            .timeline()
+            .to([leaving.title, leaving.body, this.stage], {
+                opacity: 0,
+                y: quick ? 0 : -10,
+                duration: quick ? 0.01 : 0.28,
+                ease: 'power2.in',
+                stagger: quick ? 0 : 0.04
+            })
+            .add(() => {
+                const from = this.panel.offsetHeight;
+
+                this.setView(name);
+                this.hero.resize();
+
+                const to = this.panel.offsetHeight;
+
+                gsap.set([entering.title, entering.body, this.stage], { opacity: 0 });
+                focusTarget.focus({ preventScroll: true });
+
+                if (!quick) this.hero.open(this.number);
+
+                gsap.timeline()
+                    .fromTo(
+                        this.panel,
+                        { height: from, overflow: 'hidden' },
+                        {
+                            height: to,
+                            duration: quick ? 0.01 : 0.7,
+                            ease: 'expo.out',
+                            clearProps: 'height,overflow'
+                        }
+                    )
+                    .fromTo(
+                        [entering.title, this.stage, entering.body],
+                        { opacity: 0, y: quick ? 0 : 16 },
+                        {
+                            opacity: 1,
+                            y: 0,
+                            duration: quick ? 0.01 : 0.8,
+                            ease: 'expo.out',
+                            stagger: quick ? 0 : 0.08,
+                            clearProps: 'opacity,transform'
+                        },
+                        quick ? 0 : 0.1
+                    );
+            });
     }
 
     handleKeyDown(event) {
@@ -148,7 +247,7 @@ export default class BallModal {
 
     trapFocus(event) {
         const focusable = [
-            ...this.root.querySelectorAll('a[href], button:not([disabled])')
+            ...this.root.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), [tabindex="0"]')
         ].filter((element) => element.offsetParent !== null);
 
         if (!focusable.length) return;
@@ -167,6 +266,7 @@ export default class BallModal {
 
     dispose() {
         this.root.removeEventListener('click', this.handleClick);
+        this.finder.dispose();
         document.removeEventListener('keydown', this.handleKeyDown);
         this.hero?.dispose();
     }

@@ -20,9 +20,8 @@ Experiencia one-page en WebGL: un corazón formado por miles de bolas de madera 
   - Se reproducen en modo de privacidad mejorada: un iframe de `youtube-nocookie.com`, sin la IFrame API.
   - No se conecta con YouTube hasta pulsar play.
   - `poster` (opcional) es una imagen propia para el póster; si no hay, se usa la miniatura de YouTube.
-- **Enlaces**: `src/config/app.config.js` → `links`. Vacío (`''`) = no se muestra.
-  - `buy`: botón "Compra tu décimo" del popup de la bola (ahora vacío: no se muestra). `{number}` se sustituye por el número elegido con 5 cifras (p. ej. `02845`).
-  - `pointsOfSale`: botón "Buscar punto de venta" del popup.
+- **Enlace de compra**: `src/config/app.config.js` → `links.buy`, botón "Compra tu décimo" del popup de la bola. Vacío (`''`) = no se muestra (ahora está vacío). `{number}` se sustituye por el número elegido con 5 cifras (p. ej. `02845`).
+- **Buscador de puntos de venta** (popup de la bola → "Busca tu punto de venta"): los datos son `public/data/puntos-venta.json` y `public/data/codigos-postales.json`. Se generan con `scripts/puntos-venta/generar.py` a partir del Excel y de `ES.txt`; ver `scripts/puntos-venta/README.md`. La web los descarga solo cuando se abre el buscador.
 - **Materiales descargables** (`materiales-descarga-prensa-2026.html`): listado en `src/config/materiales.config.js` (`titulo` + `url`). Los archivos van en `public/materiales/` con el mismo nombre que en `url`; se admiten espacios y tildes.
 - **Compartir en redes**: `public/images/img_compartir.jpg` (1200×629), con el texto de `description` y `og:description` en `index.html`. Para que las URL de la imagen sean absolutas en el build hay que definir `SITE_URL` (p. ej. `https://dominio.es`); en Vercel se usa sola la variable de sistema del dominio de producción.
 - **Números no disponibles a la venta**: `src/config/numbers.config.js` → `unavailable`. Admite `2845`, `'02845'` o `'02.845'`. Vacío = se usan todos los números. Afecta al reparto de números en el navegador, así que no hace falta volver a ejecutar `bake`.

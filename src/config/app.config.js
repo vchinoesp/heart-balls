@@ -25,8 +25,7 @@ const appConfig = {
     },
 
     links: {
-        buy: '',
-        pointsOfSale: ''
+        buy: ''
     }
 };
 

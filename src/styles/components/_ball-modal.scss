@@ -22,6 +22,7 @@
       'title'
       'stage'
       'actions';
+    align-content: start;
     gap: 0.5rem;
     width: min(100%, 52rem);
     max-height: calc(100dvh - 2rem);
@@ -64,6 +65,27 @@
     font-weight: 400;
     line-height: 1.15;
     text-transform: uppercase;
+  }
+
+  &__title[hidden],
+  &__actions[hidden] {
+    display: none;
+  }
+
+  &__title--search {
+    grid-area: search-title;
+    font-size: clamp(1.25rem, 3.4vw, 1.875rem);
+    line-height: 1.2;
+    text-transform: none;
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  &__finder {
+    grid-area: finder;
+    margin-top: 1rem;
   }
 
   &__title-accent {
@@ -110,17 +132,6 @@
     flex-direction: column;
     align-items: center;
     gap: 0.9rem;
-  }
-
-  &__hint {
-    max-width: 20rem;
-    text-wrap: balance;
-    margin: 0;
-    color: $color-text-soft;
-    font-size: 1rem;
-    font-weight: 400;
-    line-height: 1.4;
-    text-align: center;
   }
 
   &__button {
@@ -208,7 +219,13 @@
     align-items: center;
     gap: 0.6rem;
     min-height: 2.75rem;
+    padding: 0;
+    border: 0;
+    background: none;
     color: #fff;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
     font-size: 0.9375rem;
     font-weight: 500;
     text-decoration: none;
@@ -231,14 +248,38 @@
   }
 
   &__link-label {
+    line-height: 1.5;
+  }
+
+  &__link-text {
     padding-bottom: 0.15em;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
     background: linear-gradient(currentColor, currentColor) 100% 100% / 100% 1px no-repeat;
     transition: background-size 0.6s $ease-out-expo;
   }
 
-  &__link:hover &__link-label {
+  &__link:hover &__link-text {
     background-position: 0 100%;
     animation: ball-modal-underline 0.9s $ease-out-expo;
+  }
+
+  &__panel[data-view='search'] {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'stage search-title'
+      'finder finder';
+    column-gap: 1rem;
+    align-items: center;
+  }
+
+  &__panel[data-view='search'] &__title--search {
+    padding-right: 3rem;
+  }
+
+  &__panel[data-view='search'] &__stage {
+    width: clamp(4.5rem, 20vw, 6rem);
+    height: clamp(4.5rem, 20vw, 6rem);
   }
 
   a:focus-visible,
@@ -262,6 +303,23 @@
 
     &__actions {
       align-self: center;
+    }
+
+    &__panel[data-view='search'] {
+      grid-template-columns: auto auto minmax(0, 1fr);
+      grid-template-areas:
+        'search-title stage .'
+        'finder finder finder';
+      column-gap: 1.5rem;
+    }
+
+    &__panel[data-view='search'] &__title--search {
+      padding-right: 0;
+    }
+
+    &__panel[data-view='search'] &__stage {
+      width: 8rem;
+      height: 8rem;
     }
   }
 }
