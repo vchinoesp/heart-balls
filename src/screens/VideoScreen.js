@@ -37,6 +37,10 @@ export default class VideoScreen extends Screen {
         return this.videos[this.current];
     }
 
+    get hasMaking() {
+        return Boolean(this.videos.making?.id);
+    }
+
     onEnter() {
         this.setPoster();
     }
@@ -73,6 +77,8 @@ export default class VideoScreen extends Screen {
     }
 
     switchVideo() {
+        if (!this.hasMaking && this.current === 'anuncio') return;
+
         this.current = this.current === 'anuncio' ? 'making' : 'anuncio';
         this.updateTexts();
 
@@ -99,7 +105,16 @@ export default class VideoScreen extends Screen {
     updateTexts() {
         const isAd = this.current === 'anuncio';
 
-        this.switchLabel.textContent = isAd ? 'Ver making of' : 'Ver anuncio';
+        const comingSoon = isAd && !this.hasMaking;
+
+        this.switchButton.disabled = comingSoon;
+
+        if (comingSoon) {
+            this.switchLabel.textContent = 'Making of próximamente';
+        } else {
+            this.switchLabel.textContent = isAd ? 'Ver making of' : 'Ver anuncio';
+        }
+
         this.title.textContent = this.video.title;
         this.poster.setAttribute('aria-label', `Reproducir: ${this.video.title}`);
     }

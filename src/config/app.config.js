@@ -19,7 +19,7 @@ const appConfig = {
             title: 'Anuncio El Sorteo que nos une'
         },
         making: {
-            id: 'M7lc1UVf-VE',
+            id: '',
             title: 'Making of El Sorteo que nos une'
         }
     },

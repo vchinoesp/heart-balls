@@ -16,7 +16,7 @@ Experiencia one-page en WebGL: un corazón formado por miles de bolas de madera 
 
 ## Dónde se cambia cada cosa
 
-- **Vídeos de YouTube** (anuncio y making of): `src/config/app.config.js` → `videos.anuncio.id` y `videos.making.id`. El id es lo que va tras `?v=` en la URL de YouTube.
+- **Vídeos de YouTube** (anuncio y making of): `src/config/app.config.js` → `videos.anuncio.id` y `videos.making.id`. El id es lo que va tras `?v=` en la URL de YouTube. Si `videos.making.id` está vacío (`''`), el botón del visor muestra "Making of próximamente" y no se puede pulsar.
   - Se reproducen en modo de privacidad mejorada: un iframe de `youtube-nocookie.com`, sin la IFrame API.
   - No se conecta con YouTube hasta pulsar play.
   - `poster` (opcional) es una imagen propia para el póster; si no hay, se usa la miniatura de YouTube.
