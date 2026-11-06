@@ -159,6 +159,11 @@ export default class Experience {
         this.lastActivity = 0;
         this.markActivity = () => {
             this.lastActivity = gsap.ticker.time;
+
+            if (this.idleActive && this.heartBeat.looping) {
+                this.heartBeat.finish();
+                this.scheduleIdle(this.config.beat.idleDelay);
+            }
         };
 
         ['pointerdown', 'pointermove', 'wheel', 'keydown'].forEach((type) => {
@@ -166,11 +171,19 @@ export default class Experience {
         });
     }
 
-    startIdle() {
+    startBeating() {
         if (this.reducedMotion) return;
 
         this.idleActive = true;
-        this.markActivity();
+        this.idleCall?.kill();
+        this.heartBeat.start();
+    }
+
+    resumeIdle() {
+        if (this.reducedMotion) return;
+
+        this.idleActive = true;
+        this.lastActivity = gsap.ticker.time;
         this.scheduleIdle(this.config.beat.idleDelay);
     }
 
@@ -197,18 +210,13 @@ export default class Experience {
             return;
         }
 
-        if (this.paused || this.heartBeat.playing) {
+        if (this.paused) {
             this.scheduleIdle(delay);
 
             return;
         }
 
-        this.heartBeat.play().then(() => {
-            if (!this.idleActive) return;
-
-            this.markActivity();
-            this.scheduleIdle(delay);
-        });
+        this.startBeating();
     }
 
     setInteractive(enabled) {
@@ -291,7 +299,7 @@ export default class Experience {
                 0
             )
             .call(() => this.setInteractive(true), null, 1.5)
-            .call(() => this.heartBeat.play().then(() => this.startIdle()), null, 2.7);
+            .call(() => this.startBeating(), null, 2.7);
 
         this.introTimeline = timeline;
 
@@ -322,7 +330,7 @@ export default class Experience {
         this.modalOpen = false;
         this.controls.setEnabled(true);
         this.selection.release();
-        this.startIdle();
+        this.resumeIdle();
     }
 
     resize() {

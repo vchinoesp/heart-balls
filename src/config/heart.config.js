@@ -92,9 +92,7 @@ const heartConfig = {
     },
 
     beat: {
-        count: 5,
         interval: 1.05,
-        decay: 0.82,
         echo: 0.55,
         echoDelay: 0.26,
         spread: 0.13,
@@ -102,7 +100,7 @@ const heartConfig = {
         scale: 0.07,
         glow: 0.34,
         heartScale: 0.029,
-        idleDelay: 30
+        idleDelay: 5
     }
 };
 
