@@ -185,6 +185,10 @@ export default class App {
             });
 
             this.experience.setBlocked(this.rotateNotice.active);
+            this.experience.setBeatClock({
+                getTime: () => this.soundtrack.time,
+                cycles: this.config.sound.beats
+            });
 
             await this.experience.init({
                 onProgress: (value) => {

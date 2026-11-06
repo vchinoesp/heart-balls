@@ -80,6 +80,8 @@ export default class Experience {
             debug: this.debug
         });
 
+        if (this.beatClock) this.heartBeat.setClock(this.beatClock);
+
         this.setIdle();
 
         const renderer = this.renderer.instance;
@@ -169,6 +171,11 @@ export default class Experience {
         ['pointerdown', 'pointermove', 'wheel', 'keydown'].forEach((type) => {
             this.canvas.addEventListener(type, this.markActivity, { passive: true });
         });
+    }
+
+    setBeatClock(clock) {
+        this.beatClock = clock;
+        this.heartBeat?.setClock(clock);
     }
 
     startBeating() {

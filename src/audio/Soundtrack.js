@@ -42,7 +42,11 @@ export default class Soundtrack {
     get time() {
         if (!this.source) return null;
 
-        return (this.context.currentTime - this.startedAt) % this.source.buffer.duration;
+        const latency = this.context.outputLatency || this.context.baseLatency || 0;
+        const elapsed = this.context.currentTime - this.startedAt - latency;
+        const duration = this.source.buffer.duration;
+
+        return ((elapsed % duration) + duration) % duration;
     }
 
     preload() {

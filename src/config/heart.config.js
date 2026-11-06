@@ -95,6 +95,7 @@ const heartConfig = {
         interval: 1.05,
         echo: 0.55,
         echoDelay: 0.26,
+        leadWave: 0.7,
         spread: 0.13,
         lift: 0.105,
         scale: 0.07,
