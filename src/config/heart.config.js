@@ -92,16 +92,17 @@ const heartConfig = {
     },
 
     beat: {
-        count: 3,
-        interval: 0.95,
-        decay: 0.8,
+        count: 5,
+        interval: 1.05,
+        decay: 0.82,
         echo: 0.55,
         echoDelay: 0.26,
-        spread: 0.09,
-        lift: 0.06,
-        scale: 0.14,
-        glow: 0.3,
-        heartScale: 0.03
+        spread: 0.13,
+        lift: 0.105,
+        scale: 0.07,
+        glow: 0.34,
+        heartScale: 0.029,
+        idleDelay: 30
     }
 };
 

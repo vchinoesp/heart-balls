@@ -1,0 +1,60 @@
+@use '../tokens' as *;
+
+.sound-toggle {
+  position: absolute;
+  right: 1rem;
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 1px solid rgba($color-gold, 0.7);
+  border-radius: 50%;
+  background: rgba(2, 8, 22, 0.55);
+  color: $color-gold;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition:
+    color 0.4s $ease-out-power3,
+    border-color 0.4s $ease-out-power3;
+
+  &:hover {
+    border-color: $color-gold-light;
+    color: $color-gold-light;
+  }
+
+  @include focus-ring(4px);
+
+  &__bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 1rem;
+  }
+
+  &__bar {
+    width: 3px;
+    height: 100%;
+    border-radius: 2px;
+    background: currentColor;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 1.6rem;
+    height: 1.5px;
+    border-radius: 1px;
+    background: currentColor;
+    transform: rotate(-45deg) scaleX(0);
+    transition: transform 0.45s $ease-out-expo;
+  }
+
+  &--off::after {
+    transform: rotate(-45deg) scaleX(1);
+  }
+}

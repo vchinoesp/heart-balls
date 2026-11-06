@@ -25,6 +25,8 @@ Experiencia one-page en WebGL: un corazón formado por miles de bolas de madera 
 - **Materiales descargables** (`materiales-descarga-prensa-2026.html`): listado en `src/config/materiales.config.js` (`titulo` + `url`). Los archivos van en `public/materiales/` con el mismo nombre que en `url`; se admiten espacios y tildes.
 - **Compartir en redes**: `public/images/img_compartir.jpg` (1200×629), con el texto de `description` y `og:description` en `index.html`. Para que las URL de la imagen sean absolutas en el build hay que definir `SITE_URL` (p. ej. `https://dominio.es`); en Vercel se usa sola la variable de sistema del dominio de producción.
 - **Números no disponibles a la venta**: `src/config/numbers.config.js` → `unavailable`. Admite `2845`, `'02845'` o `'02.845'`. Vacío = se usan todos los números. Afecta al reparto de números en el navegador, así que no hace falta volver a ejecutar `bake`.
+- **Música del corazón**: `public/audio/corazon.mp3` (MP3 128 kbps), configurada en `src/config/app.config.js` → `sound` (`src`, `volume`). Suena en bucle en la pantalla del corazón, con entrada y salida en fundido. El botón de las barras la activa o la silencia, y la preferencia se guarda en el navegador.
+- **Latido del corazón**: `src/config/heart.config.js` → `beat`. Late al terminar la animación de montaje y otra vez tras `idleDelay` segundos sin interacción. Con `/#debug`, la carpeta "Latido" permite ajustarlo y probarlo.
 - **Forma, bolas, luz e interacción del corazón**: `src/config/heart.config.js`.
   - Si se cambia la forma o el empaquetado, hay que ejecutar `npm run bake`.
   - `navigation.maxTilt` es la inclinación máxima y `navigation.minSurfaceDistance` la distancia mínima de la cámara al corazón al hacer zoom.

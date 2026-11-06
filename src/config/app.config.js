@@ -24,6 +24,11 @@ const appConfig = {
         }
     },
 
+    sound: {
+        src: '/audio/corazon.mp3',
+        volume: 0.6
+    },
+
     links: {
         buy: ''
     }

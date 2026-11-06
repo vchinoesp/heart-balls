@@ -10,6 +10,8 @@ import HomeScreen from './screens/HomeScreen.js';
 import HeartScreen from './screens/HeartScreen.js';
 import VideoScreen from './screens/VideoScreen.js';
 import RotateNotice from './ui/RotateNotice.js';
+import SoundToggle from './ui/SoundToggle.js';
+import Soundtrack from './audio/Soundtrack.js';
 
 export default class App {
     constructor() {
@@ -40,11 +42,54 @@ export default class App {
 
         gsap.set([this.footer, this.canvas], { autoAlpha: 0 });
 
+        this.setSound();
+
         this.rotateNotice = new RotateNotice(document.querySelector('.rotate-notice'), {
             reducedMotion: this.reducedMotion,
             blocked: [document.querySelector('.layout'), this.canvas, document.querySelector('.ball-modal')],
             onChange: (active) => this.experience?.setBlocked?.(active)
         });
+    }
+
+    setSound() {
+        const toggle = document.querySelector('.sound-toggle');
+
+        this.soundtrack = new Soundtrack({
+            src: this.config.sound.src,
+            volume: this.config.sound.volume,
+            onChange: () => this.updateSoundToggle()
+        });
+
+        if (!this.soundtrack.supported) {
+            toggle.hidden = true;
+
+            return;
+        }
+
+        this.soundToggle = new SoundToggle(toggle, {
+            reducedMotion: this.reducedMotion,
+            onToggle: () => this.toggleSound()
+        });
+
+        this.updateSoundToggle();
+    }
+
+    toggleSound() {
+        const enabled = !this.soundtrack.enabled;
+
+        if (enabled) this.soundtrack.unlock();
+
+        this.soundtrack.setEnabled(enabled);
+    }
+
+    updateSoundToggle() {
+        this.soundToggle?.update({ enabled: this.soundtrack.enabled, playing: this.soundtrack.playing });
+    }
+
+    updateSound(name) {
+        if (name === 'home') this.soundtrack.preload().catch(() => {});
+        if (name === 'heart') this.soundtrack.unlock();
+        if (name !== 'heart' && this.current?.name === 'heart') this.soundtrack.stop();
     }
 
     setScreens() {
@@ -171,6 +216,7 @@ export default class App {
         if (this.current?.name === name || this.transitioning) return;
 
         this.transitioning = true;
+        this.updateSound(name);
 
         const previous = this.current;
         const next = this.screens[name];
@@ -196,6 +242,8 @@ export default class App {
         this.backdrop.update(name);
         this.showFooter(name);
         this.showHeart(name);
+
+        if (name === 'heart') this.soundtrack.play();
 
         await next.enter();
 

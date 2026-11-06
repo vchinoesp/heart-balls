@@ -80,6 +80,8 @@ export default class Experience {
             debug: this.debug
         });
 
+        this.setIdle();
+
         const renderer = this.renderer.instance;
 
         if (renderer.extensions.has('KHR_parallel_shader_compile')) {
@@ -153,6 +155,62 @@ export default class Experience {
         this.setInteractive(false);
     }
 
+    setIdle() {
+        this.lastActivity = 0;
+        this.markActivity = () => {
+            this.lastActivity = gsap.ticker.time;
+        };
+
+        ['pointerdown', 'pointermove', 'wheel', 'keydown'].forEach((type) => {
+            this.canvas.addEventListener(type, this.markActivity, { passive: true });
+        });
+    }
+
+    startIdle() {
+        if (this.reducedMotion) return;
+
+        this.idleActive = true;
+        this.markActivity();
+        this.scheduleIdle(this.config.beat.idleDelay);
+    }
+
+    stopIdle() {
+        this.idleActive = false;
+        this.idleCall?.kill();
+        this.idleCall = null;
+    }
+
+    scheduleIdle(delay) {
+        this.idleCall?.kill();
+        this.idleCall = gsap.delayedCall(delay, () => this.checkIdle());
+    }
+
+    checkIdle() {
+        if (!this.idleActive) return;
+
+        const delay = this.config.beat.idleDelay;
+        const idle = gsap.ticker.time - this.lastActivity;
+
+        if (idle < delay) {
+            this.scheduleIdle(delay - idle);
+
+            return;
+        }
+
+        if (this.paused || this.heartBeat.playing) {
+            this.scheduleIdle(delay);
+
+            return;
+        }
+
+        this.heartBeat.play().then(() => {
+            if (!this.idleActive) return;
+
+            this.markActivity();
+            this.scheduleIdle(delay);
+        });
+    }
+
     setInteractive(enabled) {
         this.controls.setEnabled(enabled);
         this.selection.locked = !enabled;
@@ -160,6 +218,8 @@ export default class Experience {
 
     pause() {
         this.hidden = true;
+        this.stopIdle();
+        this.heartBeat.stop();
     }
 
     resume() {
@@ -178,6 +238,7 @@ export default class Experience {
         const heartBalls = this.world.heartBalls;
 
         this.introTimeline?.kill();
+        this.stopIdle();
         this.heartBeat.stop();
         this.setInteractive(false);
         this.controls.reset({ immediate: true });
@@ -230,7 +291,7 @@ export default class Experience {
                 0
             )
             .call(() => this.setInteractive(true), null, 1.5)
-            .call(() => this.heartBeat.play(), null, 2.7);
+            .call(() => this.heartBeat.play().then(() => this.startIdle()), null, 2.7);
 
         this.introTimeline = timeline;
 
@@ -248,6 +309,8 @@ export default class Experience {
     }
 
     onBallSelected(number) {
+        this.stopIdle();
+        this.heartBeat.stop();
         this.controls.setEnabled(false);
         this.modal.open({ number });
 
@@ -259,6 +322,7 @@ export default class Experience {
         this.modalOpen = false;
         this.controls.setEnabled(true);
         this.selection.release();
+        this.startIdle();
     }
 
     resize() {
@@ -287,6 +351,7 @@ export default class Experience {
         this.time?.dispose();
         this.sizes.dispose();
         this.controls?.dispose();
+        this.stopIdle();
         this.heartBeat?.dispose();
         this.modal?.dispose();
         this.fpsMeter?.dispose();

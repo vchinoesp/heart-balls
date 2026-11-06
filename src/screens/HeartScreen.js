@@ -5,10 +5,11 @@ export default class HeartScreen extends Screen {
         super(root, options);
 
         this.help = root.querySelector('.heart-help');
+        this.soundToggle = root.querySelector('.sound-toggle');
     }
 
     get animated() {
-        return [this.help];
+        return [this.help, this.soundToggle];
     }
 
     get focusTarget() {
