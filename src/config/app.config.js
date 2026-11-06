@@ -15,8 +15,8 @@ const appConfig = {
 
     videos: {
         anuncio: {
-            id: 'M7lc1UVf-VE',
-            title: 'Anuncio El Sorteo que nos une'
+            id: 'ksLwcaZfv5c',
+            title: 'Spot TV'
         },
         making: {
             id: '',
