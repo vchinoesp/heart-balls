@@ -9,6 +9,7 @@ import Renderer from './Renderer.js';
 import Debug from '../utils/Debug.js';
 import FpsMeter from '../utils/FpsMeter.js';
 import World from '../world/World.js';
+import HeartBeat from '../world/heart/HeartBeat.js';
 import HeartControls from '../interaction/HeartControls.js';
 import BallSelection from '../interaction/BallSelection.js';
 import BallModal from '../ui/BallModal.js';
@@ -70,6 +71,14 @@ export default class Experience {
         progress(0.6);
 
         this.setInteraction();
+
+        this.heartBeat = new HeartBeat({
+            uniforms: this.world.heartBalls.material.uniforms,
+            target: this.world.heartBalls.group,
+            config: this.config.beat,
+            reducedMotion: this.reducedMotion,
+            debug: this.debug
+        });
 
         const renderer = this.renderer.instance;
 
@@ -169,6 +178,7 @@ export default class Experience {
         const heartBalls = this.world.heartBalls;
 
         this.introTimeline?.kill();
+        this.heartBeat.stop();
         this.setInteractive(false);
         this.controls.reset({ immediate: true });
         this.camera.applyView();
@@ -219,7 +229,8 @@ export default class Experience {
                 { y: 0, duration: 2.6, ease: 'expo.out' },
                 0
             )
-            .call(() => this.setInteractive(true), null, 1.5);
+            .call(() => this.setInteractive(true), null, 1.5)
+            .call(() => this.heartBeat.play(), null, 2.7);
 
         this.introTimeline = timeline;
 
@@ -276,6 +287,7 @@ export default class Experience {
         this.time?.dispose();
         this.sizes.dispose();
         this.controls?.dispose();
+        this.heartBeat?.dispose();
         this.modal?.dispose();
         this.fpsMeter?.dispose();
         this.world?.dispose();

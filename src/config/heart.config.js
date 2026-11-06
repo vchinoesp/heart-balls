@@ -89,6 +89,19 @@ const heartConfig = {
         touchHoverBoost: 2.8,
         pointerSmoothing: 0.55,
         hoverMaxSpeed: 0.9
+    },
+
+    beat: {
+        count: 3,
+        interval: 0.95,
+        decay: 0.8,
+        echo: 0.55,
+        echoDelay: 0.26,
+        spread: 0.09,
+        lift: 0.06,
+        scale: 0.14,
+        glow: 0.3,
+        heartScale: 0.03
     }
 };
 

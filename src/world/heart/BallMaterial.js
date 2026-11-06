@@ -35,6 +35,14 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
             uSelectedId: { value: -1 },
             uSelectedScale: { value: 1 },
 
+            uBeatTime: { value: -10 },
+            uBeatStrength: { value: 0 },
+            uBeatEcho: { value: new THREE.Vector2(0.55, 0.26) },
+            uBeatSpread: { value: 0.09 },
+            uBeatLift: { value: 0.06 },
+            uBeatScale: { value: 0.14 },
+            uBeatGlow: { value: 0.3 },
+
             uIntro: { value: 1 }
         };
     }
@@ -64,12 +72,27 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
                 uniform float uHoverBoost;
                 uniform float uSelectedId;
                 uniform float uSelectedScale;
+                uniform float uBeatTime;
+                uniform float uBeatStrength;
+                uniform vec2 uBeatEcho;
+                uniform float uBeatSpread;
+                uniform float uBeatLift;
+                uniform float uBeatScale;
                 varying vec3 vLocal;
                 varying float vNumber;
                 varying vec3 vSurfaceNormal;
                 varying float vHover;
                 varying float vHoverGlow;
                 varying float vWorldHeight;
+                varying float vBeat;
+
+                float beatPulse(float t) {
+                    if (t <= 0.0) return 0.0;
+
+                    float x = t / 0.11;
+
+                    return x * exp(1.0 - x);
+                }
                 `
             )
             .replace(
@@ -118,7 +141,12 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
                 vec3 push = tangentLength > 1e-4 ? tangent / tangentLength : vec3(0.0);
                 field *= 1.0 - min(hover, 1.0);
 
-                vec3 offset = push * field * uRepelPush + ballNormal * (field * uRepelLift + hover * uHoverLift * uHoverBoost);
+                float beatT = uBeatTime - length(ballCenter) * uBeatSpread;
+                float beat = (beatPulse(beatT) + uBeatEcho.x * beatPulse(beatT - uBeatEcho.y)) * uBeatStrength;
+                vBeat = beat;
+
+                vec3 offset = push * field * uRepelPush + ballNormal * (field * uRepelLift + hover * uHoverLift * uHoverBoost + beat * uBeatLift);
+                ballLocal *= 1.0 + beat * uBeatScale;
 
                 float selected = abs(instanceId - uSelectedId) < 0.5 ? uSelectedScale : 1.0;
                 ballLocal *= (1.0 + hover * uHoverScale * uHoverBoost) * selected;
@@ -143,12 +171,14 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
                 uniform vec3 uLightDirection;
                 uniform float uSurfaceShade;
                 uniform vec3 uHeightShade;
+                uniform float uBeatGlow;
                 varying vec3 vLocal;
                 varying float vNumber;
                 varying vec3 vSurfaceNormal;
                 varying float vHover;
                 varying float vHoverGlow;
                 varying float vWorldHeight;
+                varying float vBeat;
 
                 float digitPower(float index) {
                     if (index < 0.5) return 10000.0;
@@ -228,6 +258,7 @@ export default class BallMaterial extends THREE.MeshStandardMaterial {
                 surfaceShade = mix(surfaceShade, 1.0, vHover * 0.6);
 
                 surfaceShade *= 1.0 + 0.18 * vHoverGlow;
+                surfaceShade *= 1.0 + uBeatGlow * vBeat;
 
                 reflectedLight.directDiffuse *= cavity * surfaceShade;
                 reflectedLight.indirectDiffuse *= cavity * mix(0.45, 1.0, surfaceShade);
