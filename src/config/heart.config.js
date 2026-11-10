@@ -101,7 +101,7 @@ const heartConfig = {
         scale: 0.07,
         glow: 0.34,
         heartScale: 0.029,
-        idleDelay: 5
+        idleDelay: 1.5
     }
 };
 
