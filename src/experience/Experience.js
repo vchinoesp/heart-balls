@@ -56,6 +56,9 @@ export default class Experience {
         });
 
         this.renderer = new Renderer(this.canvas, this.sizes, this.scene, this.camera);
+
+        this.onResize = () => this.resize();
+        window.addEventListener('sizes:resize', this.onResize);
         progress(0.15);
 
         this.world = new World({
@@ -101,10 +104,7 @@ export default class Experience {
             this.fpsMeter = new FpsMeter({ renderer: this.renderer.instance });
         }
 
-        this.onResize = () => this.resize();
         this.onTick = () => this.update();
-
-        window.addEventListener('sizes:resize', this.onResize);
 
         this.time = new Time();
         window.addEventListener('time:tick', this.onTick);
@@ -341,6 +341,7 @@ export default class Experience {
     }
 
     resize() {
+        this.sizes.update();
         this.camera.resize();
         this.renderer.resize();
 

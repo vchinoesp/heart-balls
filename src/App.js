@@ -326,6 +326,7 @@ export default class App {
 
         this.canvas.tabIndex = 0;
 
+        experience.resize();
         experience.resetView();
         experience.resume();
 
