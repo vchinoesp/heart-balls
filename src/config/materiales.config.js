@@ -6,7 +6,7 @@ const materiales = [
     { titulo: 'RADIO', url: 'https://d1fksq2n2bfzag.cloudfront.net/yotengounacorazonada/material/04Radio.zip' },
     { titulo: 'GRÁFICAS', url: 'https://d1fksq2n2bfzag.cloudfront.net/yotengounacorazonada/material/05Grafica.zip' },
     { titulo: 'FOTOGRAMAS SPOT', url: 'https://d1fksq2n2bfzag.cloudfront.net/yotengounacorazonada/material/06Fotogramas.zip' },
-    { titulo: 'FOTOS DE PRESENTACIÓN', url: 'https://d1fksq2n2bfzag.cloudfront.net/yotengounacorazonada/material/fotos_presentacion.zip' },
+    { titulo: 'FOTOS DE LA PRESENTACIÓN', url: 'https://d1fksq2n2bfzag.cloudfront.net/yotengounacorazonada/material/fotos_presentacion.zip' },
     { titulo: 'DÉCIMOS Y RESGUARDOS', url: 'https://d1fksq2n2bfzag.cloudfront.net/yotengounacorazonada/material/07Decimo.zip' }
 ];
 
