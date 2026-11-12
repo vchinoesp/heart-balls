@@ -67,6 +67,8 @@ export default class Soundtrack {
     unlock() {
         if (!this.supported) return;
 
+        Soundtrack.usePlaybackSession();
+
         if (!this.context) {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
 
@@ -76,7 +78,30 @@ export default class Soundtrack {
             this.gain.connect(this.context.destination);
         }
 
-        if (this.context.state === 'suspended' && !document.hidden) this.context.resume().catch(() => {});
+        if (this.context.state !== 'running' && !document.hidden) this.context.resume().catch(() => {});
+
+        if (!this.primed) {
+            this.primed = true;
+            this.playSilence();
+        }
+    }
+
+    static usePlaybackSession() {
+        try {
+            if (navigator.audioSession && navigator.audioSession.type !== 'playback') {
+                navigator.audioSession.type = 'playback';
+            }
+        } catch {
+            return;
+        }
+    }
+
+    playSilence() {
+        const source = this.context.createBufferSource();
+
+        source.buffer = this.context.createBuffer(1, 1, this.context.sampleRate);
+        source.connect(this.context.destination);
+        source.start(0);
     }
 
     decode() {
