@@ -43,23 +43,9 @@
 
   <link rel="preload" href="/data/heart-layout.bin" as="fetch" type="application/octet-stream" crossorigin />
 
-  <style>
-    html,
-    body {
-      background-color: #020816;
-    }
-
-    [data-screen='boot'] .layout,
-    [data-screen='boot'] .webgl {
-      visibility: hidden;
-    }
-  </style>
+  <link rel="stylesheet" href="/css/boot.css" />
   <noscript>
-    <style>
-      [data-screen='boot'] .layout {
-        visibility: visible;
-      }
-    </style>
+    <link rel="stylesheet" href="/css/noscript.css" />
   </noscript>
 </head>
 <body class="app" data-screen="boot">

@@ -1,0 +1,9 @@
+html,
+body {
+  background-color: #020816;
+}
+
+[data-screen='boot'] .layout,
+[data-screen='boot'] .webgl {
+  visibility: hidden;
+}
