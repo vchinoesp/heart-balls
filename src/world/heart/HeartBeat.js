@@ -51,7 +51,6 @@ export default class HeartBeat {
         if (this.reducedMotion) return;
 
         this.looping = true;
-        this.awaitingLead = true;
         this.lastTime = null;
         gsap.ticker.add(this.tick);
 
@@ -114,13 +113,10 @@ export default class HeartBeat {
         if (!this.looping) return;
 
         if (event.kind === 'lead') {
-            this.awaitingLead = false;
             this.startWave(this.config.leadWave, 0, 0);
 
             return;
         }
-
-        if (this.awaitingLead) return;
 
         this.startWave(1, this.config.echo, event.echoDelay);
         this.scalePulse('beat');
@@ -199,7 +195,6 @@ export default class HeartBeat {
             return;
         }
 
-        this.awaitingLead = true;
         this.reset();
     }
 
